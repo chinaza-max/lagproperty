@@ -12,11 +12,11 @@ export function init(connection) {
         autoIncrement: true,
       },
       senderId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       receiverId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false
       },
       messageType: { 
@@ -35,10 +35,10 @@ export function init(connection) {
         allowNull: true,
       },
       repliedMessageId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
         references: {
-          model: 'Chats',
+          model: 'Chat',
           key: 'id',
         },
       },

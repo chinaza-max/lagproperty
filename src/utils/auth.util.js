@@ -2,44 +2,33 @@ import Joi from "joi";
 
 class authUtil {
 
-
-
-  verifyUserCreationData1= Joi.object({
+  verifyUserCreationData= Joi.object({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
-    publicKey: Joi.string().required(),
     emailAddress: Joi.string().email().required(),
     password: Joi.string().required(),
+    image: Joi.string().required(),
     type: Joi.string().valid(
-      'parent',
-    ).required(),
-
+      'rent',
+      'list',
+    ).required()
   });
 
 
-  verifyUserCreationData2= Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    publicKey: Joi.string().required(),
-    parentUserId: Joi.number().required(),
-    emailAddress: Joi.string().email().required(),
-    password: Joi.string().required(),
-    dateOfBirth: Joi.date().required(),
-    type: Joi.string().valid(
-      'child'
-    ).required(), 
-  });
-  
    
 
-    verifyHandleVerifyEmailorTel= Joi.object({
-      userId: Joi.number().required(),
-      verificationCode: Joi.number().required(),
-      type: Joi.string().valid(
-        'email',
-        'tel'
-      ).required()
-    });
+  verifyHandleVerifyEmailorTel= Joi.object({
+    userId: Joi.number().required(),
+    validateFor: Joi.string().valid(
+      'tenant',
+      'propertyManager'
+    ).required(),
+    verificationCode: Joi.number().required(),
+    type: Joi.string().valid(
+      'email',
+      'tel'
+    ).required()
+  });
 
     verifyHandleSendVerificationCodeEmailOrTel= Joi.object({
       userId: Joi.number().required(),

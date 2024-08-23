@@ -1,16 +1,17 @@
 import authService from "../../service/auth.service.js";
-import { User,EmailandTelValidation } from "../../db/models/index.js";
+//import { User,EmailandTelValidation } from "../../db/models/index.js";
 
 
 export default class AuthenticationController {
 
 
-  
-
 
   
-
-  
+  constructor(){
+    this.filterObject=this.filterObject.bind(this)
+    this.signupUser=this.signupUser.bind(this)
+  }
+    
 
   async verifyEmailorTelAdmin(req, res, next) {
 
@@ -36,6 +37,7 @@ export default class AuthenticationController {
     }
     
   }
+  
   async verifyEmailorTel(req, res, next) {
 
     try {
@@ -47,7 +49,6 @@ export default class AuthenticationController {
       }
 
       const user = await authService.handleVerifyEmailorTel(my_bj);
-
 
       const token = await authService.generateToken(user.dataValues);
 
@@ -75,60 +76,27 @@ export default class AuthenticationController {
   }
  
   
-  async handlemarketingData(req, res, next) {
-
-    try {
-
-      const data = req.body;        
-
-      let my_bj = {
-        ...data,
-      }
-
-      await authService.handlemarketingData(my_bj);
-
-      return res.status(200).json({
-        status: 200,
-        message: "request sent successfully",
-      });
-      
-    } catch (error) {
-      console.log(error);
-      next(error)
-    }
-    
-  }
-
+  
   async signupUser(req, res, next) {
 
     try {
 
       const data = req.body;        
-
-      let my_bj = {
+      
+      const my_bj = {
         ...data,
-      }
-      let result=''
+      }      
 
-      if(my_bj?.type=='parent'){
-        result=await authService.handleUserCreation1(my_bj);
+      const result=await authService.handleUserCreation(my_bj);
 
-      }
-      else if(my_bj?.type=='child'){
-        result=await authService.handleUserCreation2(my_bj);
+      const keysToRemove = ['password'];
 
-      }
-      else{
-        return res.status(400).json({
-          status: 400,
-          message: "type is required",
-        });
-      }
+      const filteredUser = this.filterObject(result.dataValues, keysToRemove);
 
       return res.status(200).json({
         status: 200,
         message: "user registered successfully",
-        data:{result} ,
+        data:filteredUser,
       });
       
     } catch (error) {
@@ -139,36 +107,19 @@ export default class AuthenticationController {
   }
   
 
-  /*
-  async registerAdmin(req, res, next) {
+  filterObject(obj, keysToRemove) {
 
-    try {
+    console.log(obj)
+    console.log(keysToRemove)
 
-      const data = req.body;        
-      console.log(req.user)
-      let my_bj = {
-        ...data,
-        createdBy:req.user.id
-      }
-      
-      await authService.handleRegisterAdmin(my_bj);
-
-    
-
-      return res.status(200).json({
-        status: 200,
-        message: "user registered successfully",
-      });
-    } catch (error) {
-      console.log(error);
-      next(error)
-    }
-    
+    return Object.keys(obj)
+    .filter(key => !keysToRemove.includes(key))
+    .reduce((filteredObj, key) => {
+        filteredObj[key] = obj[key];
+        return filteredObj;
+    }, {});
+        
   }
-  */
-  
-
-  
   
   async googleCallback(
     req,

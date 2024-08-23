@@ -9,7 +9,6 @@ const DEBUG = debug('dev');
 class MailService {
   constructor() {
 
-    console.log(serverConfig)
     this.transporter = nodemailer.createTransport({
       host: serverConfig.EMAIL_HOST,
       port: Number(serverConfig.EMAIL_PORT),

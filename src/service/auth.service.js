@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import bcrypt from'bcrypt';
-import { User, 
-     EmailandTelValidation ,  
-     PasswordReset,
+import { Tenant, 
+     PropertyManager, 
+     PasswordReset , 
+     EmailandTelValidation
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
 import authUtil from "../utils/auth.util.js";
@@ -19,10 +20,10 @@ import { Op } from "sequelize";
 
 
 class AuthenticationService {
-   UserModel = User;
-   EmailandTelValidationModel=EmailandTelValidation
-   PasswordResetModel=PasswordReset
-
+  TenantModel = Tenant;
+  PropertyManagerModel=PropertyManager
+  PasswordResetModel=PasswordReset
+  EmailandTelValidationModel=EmailandTelValidation
 
    
 
@@ -46,75 +47,17 @@ class AuthenticationService {
   }
 
 
-  
-  async handlemarketingData(data) {
 
-
-    let { 
-      name,
-      tel,
-      country,
-      state,
-      emailAddress,
-      
-    } = await authUtil.verifyHandlemarketingData.validateAsync(data);
-
-
-  /*
-
-    const existingMarketingData=await this.MarketingDataModel.findOne({
-      where:{
-        emailAddress
-      }
-    })
-
-  if (existingMarketingData) return
-*/
-  try {
-
-    /*
-    await this.MarketingDataModel.create({
-      name,
-      tel,
-      country,
-      state,
-      emailAddress,
-  });
-*/
-
-  
-  const adminResult=await this.AdminModel.findByPk(1)
-
-
-
-  await this.sendEmailMarketingdata(name,
-    tel,
-    country,
-    state,
-    emailAddress,
-    adminResult.dataValues.emailAddress)
-  
-  } catch (error) {
-    console.log(error)
-    throw new SystemError(error.name,error.parent)
-  }
-
-
-
-
-}
-
-
-  async handleUserCreation1(data) {
+  async handleUserCreation(data,file) {
       let { 
         firstName,
         lastName,
         emailAddress,
         password,
-        publicKey,
-      } = await authUtil.verifyUserCreationData1.validateAsync(data);
+        type,
+        image
+      } = await authUtil.verifyUserCreationData.validateAsync(data);
   
-
     let hashedPassword;
     try {
       hashedPassword = await bcrypt.hash(
@@ -126,77 +69,57 @@ class AuthenticationService {
       throw new SystemError(error);
     }
 
-    var existingUser = await this.isUserExisting(emailAddress);
- 
-    if (existingUser != null)throw new ConflictError(existingUser);
+   
 
-    try {
-      const user = await this.UserModel.create({
-        firstName,
-        lastName,
-        emailAddress,
-        password:hashedPassword,
-        publicKey
-    });
-    await this.sendEmailVerificationCode(user.emailAddress,user.id)
-    
-    return user;
+    if(type==="list"){
+      let existingUser = await this.isUserEmailExisting(emailAddress,this.PropertyManagerModel);
 
-    } catch (error) {
-      console.log(error)
-      throw new SystemError(error.name,error.parent)
-    }
-  }
-
-  async handleUserCreation2(data) {
-    let { 
-      firstName,
-      lastName,
-      emailAddress,
-      password,
-      dateOfBirth,
-      publicKey,
-      parentUserId
-    } = await authUtil.verifyUserCreationData2.validateAsync(data);
-
-
-
-    
-  let hashedPassword;
-  try {
-    hashedPassword = await bcrypt.hash(
-      password,
-      Number(serverConfig.SALT_ROUNDS)
-    );
-  } catch (error) { 
-    console.log(error)
-    throw new SystemError('SystemError','An error occured while processing your request(handleUserCreation) while hashing password ');
-  }
-
-
-  var existingUser = await this.isUserExisting(emailAddress);
-
-  if (existingUser != null)throw new ConflictError(existingUser);
-
-  try {
-    const user = await this.UserModel.create({
-      firstName,
-      lastName,
-      emailAddress,
-      password:hashedPassword,
-      publicKey,
-      dateOfBirth,
-      parentUserId
-  });
-  await this.sendEmailVerificationCode(user.emailAddress,user.id)
+      if (existingUser != null)throw new ConflictError(existingUser);
   
-  return user;
+      try {
+        const user = await this.PropertyManagerModel.create({
+          firstName,
+          lastName,
+          emailAddress,
+          password:hashedPassword,
+          image
+      });
+      await this.sendEmailVerificationCode(user.emailAddress,user.id,'propertyManager')
+      
+      return user;
+  
+      } catch (error) {
+        console.log(error)
+        throw new SystemError(error.name,error.parent)
+      }
+    }
+    else{
 
-  } catch (error) {
-    console.log(error)
-    throw new SystemError(error.name,error.parent)
+      let existingUser = await this.isUserEmailExisting(emailAddress, this.TenantModel );
+      if (existingUser != null)throw new ConflictError(existingUser);
+      
+      try {
+        const user = await this.TenantModel.create({
+          firstName,
+          lastName,
+          emailAddress,
+          password:hashedPassword,
+          image
+      });
+      await this.sendEmailVerificationCode(user.emailAddress,user.id,'tenant')
+      
+      return user;
+  
+      } catch (error) {
+        console.log(error)
+        throw new SystemError(error.name,error.parent)
+      }
+
+    }
+
   }
-}
+
+
 
 
   
@@ -638,12 +561,14 @@ class AuthenticationService {
     let { 
       userId,
       verificationCode,
+      validateFor,
       type
     } = await authUtil.verifyHandleVerifyEmailorTel.validateAsync(data);
 
     var relatedEmailoRTelValidationCode = await this.EmailandTelValidationModel.findOne({
       where: {
         userId: userId,
+        validateFor,
         verificationCode: verificationCode,
         type
       },
@@ -656,16 +581,28 @@ class AuthenticationService {
       throw new NotFoundError("verification code expired");
     }
 
-    var relatedUser = await this.UserModel.findOne({
-      where: { id: relatedEmailoRTelValidationCode.userId },
-    });
+    let relatedUser
+
+    if(validateFor=='propertyManager'){
+      relatedUser = await this.PropertyManagerModel.findOne({
+        where: { id: relatedEmailoRTelValidationCode.userId },
+      });
+    }
+    else{
+      relatedUser = await this.TenantModel.findOne({
+        where: { id: relatedEmailoRTelValidationCode.userId },
+      });
+    }
+   
 
     if (relatedUser == null){
       throw new NotFoundError("Selected user cannot be found");
     }
+
     try {
      
       if(type==='email'){
+
         relatedUser.update({
           isEmailValid: true,
         });
@@ -675,6 +612,7 @@ class AuthenticationService {
         });
 
         return  relatedUser
+        
       }
       else{
         relatedUser.update({
@@ -693,15 +631,14 @@ class AuthenticationService {
   }
 
 
-  async  isUserExisting(emailAddress) {
-
+  async  isUserEmailExisting(emailAddress,Model) {
 
 
     try {
 
-      const existingUser = await this.UserModel.findOne({
+      const existingUser = await Model.findOne({
         where: {
-            emailAddress: emailAddress ,
+            emailAddress: emailAddress,
             isDeleted: false 
         }
       });
@@ -767,7 +704,7 @@ class AuthenticationService {
     }
 
 
-  async  sendEmailVerificationCode(emailAddress, userId) {
+  async  sendEmailVerificationCode(emailAddress, userId, validateFor) {
 
   try {
     
@@ -777,11 +714,13 @@ class AuthenticationService {
       await this.EmailandTelValidationModel.upsert({
         userId,
         type: 'email',
+        validateFor,
         verificationCode,
         expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
       }, {
         where: {
-          userId
+          userId,
+          validateFor
         }
       });
   

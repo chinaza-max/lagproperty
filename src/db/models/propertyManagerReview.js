@@ -14,11 +14,11 @@ export function init(connection) {
         autoIncrement: true
       },
       propertyManagerId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false
       },
       tenantId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false
       },
       review: {

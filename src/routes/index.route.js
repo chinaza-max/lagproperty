@@ -18,7 +18,7 @@ class Routes {
         status: 200,
         message: "Welcome to giggle  App API",
         data: {
-          service: "giggle",
+          service: "LAGProperty",
           version: "1.0.0",
         },
       });

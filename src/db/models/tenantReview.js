@@ -14,11 +14,11 @@ export function init(connection) {
         autoIncrement: true
       },
       buidingId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false
       },
       tenentId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false
       },
       review: {
@@ -26,7 +26,7 @@ export function init(connection) {
         allowNull: false
       },
       rating: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true
       },
       isDeleted: {

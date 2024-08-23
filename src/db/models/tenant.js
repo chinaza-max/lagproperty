@@ -124,7 +124,7 @@ export function init(connection) {
         type: DataTypes.ENUM(
           'residential',
           'gras',
-          'estates'
+          'estates'   
         ),
         allowNull: true,
       },
@@ -148,7 +148,7 @@ export function init(connection) {
         defaultValue:false ,
       }
     }, {
-      tableName: 'propertyManager',
+      tableName: 'Tenant',
       sequelize: connection,
       timestamps: true,
       underscored:false

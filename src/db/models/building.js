@@ -48,20 +48,34 @@ export function init(connection) {
         allowNull: false,
       },
       numberOfFloors: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       numberOfRooms: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       amenity: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.TEXT,
         allowNull: false,
+        get() {
+          const rawValue = this.getDataValue('roomPreference');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+          this.setDataValue('roomPreference', JSON.stringify(value));
+        }
       },
       roomPreference: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.TEXT,
         allowNull: false,
+        get() {
+          const rawValue = this.getDataValue('roomPreference');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+          this.setDataValue('roomPreference', JSON.stringify(value));
+        }
       },
       availability: {
         type: DataTypes.ENUM(
@@ -86,19 +100,19 @@ export function init(connection) {
         allowNull: false,
       },
       price: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       electricityBill: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       wasteBill: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       commissionBill: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       propertyDescription: {
@@ -106,11 +120,11 @@ export function init(connection) {
         allowNull: true,
       },
       bedroomSizeLength: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       bedroomSizeWidth: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       bedroomSizeImage: {
@@ -118,11 +132,11 @@ export function init(connection) {
         allowNull: true,
       },
       kitchenSizeLength: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       kitchenSizeWidth: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       kitchenSizeImage: {
@@ -130,11 +144,11 @@ export function init(connection) {
         allowNull: true,
       },
       livingRoomSizeLength: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       livingRoomSizeWidth: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       livingRoomSizeImage: {
@@ -142,11 +156,11 @@ export function init(connection) {
         allowNull: true,
       },
       diningAreaSizeLength: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: true,
       },
       diningAreaSizeWidth: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       diningAreaSizeImage: {

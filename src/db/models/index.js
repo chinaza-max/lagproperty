@@ -1,4 +1,3 @@
-import {  Sequelize } from "sequelize";
 import Tenant, { init as initTenant } from "./tenant.js";
 import TenantReview, { init as initTenantReview } from "./tenantReview.js";
 import Admin, { init as initAdmin } from "./admin.js";
@@ -59,11 +58,14 @@ function associate() {
     foreignKey: 'tenentId',
   })
 
+  Chat.belongsTo(Chat, { 
+    as: 'RepliedMessage',
+    foreignKey: 'repliedMessageId' 
+  });
 
-  
+
   //console.log(BusinessSpot.associations)
   //console.log(UserDate.associations)
-
 
   
 }

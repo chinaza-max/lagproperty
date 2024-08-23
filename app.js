@@ -20,7 +20,7 @@ class Server {
       this.port = port;
       this.mode = mode;
       this.app = express();
-     // this.initializeDbAndFirebase();
+      this.initializeDbAndFirebase();
       this.initializeMiddlewaresAndRoutes();
     }
   
@@ -61,7 +61,7 @@ class Server {
     start() {
       this.app.listen(this.port, () => {
           console.log(`Server is running on http://localhost:${this.port}`);
-      });
+      });  
     }
   }
   

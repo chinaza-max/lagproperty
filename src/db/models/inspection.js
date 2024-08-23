@@ -12,11 +12,11 @@ export function init(connection) {
         autoIncrement: true,
       },
       buidingId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       tenantId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER ,
         allowNull: false,
       },
       inspectionStatus: {
@@ -79,7 +79,7 @@ export function init(connection) {
       }
     }, {
       tableName: 'Inspection',
-      sequelize: connection,
+      sequelize: connection, 
       timestamps: true,
       underscored:false
     });

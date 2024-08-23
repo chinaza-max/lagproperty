@@ -92,10 +92,10 @@ export function init(connection) {
         type: DataTypes.ENUM(
           'landLord',
           'agent',
-          'none',
+          'unset',
         ),
         allowNull: false,
-        defaultValue:'none'
+        defaultValue:'unset'
       },
       companyName: {
         type: DataTypes.STRING,

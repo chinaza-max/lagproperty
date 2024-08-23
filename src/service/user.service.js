@@ -1,6 +1,5 @@
-import { User,Task ,
+import { 
   EmailandTelValidation,
-  TaskReponse,AsignTask
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
 import bcrypt from'bcrypt';
@@ -19,11 +18,8 @@ import {
 } from "../errors/index.js";
 
 class UserService {
-  UserModel = User;
-  TaskModel = Task;
-  AsignTaskModel = AsignTask;
+
   EmailandTelValidationModel=EmailandTelValidation
-  TaskReponseModel=TaskReponse
  
 
   
