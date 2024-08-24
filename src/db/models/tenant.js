@@ -107,12 +107,13 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      bankAccout: {
+      bankAccount: {
         type: DataTypes.STRING,
         allowNull: true,
       },
       propertyPreference: {
         type: DataTypes.ENUM(
+          'all',
           'flats',
           'duplex',
           'selfContains',
@@ -121,16 +122,16 @@ export function init(connection) {
         allowNull: true,
       },
       propertyType: {
-        type: DataTypes.ENUM(
-          'residential',
-          'gras',
-          'estates'   
-        ),
+        type: DataTypes.STRING,
         allowNull: true,
       },
       propertyType: {
         type: DataTypes.STRING,
         allowNull: true,
+      },
+      role: {
+        type: DataTypes.STRING,
+        defaultValue: 'rent',
       },
       disableAccount: {
         type: DataTypes.BOOLEAN,

@@ -119,9 +119,6 @@ class AuthenticationService {
 
   }
 
-
-
-
   
   async handleSendVerificationCodeEmailOrTel(data) {
 
@@ -379,22 +376,7 @@ class AuthenticationService {
 
 
 
-  
-  async handleGoogleCallback(data) {
-   
-    try {
-      
-     console.log(data)
 
-    } catch (error) {
-      console.log(error)
-      throw new SystemError(error.name, error.parent)
-    }
-
-   
-    
-
-  }
 
   async handleUpdateTel(data) {
     let {      

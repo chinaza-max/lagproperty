@@ -76,7 +76,7 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      agentBankAccout: {
+      agentBankAccount: {
         type: DataTypes.STRING,
         allowNull: true,
       },
@@ -84,7 +84,7 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      landlordBankAccout: {
+      landlordBankAccount: {
         type: DataTypes.STRING,
         allowNull: true,
       },
@@ -104,6 +104,10 @@ export function init(connection) {
       agentRegistrationNO: {
         type: DataTypes.STRING,
         allowNull: true,
+      },
+      role: {
+        type: DataTypes.STRING,
+        defaultValue: 'list',
       },
       disableAccount: {
         type: DataTypes.BOOLEAN,

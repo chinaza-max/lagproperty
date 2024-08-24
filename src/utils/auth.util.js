@@ -15,8 +15,6 @@ class authUtil {
   });
 
 
-   
-
   verifyHandleVerifyEmailorTel= Joi.object({
     userId: Joi.number().required(),
     validateFor: Joi.string().valid(

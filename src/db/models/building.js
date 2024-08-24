@@ -19,12 +19,8 @@ export function init(connection) {
         ),
         allowNull: false,
       },
-      propertyType: {
-        type: DataTypes.ENUM(
-          'residential',
-          'gras',
-          'estates'
-        ),
+      propertyLocation: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       propertyPreferenceImage: {

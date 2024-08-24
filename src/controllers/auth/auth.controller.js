@@ -50,7 +50,10 @@ export default class AuthenticationController {
 
       const user = await authService.handleVerifyEmailorTel(my_bj);
 
-      const token = await authService.generateToken(user.dataValues);
+
+      const generateTokenFrom={id:user.dataValues.id,role:user.dataValues.role}
+
+      const token = await authService.generateToken(generateTokenFrom);
 
       const excludedProperties = ['isDeleted', 'password'];
 
@@ -202,10 +205,13 @@ export default class AuthenticationController {
       }
       
 
+      let generateTokenFrom={id:user.dataValues.id,role:user.dataValues.role}
 
-      const token = await authService.generateToken(user.dataValues);
+      const token = await authService.generateToken(generateTokenFrom);
 
       const excludedProperties = ['isDeleted', 'password'];
+
+
 
       const modifiedUser = Object.keys(user.dataValues)
         .filter(key => !excludedProperties.includes(key))
