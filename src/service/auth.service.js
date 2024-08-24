@@ -84,7 +84,7 @@ class AuthenticationService {
           password:hashedPassword,
           image
       });
-      await this.sendEmailVerificationCode(user.emailAddress,user.id,'propertyManager')
+      await this.sendEmailVerificationCode(user.emailAddress,user.id,type)
       
       return user;
   
@@ -106,7 +106,7 @@ class AuthenticationService {
           password:hashedPassword,
           image
       });
-      await this.sendEmailVerificationCode(user.emailAddress,user.id,'tenant')
+      await this.sendEmailVerificationCode(user.emailAddress,user.id,type)
       
       return user;
   
@@ -128,31 +128,45 @@ class AuthenticationService {
     let { 
       userId,
       type,
+      validateFor
     } = await authUtil.verifyHandleSendVerificationCodeEmailOrTel.validateAsync(data);
 
-    var relatedUser = await this.UserModel.findOne({
-      where: { id: userId },
-    });
+    let relatedUser
 
+    if(validateFor=='rent'){
+      relatedUser = await this.TenantModel.findOne({
+        where: { id: userId },
+      });
+    }
+    else{
+      relatedUser = await this.PropertyManagerModel.findOne({
+        where: { id: userId },
+      });
+    }
+   
+    if(!relatedUser) throw new NotFoundError("No user found")
     if(type==='email'){
-      await this.sendEmailVerificationCode(relatedUser.emailAddress,relatedUser.id)
+      await this.sendEmailVerificationCode(relatedUser.emailAddress,relatedUser.id, validateFor)
     }else{
       await this.sendTelVerificationCode(relatedUser.tel,relatedUser.id)
     }
+
   }
 
 
 
 
-  async handlePasswordResetEmail(data) {
-    const { emailOrPhone ,type} = await authUtil.validateUserEmail.validateAsync(data);
+  async handleSendPasswordResetLink(data) {
+    const { emailOrPhone , type } = await authUtil.validateHandleSendPasswordResetLink.validateAsync(data);
 
 
-    let matchedUser=null
-    if(type=="user"){
+    let matchedUser
+
+    if(type=="list"){
 
       try {
-        matchedUser=await this.UserModel.findOne({
+
+        matchedUser=await this.PropertyManagerModel.findOne({
           where: {
         [Op.or]: [
           { emailAddress:emailOrPhone},
@@ -171,33 +185,28 @@ class AuthenticationService {
       }
 
     }
-    else if(type=="admin"){
-      matchedUser=await this.AdminModel.findOne({
-        where: {
-      [Op.or]: [
-        { emailAddress:emailOrPhone },
-        { tel: emailOrPhone }, 
-      ],
-      isEmailValid:true, 
-      isDeleted:false
-    }
-    });
-    }
-    else if(type=="business"){
-      matchedUser=await this.BusinessModel.findOne({
-        where: {
-      [Op.or]: [
-        { emailAddress:emailOrPhone },
-        { tel: emailOrPhone }, 
-      ],
-      isEmailValid:true, 
-      isDeleted:false
-    }
-    });
-    }
+    else{
+      try {
 
+        matchedUser=await this.TenantModel.findOne({
+          where: {
+        [Op.or]: [
+          { emailAddress:emailOrPhone},
+          { tel: emailOrPhone }, 
+        ],
+        isEmailValid:true, 
+        disableAccount:false, 
+        isDeleted:false
+      }
+      });
+        
+      } catch (error) {
+          console.log(error)
+          throw new SystemError(error.name , error.parent)
+      }
 
-
+    }
+    
     if (matchedUser == null){
       throw new NotFoundError("This email does not correspond to any user");
     }
@@ -217,9 +226,6 @@ class AuthenticationService {
       },
     });
 
-
-
-
     relatedPasswordReset[0]?.update({
       resetKey: generatedKey,
       expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
@@ -228,8 +234,6 @@ class AuthenticationService {
     const params = new URLSearchParams();
     params.append('key', generatedKey);
     params.append('Exkey',keyExpirationMillisecondsFromEpoch);
-
-
 
     await mailService.sendMail({
       to: matchedUser.emailAddress,
@@ -280,23 +284,18 @@ class AuthenticationService {
       let type=parts[1]
       let userId=parts[0]
 
-      if(type=='user'){
-        relatedUser = await this.UserModel.findOne({
+      if(type=='list'){
+        relatedUser = await this.PropertyManagerModel.findOne({
           where: { id: userId },
         });
       }
-      else if(type=='admin'){
-        relatedUser = await this.AdminModel.findOne({
+      else{
+        relatedUser = await this.TenantModel.findOne({
           where: { id: userId },
         });
       }
-      else if(type=='business'){
-        relatedUser = await this.BusinessModel.findOne({
-          where: { id: userId },
-        });
-      }
+     
 
-   
     if (relatedUser == null)
       throw new NotFoundError("Selected user cannot be found");
     try {
@@ -304,16 +303,6 @@ class AuthenticationService {
         password,
         Number(serverConfig.SALT_ROUNDS)
       );
-
-
-      console.log("''''===============''''")
-
-      console.log(type)
-      console.log(userId)
-      console.log(resetPasswordKey)
-      console.log(relatedUser)
-      console.log(hashedPassword)
-      console.log("''''===============''''")
 
       relatedUser.update({
         password: hashedPassword,
@@ -435,22 +424,36 @@ class AuthenticationService {
 
   async handleLoginUser(data) {
 
-    const{ emailAddress, password }=await authUtil.verifyHandleLoginUser.validateAsync(data);
+    const { 
+      emailAddress,
+      password ,
+      type
+      }=await authUtil.verifyHandleLoginUser.validateAsync(data);
 
+    let user 
 
-    const user =  await this.UserModel.findOne({
-      where: {
-        emailAddress, 
-        isEmailValid:true
-      }
-    });   
+    if(type=="list"){
 
+      user =  await this.PropertyManagerModel.findOne({
+        where: {
+          emailAddress, 
+          isEmailValid:true, 
+          isDeleted:false
+        }
+      });  
 
+    }else{
+      user =  await this.TenantModel.findOne({
+        where: {
+          emailAddress, 
+          isEmailValid:true,
+          isDeleted:false
+        }
+      });  
+    }
+    
     if (!user) throw new NotFoundError("User not found.");
 
-
-    console.log(user.password)
-    console.log(user.dataValues.password)
 
     if (!(await bcrypt.compare(password, user.password))) return null;
    
@@ -565,7 +568,7 @@ class AuthenticationService {
       type
     } = await authUtil.verifyHandleVerifyEmailorTel.validateAsync(data);
 
-    var relatedEmailoRTelValidationCode = await this.EmailandTelValidationModel.findOne({
+    let relatedEmailoRTelValidationCode = await this.EmailandTelValidationModel.findOne({
       where: {
         userId: userId,
         validateFor,
@@ -583,7 +586,7 @@ class AuthenticationService {
 
     let relatedUser
 
-    if(validateFor=='propertyManager'){
+    if(validateFor=='list'){
       relatedUser = await this.PropertyManagerModel.findOne({
         where: { id: relatedEmailoRTelValidationCode.userId },
       });
@@ -656,52 +659,6 @@ class AuthenticationService {
     }
       
   }
-
-
-
-  
-
-  async  sendEmailMarketingdata(name,
-    tel,
-    country,
-    state,
-    emailAddress,
-    emailAddress2) {
-
-    try {
-      
-    
-        try {
-            
-            await mailService.sendMail({
-              to: emailAddress2,
-              subject:"Marketing data",
-              templateName:"marketingdata",
-              variables: {
-                name,
-                tel,
-                domain:serverConfig.DOMAIN,
-                country,
-                state,
-                emailAddress,
-                email:emailAddress
-              },
-            });
-    
-        } catch (error) {
-            console.log(error)
-        }
-    
-    
-    } catch (error) {
-      console.log(error);
-    }
-  
-     
-  
-  
-  
-    }
 
 
   async  sendEmailVerificationCode(emailAddress, userId, validateFor) {

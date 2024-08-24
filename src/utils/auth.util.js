@@ -20,18 +20,22 @@ class authUtil {
   verifyHandleVerifyEmailorTel= Joi.object({
     userId: Joi.number().required(),
     validateFor: Joi.string().valid(
-      'tenant',
-      'propertyManager'
+      'rent',
+      'list'
     ).required(),
     verificationCode: Joi.number().required(),
     type: Joi.string().valid(
       'email',
-      'tel'
+      'tel'  
     ).required()
   });
 
     verifyHandleSendVerificationCodeEmailOrTel= Joi.object({
       userId: Joi.number().required(),
+      validateFor: Joi.string().valid(
+        'rent',
+        'list'
+      ).required(),
       type: Joi.string().required()
     });
     
@@ -59,18 +63,24 @@ class authUtil {
 
     verifyHandleLoginUser= Joi.object({
       password: Joi.string().required(),
+      type:Joi.string().valid(
+        'rent',
+        'list',
+        'admin',
+      ).required(),
       emailAddress: Joi.string().email().required()
-    });
+    })
     
-    validateUserEmail  = Joi.object({
+
+    validateHandleSendPasswordResetLink  = Joi.object({
       emailOrPhone: Joi.alternatives().try(
         Joi.string().email(), 
         Joi.number(), 
       ).required(),
       type: Joi.string().valid(
-        'user',
-        'admin',
-        'business'
+        'rent',
+        'list',
+        'admin'
       ).required(),
     });
  

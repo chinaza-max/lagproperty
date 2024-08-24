@@ -17,14 +17,6 @@ import {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      resetForType: {
-        type: DataTypes.ENUM(
-          'tenant',
-          'propertyManager',
-          'admin'
-        ),
-        allowNull: false,
-      },
       resetKey: {
         type: DataTypes.STRING,
         allowNull: false,

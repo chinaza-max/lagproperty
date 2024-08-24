@@ -270,7 +270,7 @@ export default class AuthenticationController {
 
 
   
-  async resetPasswordEmail(
+  async sendPasswordResetLink(
     req,
     res,
     next
@@ -278,7 +278,7 @@ export default class AuthenticationController {
     try {
 
       
-      await authService.handlePasswordResetEmail(req.body);
+      await authService.handleSendPasswordResetLink(req.body);
       return res.status(200).json({
         status: 200,
         message: "A reset link was sent to your email"
@@ -324,13 +324,13 @@ export default class AuthenticationController {
       if(data.type=='email'){
         return res.status(200).json({
           status: 200,
-          message: "verification code sent you email address",
+          message: "verification code sent to your email address",
         });
       }
       else{
         return res.status(200).json({
           status: 200,
-          message: "verification code sent you number",
+          message: "verification code sent to your number",
         });
       }
      

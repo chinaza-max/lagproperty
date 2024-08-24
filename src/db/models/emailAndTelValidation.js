@@ -26,8 +26,8 @@ import {
       },
       validateFor: {
         type: DataTypes.ENUM(
-          'tenant',
-          'propertyManager'
+          'list',
+          'rent'
         ),
         allowNull: false,
       },
