@@ -37,7 +37,7 @@ class UserService {
         image,
         ...updateData
       } = await userUtil.verifyHandleUpdateProfile.validateAsync(data);
-      
+          f
       try {
         let imageUrl=''
         if(file){
