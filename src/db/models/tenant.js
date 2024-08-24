@@ -121,11 +121,7 @@ export function init(connection) {
         ),
         allowNull: true,
       },
-      propertyType: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      propertyType: {
+      propertyLocation: {
         type: DataTypes.STRING,
         allowNull: true,
       },

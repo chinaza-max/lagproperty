@@ -24,6 +24,8 @@ class DB {
       process.exit(1);
     }*/
 
+     // console.log(serverConfig)
+
     const options= { 
       logging: console.log,
       dialect: "mysql",
@@ -33,7 +35,6 @@ class DB {
       port: Number(serverConfig.DB_PORT),
       database: serverConfig.DB_NAME,
       logQueryParameters: true,
-    
     };
     
     this.sequelize = new Sequelize(
@@ -45,13 +46,14 @@ class DB {
 
     initModels(this.sequelize);
  
+   
     if (serverConfig.NODE_ENV === "development") {
           //await this.sequelize.sync({ alter: true });
           //await this.sequelize.sync({ force: true }); 
-        }          
+        }             
 /*  
         (async () => {
-          try {
+          try {  
             const [results] = await this.sequelize.query('SHOW TABLES;');
             const tables = results.map(result => result.Tables_in_your_database_name);
             console.log('List of tables:', tables);

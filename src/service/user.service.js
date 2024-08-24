@@ -9,6 +9,7 @@ import serverConfig from "../config/server.js";
 import {  Op, Sequelize } from "sequelize";
 import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 
 import {
@@ -36,12 +37,12 @@ class UserService {
         role,
         image,
         ...updateData
-      } = await userUtil.verifyHandleUpdateProfile.validateAsync(data);
-          f
+      } = await userUtil.verifyHandleUpdateProfileList.validateAsync(data);
+      
       try {
         let imageUrl=''
         if(file){
-      
+          
           if(serverConfig.NODE_ENV == "production"){
             imageUrl =
             serverConfig.DOMAIN +
@@ -78,11 +79,18 @@ class UserService {
       let { 
         userId,
         role,
+        lasrraId,
         ...updateData
-      } = await userUtil.verifyHandleUpdateProfile.validateAsync(data);
+      } = await userUtil.verifyHandleUpdateProfileRent.validateAsync(data);
   
 
-      await this.TenantModel.update({image:imageUrl  ,...updateData}, { where: { id: userId } });
+      if(lasrraId){
+        await this.TenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
+
+      }else{
+        await this.TenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } });
+
+      }
 
 
     }
@@ -91,16 +99,19 @@ class UserService {
   }
 
 
-  async handleSubmitTask(data,file) {
+  async handleListBuilding(data,file) {
+
     let { 
       userId,
-      taskId,
-      reponse,
-    } = await userUtil.verifyHandleSubmitTask.validateAsync(data);
-
+      role,
+      image,
+      ...updateData
+    } = await userUtil.verifyHandleUpdateProfileList.validateAsync(data);
+    
+    try {
       let imageUrl=''
       if(file){
-    
+        
         if(serverConfig.NODE_ENV == "production"){
           imageUrl =
           serverConfig.DOMAIN +
@@ -110,63 +121,31 @@ class UserService {
     
           imageUrl = serverConfig.DOMAIN+file.path.replace("public", "");
         }
-    
-        
-      }
-
-      const  result=await this.TaskReponseModel.findOne({
-        where:{
-          userId,
-          taskId
-        }
-      })
-
-      const  result2=await this.TaskModel.findOne({
-        where:{
-          id:taskId
-        }
-      })
-
-      const  result3=await this.AsignTaskModel.findOne({
-        where:{
-          taskId,
-          userId
-        }
-      })
-
-      
-      if (result) throw new BadRequestError("Only 1 response is allowed");
-      if (!result2||!result3) throw new BadRequestError("No task found ");
-
-
-      try {
-
-      if(imageUrl!=''){
-        await this.TaskReponseModel.create({
-          userId:userId,
-          reponse,
-          taskId,
-          TaskResponseImage:imageUrl,
-        });
-      }else{
-        await this.TaskReponseModel.create({
-          userId:userId,
-          taskId,
-          reponse
-        });
+  
       }
 
 
-     
-        
-      } catch (error) { 
-        throw new SystemError(error.name,  error.parent)
 
-      }
+        if(file){
 
+  
+          await this.PropertyManagerModel.update({image:imageUrl  ,...updateData}, { where: { id: userId } });
+
+
+        }else{
+
+          await this.PropertyManagerModel.update(updateData, { where: { id: userId } });
+
+        }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+    }
 
   }
-  
+
+
+ 
 
 
   async  sendEmailVerificationCode(emailAddress, userId ,password) {
