@@ -41,6 +41,37 @@ export default class UserController {
   }
 
 
+
+  async listBuilding(req, res, next) {
+
+    try {
+      const data = req.body;        
+      const { files } = req;
+
+
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id,
+        role:req.user.role,
+      }
+
+       await userService.handleListBuilding(my_bj,files);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "Building listed successfully",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
 /*
 
 

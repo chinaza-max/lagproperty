@@ -2,12 +2,13 @@ import { config } from "dotenv";
 
 config();
    
+
+
 class ServerConfig {
    NODE_ENV = process.env.NODE_ENV;
    PORT = process.env.PORT;
-   DOMAIN = process.env.DOMAIN;
-   TRUSTLY_ACCESS_KEY = process.env.TRUSTLY_ACCESS_KEY;
-
+   DOMAIN = process.env.DOMAIN; 
+     
 
 
    DB_USERNAME = process.env.DB_USERNAME;
