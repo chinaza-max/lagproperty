@@ -13,7 +13,13 @@ class UserRoutes extends UserController {
   routes() {
 
     this.router.post("/updateProfile",uploadHandler.image.single('image'), this.updateProfile);
-    this.router.post("/listBuilding",uploadHandler.image.single('image'), this.listBuilding);
+    this.router.post("/listBuilding",uploadHandler.image.fields([
+      { name: 'bedroomSizeImage', maxCount: 1 }, 
+      { name: 'kitchenSizeImage', maxCount: 1 },  
+      { name: 'livingRoomSizeImage', maxCount: 1 }, 
+      { name: 'diningAreaSizeImage', maxCount: 1 },
+      { name: 'propertyTerms', maxCount: 1 },
+    ]), this.listBuilding);
 
     this.router.get("/whoIAm", this.whoIAm);
     

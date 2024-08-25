@@ -48,12 +48,10 @@ export default class UserController {
       const data = req.body;        
       const { files } = req;
 
-
-
       let my_bj = {
         ...data,
+        amenity:JSON.parse(data.amenity),
         userId:req.user.id,
-        role:req.user.role,
       }
 
        await userService.handleListBuilding(my_bj,files);

@@ -79,6 +79,7 @@ class UserService {
       let { 
         userId,
         role,
+        image,
         lasrraId,
         ...updateData
       } = await userUtil.verifyHandleUpdateProfileRent.validateAsync(data);
@@ -99,44 +100,70 @@ class UserService {
   }
 
 
-  async handleListBuilding(data,file) {
+  async handleListBuilding(data,files) {
 
     let { 
       userId,
       role,
       image,
       ...updateData
-    } = await userUtil.verifyHandleUpdateProfileList.validateAsync(data);
+    } = await userUtil.verifyHandleListBuilding.validateAsync(data);
     
+    let imageUrls = {
+      bedroomSizeImage: "",
+      kitchenSizeImage: "",
+      livingRoomSizeImage: "",
+      diningAreaSizeImage: "",
+      propertyTerms: ""
+    };
+
+
     try {
-      let imageUrl=''
-      if(file){
-        
-        if(serverConfig.NODE_ENV == "production"){
-          imageUrl =
-          serverConfig.DOMAIN +
-          file.path.replace("/home", "");
-        }
-        else if(serverConfig.NODE_ENV == "development"){
-    
-          imageUrl = serverConfig.DOMAIN+file.path.replace("public", "");
-        }
-  
+
+      if (files.bedroomSizeImage && files.bedroomSizeImage.length > 0) {
+        const bedroomFile = files.bedroomSizeImage[0];
+        imageUrls.bedroomSizeImage = serverConfig.NODE_ENV === "production"
+          ? serverConfig.DOMAIN + bedroomFile.path.replace("/home", "")
+          : serverConfig.DOMAIN + bedroomFile.path.replace("public", "");
       }
-
-
-
-        if(file){
-
   
-          await this.PropertyManagerModel.update({image:imageUrl  ,...updateData}, { where: { id: userId } });
-
-
-        }else{
-
-          await this.PropertyManagerModel.update(updateData, { where: { id: userId } });
-
-        }
+      // Handle kitchen image
+      if (files.kitchenSizeImage && files.kitchenSizeImage.length > 0) {
+        const kitchenFile = files.kitchenSizeImage[0];
+        imageUrls.kitchenSizeImage = serverConfig.NODE_ENV === "production"
+          ? serverConfig.DOMAIN + kitchenFile.path.replace("/home", "")
+          : serverConfig.DOMAIN + kitchenFile.path.replace("public", "");
+      }
+  
+      // Handle living room image
+      if (files.livingRoomSizeImage && files.livingRoomSizeImage.length > 0) {
+        const livingRoomFile = files.livingRoomSizeImage[0];
+        imageUrls.livingRoomSizeImage = serverConfig.NODE_ENV === "production"
+          ? serverConfig.DOMAIN + livingRoomFile.path.replace("/home", "")
+          : serverConfig.DOMAIN + livingRoomFile.path.replace("public", "");
+      }
+  
+      // Handle dining area image
+      if (files.diningAreaSizeImage && files.diningAreaSizeImage.length > 0) {
+        const diningAreaFile = files.diningAreaSizeImage[0];
+        imageUrls.diningAreaSizeImage = serverConfig.NODE_ENV === "production"
+          ? serverConfig.DOMAIN + diningAreaFile.path.replace("/home", "")
+          : serverConfig.DOMAIN + diningAreaFile.path.replace("public", "");
+      }
+  
+      // Handle property terms document
+      if (files.propertyTerms && files.propertyTerms.length > 0) {
+        const propertyTermsFile = files.propertyTerms[0];
+        imageUrls.propertyTerms = serverConfig.NODE_ENV === "production"
+          ? serverConfig.DOMAIN + propertyTermsFile.path.replace("/home", "")
+          : serverConfig.DOMAIN + propertyTermsFile.path.replace("public", "");
+      }     
+      
+      await this.PropertyManagerModel.create({
+        propertyManagerId:userId, 
+        ...imageUrls, 
+        ...updateData
+      });
 
     } catch (error) {
       throw new SystemError(error.name,  error.parent)

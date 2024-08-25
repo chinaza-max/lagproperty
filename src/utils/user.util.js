@@ -41,7 +41,16 @@ class UserUtil {
     agentRegistrationNO: Joi.string().required().label('Agent Registration Number'),
   });
 
+
   verifyHandleUpdateProfileRent= Joi.object({
+    userId: Joi.number().required().label('user Id'),
+    role: Joi.string().required().valid(
+      'rent',
+      'list'
+    ),
+    image: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).optional(),
     tel: Joi.number().integer().optional(),
     telCode: Joi.string().optional(),
     firstName: Joi.string().required(),
@@ -49,9 +58,9 @@ class UserUtil {
     maritalStatus: Joi.string().required(),
     gender: Joi.string().valid('Male', 'Female').optional().allow(''),
     dateOfBirth: Joi.date().required(),
-    lasrraId: Joi.string().optional(),
+    lasrraId: Joi.string().optional().allow(''),
     familySize: Joi.number().integer().required(),
-    rentalDuration: Joi.string().required(),
+    rentalDuration: Joi.number().required(),
     budgetMin: Joi.number().integer().required(),
     budgetMax: Joi.number().integer().required(),
     occupation: Joi.string().required(),
@@ -60,7 +69,9 @@ class UserUtil {
     nin: Joi.number().integer().required(),
     bankCode: Joi.string().required(),
     bankAccount: Joi.string().required(),
-    propertyPreference: Joi.string().valid('all', 'flats', 'duplex', 'selfContains', 'roomAndParlour').required(),
+    propertyPreference: Joi.array().items(
+      Joi.string().valid('all', 'flats', 'duplex', 'selfContains', 'roomAndParlour')
+    ).required(),
     propertyLocation: Joi.string().required()
   });
 
@@ -71,7 +82,44 @@ class UserUtil {
 
 
 
-
+  verifyHandleListBuilding= Joi.object({
+    propertyPreference: Joi.string()
+        .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
+        .required(),
+    propertyLocation: Joi.string().required(),
+    city: Joi.string().required(),
+    address: Joi.string().required(),
+    lat: Joi.string().required(),
+    lng: Joi.string().required(),
+    numberOfFloors: Joi.number().integer().optional(),
+    numberOfRooms: Joi.number().integer().optional(),
+    amenity: Joi.array().items(Joi.string()).required(),
+    roomPreference: Joi.array().items(Joi.string()).required(),
+    availability: Joi.string()
+        .valid('vacant', 'occupied')
+        .required(),
+    furnishingStatus: Joi.string()
+        .valid('furnished', 'unfurnished', 'partly furnished')
+        .required(),
+    rentalDuration: Joi.string().required(),
+    price: Joi.number().integer().required(),
+    electricityBill: Joi.number().integer().required(),
+    wasteBill: Joi.number().integer().required(),
+    commissionBill: Joi.number().integer().required(),
+    propertyDescription: Joi.string().optional(),
+    bedroomSizeLength: Joi.number().integer().optional(),
+    bedroomSizeWidth: Joi.number().integer().optional(),
+    bedroomSizeImage: Joi.string().uri().optional(),
+    kitchenSizeLength: Joi.number().integer().optional(),
+    kitchenSizeWidth: Joi.number().integer().optional(),
+    kitchenSizeImage: Joi.string().uri().optional(),
+    livingRoomSizeLength: Joi.number().integer().optional(),
+    livingRoomSizeWidth: Joi.number().integer().optional(),
+    livingRoomSizeImage: Joi.string().uri().optional(),
+    diningAreaSizeLength: Joi.number().integer().optional(),
+    diningAreaSizeWidth: Joi.number().integer().optional(),
+    diningAreaSizeImage: Joi.string().uri().optional(),
+});
 
 }
 

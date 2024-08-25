@@ -68,7 +68,7 @@ export function init(connection) {
         allowNull: true,
       },
       rentalDuration: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       budgetMin: {
@@ -112,14 +112,28 @@ export function init(connection) {
         allowNull: true,
       },
       propertyPreference: {
-        type: DataTypes.ENUM(
-          'all',
-          'flats',
-          'duplex',
-          'selfContains',
-          'roomAndParlour',
-        ),
+        type: DataTypes.TEXT,
         allowNull: true,
+        get() {
+          const rawValue = this.getDataValue('propertyPreference');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+          if (Array.isArray(value)) {
+            this.setDataValue('propertyPreference', JSON.stringify(value));
+          } else {
+            this.setDataValue('propertyPreference', JSON.stringify([]));
+          }
+        },
+        validate: {
+          isValidJSON(value) {
+            try {
+              JSON.parse(value);
+            } catch (e) {
+              throw new Error('Invalid JSON string for propertyPreference');
+            }
+          }
+        }
       },
       propertyLocation: {
         type: DataTypes.STRING,

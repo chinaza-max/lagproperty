@@ -51,12 +51,21 @@ function associate() {
 
 
   Building.hasMany(Inspection, {
-    foreignKey: 'tenentId',
+    foreignKey: 'buidingId',
     as: "BuildingInspection",
   });
   Inspection.belongsTo(Building, {
-    foreignKey: 'tenentId',
+    foreignKey: 'buidingId',
   })
+
+  PropertyManager.hasMany(Building, {
+    foreignKey: 'propertyManagerId',
+    as: "propertyManagerBuilding",
+  });
+  Building.belongsTo(PropertyManager, {
+    foreignKey: 'propertyManagerId',
+  })
+
 
   Chat.belongsTo(Chat, { 
     as: 'RepliedMessage',

@@ -10,6 +10,10 @@ export function init(connection) {
         primaryKey: true,
         autoIncrement: true,
       },
+      propertyManagerId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       propertyPreference: {
         type: DataTypes.ENUM(
           'flats',
@@ -21,10 +25,6 @@ export function init(connection) {
       },
       propertyLocation: {
         type: DataTypes.STRING,
-        allowNull: false,
-      },
-      propertyPreferenceImage: {
-        type: DataTypes.TEXT,
         allowNull: false,
       },
       city: {
@@ -160,6 +160,10 @@ export function init(connection) {
         allowNull: true,
       },
       diningAreaSizeImage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      propertyTerms: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
