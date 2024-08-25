@@ -31,8 +31,8 @@ export default class UserController {
         status: 200,
         message: "updated successfully",
       });
-      
-     
+       
+        
     } catch (error) {
       console.log(error);
       next(error)
@@ -68,6 +68,37 @@ export default class UserController {
     }
     
   }
+
+
+  async inspectionAction(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id,
+        role:req.user.role
+      }
+
+       await userService.handleInspectionAction(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "updated successfully",
+      });
+       
+        
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
+
+
 
 
 /*

@@ -49,6 +49,7 @@ function associate() {
     foreignKey: 'tenentId',
   })
 
+  
 
   Building.hasMany(Inspection, {
     foreignKey: 'buidingId',

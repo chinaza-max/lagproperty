@@ -1,6 +1,9 @@
 import { 
   EmailandTelValidation,
   PropertyManager,
+  Building,
+  Transaction,
+  Inspection,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -19,13 +22,17 @@ import {
   SystemError
 
 } from "../errors/index.js";
+import { Console } from "console";
+import { type } from "os";
 
 class UserService {
 
   EmailandTelValidationModel=EmailandTelValidation
   PropertyManagerModel=PropertyManager
+  BuildingModel=Building
   TenantModel=Tenant
-
+  TransactionModel=Transaction
+  InspectionModel=Inspection
 
 
   async handleUpdateProfile(data,file) {
@@ -85,14 +92,17 @@ class UserService {
       } = await userUtil.verifyHandleUpdateProfileRent.validateAsync(data);
   
 
-      if(lasrraId){
-        await this.TenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
-
-      }else{
-        await this.TenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } });
+      try {
+        if(lasrraId){
+          await this.TenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
+  
+        }else{
+          await this.TenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } })
+        }
+      } catch (error) {
+        throw new SystemError(error.name,  error.parent)
 
       }
-
 
     }
 
@@ -159,19 +169,155 @@ class UserService {
           : serverConfig.DOMAIN + propertyTermsFile.path.replace("public", "");
       }     
       
-      await this.PropertyManagerModel.create({
+      await this.BuildingModel.create({
         propertyManagerId:userId, 
         ...imageUrls, 
         ...updateData
       });
 
     } catch (error) {
+
+      console.log(error )
       throw new SystemError(error.name,  error.parent)
     }
 
   }
 
 
+  
+  async handleInspectionAction(data) {
+
+    let { 
+    userId,
+    role,
+    type,
+    page , 
+    pageSize, 
+    transactionId,
+    inspectionId,
+    buildingId,
+    tenantId,
+    inspectionMode,
+    fullDate,
+    inspectionStatus,
+    inspectionDeclineMessage,
+    emailAddress,
+    tel,
+    fullName,
+    gender,
+    note,
+    } = await userUtil.verifyHandleInspectionAction.validateAsync(data);
+    
+
+    try {
+      // Calculate offset for pagination
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
+  
+      if (type === 'getNotCreatedInspection') {
+        const notCreatedInspections = await this.InspectionModel.findAndCountAll({
+          where: { inspectionStatus: 'notCreated', isDeleted: false },
+          limit,
+          offset,
+        });
+        return {
+          data: notCreatedInspections.rows,
+          totalItems: notCreatedInspections.count,
+          currentPage: page,
+          totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+        };
+  
+      } else if (type === 'getPendingInspection') {
+        const pendingInspections = await this.InspectionModel.findAndCountAll({
+          where: { inspectionStatus: 'pending', isDeleted: false },
+          limit,
+          offset,
+        });
+        return {
+          data: pendingInspections.rows,
+          totalItems: pendingInspections.count,
+          currentPage: page,
+          totalPages: Math.ceil(pendingInspections.count / pageSize),
+        };
+  
+      } else if (type === 'getDeclineInspection') {
+        const declinedInspections = await this.InspectionModel.findAndCountAll({
+          where: { inspectionStatus: 'decline', isDeleted: false },
+          limit,
+          offset,
+        });
+        return {
+          data: declinedInspections.rows,
+          totalItems: declinedInspections.count,
+          currentPage: page,
+          totalPages: Math.ceil(declinedInspections.count / pageSize),
+        };
+  
+      } else if (type === 'getAcceptedInspection') {
+        const acceptedInspections = await this.InspectionModel.findAndCountAll({
+          where: { inspectionStatus: 'accepted', isDeleted: false },
+          limit,
+          offset,
+        });
+        return {
+          data: acceptedInspections.rows,
+          totalItems: acceptedInspections.count,
+          currentPage: page,
+          totalPages: Math.ceil(acceptedInspections.count / pageSize),
+        };
+  
+      } else if (type === 'createInspection') {
+
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        });
+
+        await inspection.update({
+          userId,
+          transactionId,
+          buildingId,
+          tenantId,
+          inspectionMode,
+          fullDate,
+          emailAddress,
+          tel,
+          fullName,
+          gender,
+          inspectionStatus: 'pending',
+        });
+  
+        return inspection;
+
+       
+  
+      } else if (type === 'updateInspection') {
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        });
+  
+        if (!inspection) {
+          throw new Error('Inspection not found');
+        }
+  
+        await inspection.update({
+          inspectionStatus,
+          inspectionDeclineMessage,
+        });
+  
+        return inspection;
+  
+      } else {
+        throw new Error('Invalid action type');
+      }
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+ 
+
+
+  }
  
 
 

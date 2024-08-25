@@ -3,6 +3,9 @@ import bcrypt from'bcrypt';
 import { Tenant, 
      PropertyManager, 
      PasswordReset , 
+     Transaction , 
+     Building , 
+     Inspection , 
      EmailandTelValidation
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
@@ -24,6 +27,11 @@ class AuthenticationService {
   PropertyManagerModel=PropertyManager
   PasswordResetModel=PasswordReset
   EmailandTelValidationModel=EmailandTelValidation
+  TransactionModel=Transaction
+  BuildingModel=Building
+  InspectionModel=Inspection
+
+  
 
    
 
@@ -259,6 +267,57 @@ class AuthenticationService {
   }
 
 
+
+  async handleWebHookMonify(data) {
+
+    const { eventType, eventData } = data
+
+    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType } = eventData;
+
+    try {
+
+      const existingTransaction  = await this.TransactionModel.findOne({
+        where: { transactionReference },
+      });
+
+      if(existingTransaction ) return
+
+      const transaction = await this.TransactionModel.create({
+        userId,
+        buildingId,
+        amount,
+        transactionReference,
+        paymentReference,
+        transactionType,
+      });
+
+      const transactionStatus = await getTransactionStatus(transactionReference);
+
+      transaction.paymentStatus = transactionStatus.paymentStatus;
+      await transaction.save();
+
+      if(transaction.paymentStatus=="PAID"){
+
+        const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
+        BuildingModelResponse.update({
+          availability:"booked"
+        })
+
+        const InspectionModelResponse = await this.InspectionModel.create({
+          
+        });
+
+     
+
+
+      }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+    }
+
+  }
+
   async handleResetPassword(data) {
 
     var {  password, resetPasswordKey } =
@@ -312,8 +371,47 @@ class AuthenticationService {
     }
   }
 
+  async  getAuthTokenMonify() {
 
+    const apiKey = serverConfig.MONNIFY_API_KEY;
+    const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
+    const authHeader = `Basic ${base64.encode(`${apiKey}:${clientSecret}`)}`;
+    
 
+    try {
+      const response = await axios.post(`${serverConfig.MONNIFY_BASE_URL}/api/v1/auth/login`, {}, {
+        headers: {
+          Authorization: authHeader,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      return response.data.responseBody.accessToken;
+    } catch (error) {
+      console.error('Error fetching auth token:', error);
+      throw error;
+    }
+  }
+  
+
+  async  getTransactionStatus(transactionReference) {
+    const authToken = await this.getAuthToken();
+  
+    try {
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/merchant/transactions/query?transactionReference=${transactionReference}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      return response.data.responseBody;
+    } catch (error) {
+      console.error('Error fetching transaction status:', error);
+      throw error;
+    }
+  }
+  
 
   async handleUploadPicture(data,file) {
     

@@ -1,5 +1,5 @@
 import authService from "../../service/auth.service.js";
-//import { User,EmailandTelValidation } from "../../db/models/index.js";
+import serverConfig  from "../../config/server.js";
 
 
 export default class AuthenticationController {
@@ -295,6 +295,28 @@ export default class AuthenticationController {
   }
 
 
+  
+
+  async webHookMonify(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      await authService.handleWebHookMonify(req.body);
+
+      return res.status(200).json({
+        status: 200,
+        message: "web hook received successufully"
+      })
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
 
   async resetPassword(
     req,
@@ -423,6 +445,29 @@ export default class AuthenticationController {
     }
     
   }
+
+
+  validateMonnifyIP = (req, res, next) => {
+    const clientIP = req.ip;
+    if (clientIP !== serverConfig.MONNIFY_IP) {
+      return res.status(403).send('Unauthorized IP');
+    }
+    next();
+  };
+
+  validateTransactionHash = (req, res, next) => {
+    const monnifySignature = req.headers['monnify-signature'];
+    const payload = JSON.stringify(req.body);
+    const computedHash = crypto
+      .createHmac('sha512', serverConfig.CLIENT_SECRET_MONIFY)
+      .update(payload)
+      .digest('hex');
+  
+    if (computedHash !== monnifySignature) {
+      return res.status(400).send('Invalid signature');
+    }
+    next();
+  };
 
 
 }

@@ -11,6 +11,10 @@ export function init(connection) {
         primaryKey: true,
         autoIncrement: true,
       },
+      transactionId: {
+        type: DataTypes.INTEGER ,
+        allowNull: false,
+      },
       buidingId: {
         type: DataTypes.INTEGER ,
         allowNull: false,
@@ -18,6 +22,14 @@ export function init(connection) {
       tenantId: {
         type: DataTypes.INTEGER ,
         allowNull: false,
+      },
+      propertyManagerStatus: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      tenentStatus: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
       },
       inspectionStatus: {
         type: DataTypes.ENUM(
@@ -42,11 +54,11 @@ export function init(connection) {
       },
       fullDate: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
       },
       emailAddress: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       tel: {
         type: DataTypes.INTEGER,
@@ -54,18 +66,18 @@ export function init(connection) {
       },
       fullName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       gender: {
         type: DataTypes.ENUM(
             'Male',
             'Female'
         ),
-        allowNull: false,
+        allowNull: true,
       },
       note: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,

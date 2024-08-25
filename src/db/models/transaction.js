@@ -19,25 +19,17 @@ export function init(connection) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      transactionId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      transactionStatus: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       amount: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      propertyManagerStatus: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
+      transactionReference: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
-      tenentStatus: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
+      paymentReference: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       transactionType: {
         type: DataTypes.ENUM(
@@ -47,6 +39,11 @@ export function init(connection) {
             'refund'
           ),
         allowNull: false,
+      },
+      paymentStatus: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue:'unverified',
       },
       isDeleted: {
         type: DataTypes.BOOLEAN,

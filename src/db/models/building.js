@@ -55,28 +55,22 @@ export function init(connection) {
         type: DataTypes.TEXT,
         allowNull: false,
         get() {
-          const rawValue = this.getDataValue('roomPreference');
+          const rawValue = this.getDataValue('amenity');
           return rawValue ? JSON.parse(rawValue) : [];
         },
         set(value) {
-          this.setDataValue('roomPreference', JSON.stringify(value));
+          this.setDataValue('amenity', JSON.stringify(value));
         }
       },
       roomPreference: {
         type: DataTypes.TEXT,
         allowNull: false,
-        get() {
-          const rawValue = this.getDataValue('roomPreference');
-          return rawValue ? JSON.parse(rawValue) : [];
-        },
-        set(value) {
-          this.setDataValue('roomPreference', JSON.stringify(value));
-        }
       },
       availability: {
         type: DataTypes.ENUM(
           'vacant',
-          'occupied'
+          'occupied',
+          'booked'
         ),
         defaultValue:'vacant',
         allowNull: false,

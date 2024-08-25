@@ -21,6 +21,10 @@ class UserRoutes extends UserController {
       { name: 'propertyTerms', maxCount: 1 },
     ]), this.listBuilding);
 
+
+    this.router.post("/inspectionAction", this.inspectionAction);
+
+
     this.router.get("/whoIAm", this.whoIAm);
     
 

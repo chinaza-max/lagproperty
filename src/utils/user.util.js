@@ -75,6 +75,115 @@ class UserUtil {
     propertyLocation: Joi.string().required()
   });
 
+  verifyHandleInspectionAction=Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('tenant', 'propertyManager').required(),
+    type: Joi.string()
+      .valid(
+        'getNotCreatedInspection',
+        'getPendingInspection',
+        'getDeclineInspection',
+        'getAcceptedInspection',
+        'createInspection',
+        'updateInspection'
+      )
+      .required()
+      .label('Type'),
+      
+      pageSize: Joi.number()
+      .integer()
+      .min(1)
+      .when('type', {
+        is: Joi.string().valid(
+          'getNotCreatedInspection', 
+          'getPendingInspection',
+          'getDeclineInspection',
+          'getAcceptedInspection'
+        ),
+        then: Joi.required(),
+        otherwise: Joi.forbidden(),
+      }),
+      page: Joi.number()
+      .integer()
+      .min(1)
+      .when('type', {
+        is: Joi.string().valid(
+          'getNotCreatedInspection', 
+          'getPendingInspection',
+          'getDeclineInspection',
+          'getAcceptedInspection'
+        ),
+        then: Joi.required(),
+        otherwise: Joi.forbidden(),
+      }),
+    transactionId: Joi.number().when('type', {
+      is: 'createInspection',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+    buildingId: Joi.number().when('type', {
+      is: 'createInspection',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+    tenantId: Joi.number().when('type', {
+      is: 'createInspection',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+    inspectionMode: Joi.string()
+      .valid('inPerson', 'videoChat')
+      .when('type', {
+        is: 'createInspection',
+        then: Joi.optional(),
+        otherwise: Joi.forbidden(),
+      }),
+    fullDate: Joi.date().when('type', {
+      is: 'createInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+    inspectionStatus: Joi.string()
+      .valid('pending', 'accepted', 'decline', 'notCreated')
+      .when('type', {
+        is: 'updateInspection',
+        then: Joi.required(),
+        otherwise: Joi.forbidden(),
+      }),
+    inspectionDeclineMessage: Joi.string().when('type', {
+      is: 'updateInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+    emailAddress: Joi.string().email().when('type', {
+      is: 'createInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+    tel: Joi.number().when('type', {
+      is: 'createInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+    fullName: Joi.string().when('type', {
+      is: 'createInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+    gender: Joi.string()
+      .valid('Male', 'Female')
+      .when('type', {
+        is: 'createInspection',
+        then: Joi.optional(),
+        otherwise: Joi.forbidden(),
+      }),
+    note: Joi.string().when('type', {
+      is: 'createInspection',
+      then: Joi.optional(),
+      otherwise: Joi.forbidden(),
+    }),
+  });
+
 
   verifyHandleWhoIAm=Joi.object({
     userId: Joi.number().required()
@@ -83,6 +192,7 @@ class UserUtil {
 
 
   verifyHandleListBuilding= Joi.object({
+    userId: Joi.number().required(),
     propertyPreference: Joi.string()
         .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
         .required(),
@@ -94,7 +204,7 @@ class UserUtil {
     numberOfFloors: Joi.number().integer().optional(),
     numberOfRooms: Joi.number().integer().optional(),
     amenity: Joi.array().items(Joi.string()).required(),
-    roomPreference: Joi.array().items(Joi.string()).required(),
+    roomPreference:Joi.string().required(),
     availability: Joi.string()
         .valid('vacant', 'occupied')
         .required(),
