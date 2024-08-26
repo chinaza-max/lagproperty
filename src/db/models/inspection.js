@@ -11,11 +11,11 @@ export function init(connection) {
         primaryKey: true,
         autoIncrement: true,
       },
-      transactionId: {
+      transactionReference: {
         type: DataTypes.INTEGER ,
         allowNull: false,
       },
-      buidingId: {
+      buildingId: {
         type: DataTypes.INTEGER ,
         allowNull: false,
       },

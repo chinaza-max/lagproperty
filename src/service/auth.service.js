@@ -272,7 +272,7 @@ class AuthenticationService {
 
     const { eventType, eventData } = data
 
-    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType } = eventData;
+    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType,  inspectionMode} = eventData;
 
     try {
 
@@ -296,19 +296,19 @@ class AuthenticationService {
       transaction.paymentStatus = transactionStatus.paymentStatus;
       await transaction.save();
 
-      if(transaction.paymentStatus=="PAID"){
+      if(transaction.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
 
         const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
         BuildingModelResponse.update({
           availability:"booked"
         })
 
-        const InspectionModelResponse = await this.InspectionModel.create({
-          
+        await this.InspectionModel.create({
+          transactionReference,
+          buildingId,
+          tenantId:userId,
+          inspectionMode,
         });
-
-     
-
 
       }
 

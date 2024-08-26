@@ -7,6 +7,8 @@ import systemMiddleware from "./src/middlewares/system.middleware.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import cron from "node-cron"
+
 //import {  Op } from "sequelize";
      
    
@@ -26,6 +28,13 @@ class Server {
   
     async initializeDbAndFirebase(){
         await DB.connectDB()
+
+
+        cron.schedule('0 */2 * * *', async () => {
+
+
+          
+        })
     }
      
     initializeMiddlewaresAndRoutes(){

@@ -1,3 +1,4 @@
+import ProspectiveTenant, { init as initProspectiveTenant } from "./prospectiveTenant.js";
 import Tenant, { init as initTenant } from "./tenant.js";
 import TenantReview, { init as initTenantReview } from "./tenantReview.js";
 import Admin, { init as initAdmin } from "./admin.js";
@@ -14,12 +15,13 @@ import Transaction , { init as initTransaction } from "./transaction.js";
 
 function associate() {
 
-  Tenant.hasMany(TenantReview, {
-    foreignKey: 'tenentId',
-    as: "TenantReview",
+
+  ProspectiveTenant.hasMany(Tenant, {
+    foreignKey: 'prospectiveTenantId',
+    as: "rentalhistory",
   });
-  TenantReview.belongsTo(Tenant, {
-    foreignKey: 'tenentId',
+  Tenant.belongsTo(ProspectiveTenant, {
+    foreignKey: 'prospectiveTenantId',
   })
 
 
@@ -41,15 +43,13 @@ function associate() {
   })
 
 
-  Tenant.hasMany(Inspection, {
+  ProspectiveTenant.hasMany(Inspection, {
     foreignKey: 'tenentId',
     as: "Inspection",
   });
-  Inspection.belongsTo(Tenant, {
+  Inspection.belongsTo(ProspectiveTenant, {
     foreignKey: 'tenentId',
   })
-
-  
 
   Building.hasMany(Inspection, {
     foreignKey: 'buidingId',
@@ -92,7 +92,7 @@ async function authenticateConnection(connection) {
 export {
   PasswordReset,
   EmailandTelValidation,
-  Tenant,
+  ProspectiveTenant,
   TenantReview,
   Admin,
   Building,
@@ -100,11 +100,12 @@ export {
   Inspection,
   PropertyManager,
   PropertyManagerReview,
-  Transaction
+  Transaction,
+  Tenant
 }
 
 export function init(connection) {
-  initTenant(connection);
+  initProspectiveTenant(connection);
   initTenantReview(connection);
   initAdmin(connection);
   initBuilding(connection);
@@ -115,6 +116,7 @@ export function init(connection) {
   initPropertyManager(connection)
   initPropertyManagerReview(connection)
   initTransaction(connection)
+  initTenant(connection)
 
   associate();
   authenticateConnection(connection)
