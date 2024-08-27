@@ -85,7 +85,9 @@ class UserUtil {
         'getDeclineInspection',
         'getAcceptedInspection',
         'createInspection',
-        'updateInspection'
+        'refund',
+        'accept',
+        'decline'
       )
       .required()
       .label('Type'),
@@ -116,21 +118,7 @@ class UserUtil {
         then: Joi.required(),
         otherwise: Joi.forbidden(),
       }),
-    transactionId: Joi.number().when('type', {
-      is: 'createInspection',
-      then: Joi.required(),
-      otherwise: Joi.optional(),
-    }),
-    buildingId: Joi.number().when('type', {
-      is: 'createInspection',
-      then: Joi.required(),
-      otherwise: Joi.optional(),
-    }),
-    tenantId: Joi.number().when('type', {
-      is: 'createInspection',
-      then: Joi.required(),
-      otherwise: Joi.optional(),
-    }),
+    
     inspectionMode: Joi.string()
       .valid('inPerson', 'videoChat')
       .when('type', {
@@ -143,6 +131,8 @@ class UserUtil {
       then: Joi.optional(),
       otherwise: Joi.forbidden(),
     }),
+
+
     inspectionStatus: Joi.string()
       .valid('pending', 'accepted', 'decline', 'notCreated')
       .when('type', {

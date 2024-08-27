@@ -4,9 +4,12 @@ import {
   Building,
   Transaction,
   Inspection,
+  RefundLog,
+  ProspectiveTenant,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
+import authService from "../service/auth.service.js";
 import bcrypt from'bcrypt';
 import serverConfig from "../config/server.js";
 import {  Op, Sequelize } from "sequelize";
@@ -33,6 +36,11 @@ class UserService {
   TenantModel=Tenant
   TransactionModel=Transaction
   InspectionModel=Inspection
+  RefundLogModel=RefundLog
+  ProspectiveTenantModel=ProspectiveTenant
+
+
+  
 
 
   async handleUpdateProfile(data,file) {
@@ -193,7 +201,7 @@ class UserService {
     type,
     page , 
     pageSize, 
-    transactionId,
+    transactionReference,
     inspectionId,
     buildingId,
     tenantId,
@@ -273,12 +281,8 @@ class UserService {
         });
 
         await inspection.update({
-          userId,
-          transactionId,
-          buildingId,
-          tenantId,
           inspectionMode,
-          fullDate,
+          fullDate,      
           emailAddress,
           tel,
           fullName,
@@ -287,27 +291,107 @@ class UserService {
         });
   
         return inspection;
-
-       
   
-      } else if (type === 'updateInspection') {
+      }
+      else if (type === 'refund') {
+
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        });
+
+        const RefundLogModelResult2 = await this.RefundLogModel.findOne({
+          where: { transactionReference: inspectionId.transactionReference, isDeleted: false }
+        });
+
+
+        if(RefundLogModelResult2.refundStatus!='COMPLETED'){
+
+    
+
+        const transactionResult = await this.TransactionModel.findOne({
+          where: { transactionReference: inspection.transactionReference, 
+            isDeleted: false }
+        });
+
+        const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
+          where: { transactionReference: inspection.transactionReference, 
+            isDeleted: false }
+        });
+      
+        if (!inspection) {
+          throw new NotFoundError('Inspection not found');
+        }
+
+        const refund = await this.RefundLogModel.create({
+          transactionReference: inspection.transactionReference,
+        });
+
+
+        const authToken = await authService.getAuthTokenMonify();
+
+        const refundMetaData={
+          transactionReference: inspection.transactionReference,
+          refundReference :refund.id,
+          refundAmount: transactionResult.amount, 
+          refundReason: note, 
+          customerNote:note,
+          destinationAccountNumber: ProspectiveTenantResult.bankAccount,
+          destinationAccountBankCode: ProspectiveTenantResult.bankCode
+        }
+
+        const refundResponse = await this.initiateRefund(refundMetaData ,authToken);
+      
+        if (refundResponse.responseBody.refundStatus=="COMPLETED") {
+          const RefundLogModelResult = await this.RefundLogModel.findByPk(refundResponse.responseBody.refundReference);
+          await RefundLogModelResult.update({
+            inspectionStatus: 'refunded',
+            refundStatus: refundResponse.responseBody.refundStatus,
+            note
+          });
+      
+          return inspection;
+        } else {
+          // Handle the failure scenario, e.g., by throwing an error or logging it
+          throw new Error('Refund failed: ' + refundResponse.responseMessage);
+        }
+
+        }
+        else{
+
+          return "refund already made "
+        }
+      }      
+      else if (type === 'accept') {
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        })
+  
+        if (!inspection) {
+          throw new NotFoundError('Inspection not found');
+        }
+        
+        await inspection.update({
+          inspectionStatus:'accepted',
+        });
+  
+        return inspection;
+  
+      }
+      else if (type === 'decline') {
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         });
   
         if (!inspection) {
-          throw new Error('Inspection not found');
+          throw new NotFoundError('Inspection not found');
         }
   
         await inspection.update({
-          inspectionStatus,
-          inspectionDeclineMessage,
+          inspectionStatus:'decline',
         });
   
         return inspection;
   
-      } else {
-        throw new Error('Invalid action type');
       }
     } catch (error) {
 
@@ -318,8 +402,34 @@ class UserService {
 
 
   }
- 
 
+
+  async  initiateRefund(refundMetaData, authToken) {
+    const refundPayload = {
+      transactionReference: refundMetaData.transactionReference,
+      refundReference:refundMetaData.refundReference , //: `REFUND-${Date.now()}`, 
+      refundAmount: refundMetaData.refundAmount, 
+      refundReason: refundMetaData.refundReason, 
+      customerNote:refundMetaData.customerNote,
+      destinationAccountNumber: refundMetaData.destinationAccountNumber, // Assuming this field exists
+      destinationAccountBankCode: refundMetaData.destinationAccountBankCode // Assuming this field exists
+    };
+  
+    try {
+      const refundResponse = await axios.post(`${serverConfig.MONNIFY_BASE_URL}/api/v1/refunds/initiate-refund`, refundPayload, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`, // Replace with actual token generation logic
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      return refundResponse.data;
+    } catch (error) {
+      // Log or rethrow the error for further handling
+      throw new Error('Refund request failed: ' + error.message);
+    }
+  }
+  
 
   async  sendEmailVerificationCode(emailAddress, userId ,password) {
 

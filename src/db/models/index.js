@@ -10,6 +10,7 @@ import PasswordReset, { init as initPasswordReset } from "./passwordReset.js";
 import PropertyManager, { init as initPropertyManager } from "./propertyManager.js";
 import PropertyManagerReview, { init as initPropertyManagerReview } from "./propertyManagerReview.js";
 import Transaction , { init as initTransaction } from "./transaction.js";
+import RefundLog , { init as initRefundLog } from "./RefundLog.js";
 
 
 
@@ -101,6 +102,7 @@ export {
   PropertyManager,
   PropertyManagerReview,
   Transaction,
+  RefundLog,
   Tenant
 }
 
@@ -117,6 +119,7 @@ export function init(connection) {
   initPropertyManagerReview(connection)
   initTransaction(connection)
   initTenant(connection)
+  initRefundLog(connection)
 
   associate();
   authenticateConnection(connection)

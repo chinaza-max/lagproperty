@@ -18,7 +18,7 @@ export function init(connection) {
         allowNull: false
       },
       tenantId: {
-        type: DataTypes.INTEGER ,
+        type: DataTypes.INTEGER,
         allowNull: false
       },
       review: {

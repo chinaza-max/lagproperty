@@ -4,6 +4,7 @@ import { Tenant,
      PropertyManager, 
      PasswordReset , 
      Transaction , 
+     RefundLog , 
      Building , 
      Inspection , 
      EmailandTelValidation
@@ -24,12 +25,15 @@ import { Op } from "sequelize";
 
 class AuthenticationService {
   TenantModel = Tenant;
-  PropertyManagerModel=PropertyManager
-  PasswordResetModel=PasswordReset
-  EmailandTelValidationModel=EmailandTelValidation
-  TransactionModel=Transaction
-  BuildingModel=Building
-  InspectionModel=Inspection
+  PropertyManagerModel=PropertyManager;
+  PasswordResetModel=PasswordReset;
+  EmailandTelValidationModel=EmailandTelValidation;
+  TransactionModel=Transaction;
+  BuildingModel=Building;
+  InspectionModel=Inspection;
+  RefundLogModel=RefundLog
+
+  
 
   
 
@@ -53,7 +57,6 @@ class AuthenticationService {
       };
     }
   }
-
 
 
   async handleUserCreation(data,file) {
@@ -157,9 +160,6 @@ class AuthenticationService {
     }
 
   }
-
-
-
 
   async handleSendPasswordResetLink(data) {
     const { emailOrPhone , type } = await authUtil.validateHandleSendPasswordResetLink.validateAsync(data);
@@ -267,12 +267,11 @@ class AuthenticationService {
   }
 
 
-
   async handleWebHookMonify(data) {
 
     const { eventType, eventData } = data
 
-    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType,  inspectionMode} = eventData;
+    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType} = eventData;
 
     try {
 
@@ -291,7 +290,7 @@ class AuthenticationService {
         transactionType,
       });
 
-      const transactionStatus = await getTransactionStatus(transactionReference);
+      const transactionStatus = await this.getTransactionStatus(transactionReference);
 
       transaction.paymentStatus = transactionStatus.paymentStatus;
       await transaction.save();
@@ -301,13 +300,12 @@ class AuthenticationService {
         const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
         BuildingModelResponse.update({
           availability:"booked"
-        })
+        });
 
         await this.InspectionModel.create({
           transactionReference,
           buildingId,
           tenantId:userId,
-          inspectionMode,
         });
 
       }
@@ -395,7 +393,7 @@ class AuthenticationService {
   
 
   async  getTransactionStatus(transactionReference) {
-    const authToken = await this.getAuthToken();
+    const authToken = await this.getAuthTokenMonify();
   
     try {
       const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/merchant/transactions/query?transactionReference=${transactionReference}`, {
@@ -409,6 +407,130 @@ class AuthenticationService {
     } catch (error) {
       console.error('Error fetching transaction status:', error);
       throw error;
+    }
+  }
+  
+  
+  async  updateTransactionStatusCronJob(transaction, status) {
+    try {
+      transaction.paymentStatus = status;
+      await transaction.save();
+
+      if(status=="PAID"&&transaction.transactionType=='appointmentAndRent'){
+
+        const BuildingModelResponse = await this.BuildingModel.findByPk(transaction.buildingId);
+        BuildingModelResponse.update({
+          availability:"booked"
+        })
+
+        await this.InspectionModel.create({
+          transactionReference,
+          buildingId:transaction.buildingId,
+          tenantId:transaction.userId,
+        });
+
+      }
+
+      console.log(`Transaction ${transaction.transactionReference} updated to ${status}`);
+    } catch (error) {
+      console.error('Error updating transaction:', error.message);
+    }
+  }
+
+
+  async checktransactionUpdate() {
+    try {
+      // Get all transactions with 'pending' or 'unverified' status
+      const transactions = await this.TransactionModel.findAll({
+        where: {
+          paymentStatus: ['pending', 'unverified']
+        }
+      });
+  
+      if (transactions.length > 0) {
+
+        // Get Monify authentication token
+        const authToken = await this.getAuthTokenMonify();
+        if (!authToken) return;
+  
+        // Check and update each transaction
+        for (const transaction of transactions) {
+
+          const transactionStatus = await getTransactionStatus(transaction.transactionReference, authToken);
+  
+          if (transactionStatus) {
+            await this.updateTransactionStatusCronJob(transaction, transactionStatus.paymentStatus);
+          }
+        }
+      } else {
+        console.log('No pending or unverified transactions found');
+      }
+    } catch (error) {
+      console.error('Error during cron job:', error.message);
+    }
+  }
+
+
+  async updateRefundStatusCronJob(refund, status) {
+    try {
+      refund.refundStatus = status;
+      await refund.save();
+  
+    } catch (error) {
+      console.error('Error updating refund:', error.message);
+    }
+  }
+
+  async  getRefundStatus(transactionReference, authToken) {
+    try {
+      const response = await axios.get(`{{base_url}}/api/v1/refunds/${transactionReference}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+  
+      if (response.data.requestSuccessful) {
+        return response.data.responseBody;
+      } else {
+        console.error(`Error retrieving refund status: ${response.data.responseMessage}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching refund status:', error.message);
+      return null;
+    }
+  }
+  
+  
+
+  async checkRefundUpdate() {
+    try {
+      // Get all refunds that are not completed
+      const refunds = await this.RefundLogModel.findAll({
+        where: {
+          refundStatus: {
+            [Op.ne]: 'COMPLETED' // Not equal to 'COMPLETED'
+          }
+        }
+      });
+  
+      if (refunds.length > 0) {
+        // Get Monify authentication token
+        const authToken = await this.getAuthTokenMonify();
+        if (!authToken) return;
+  
+        // Check and update each refund
+        for (const refund of refunds) {
+          const refundStatus = await this.getRefundStatus(refund.transactionReference, authToken);
+  
+          if (refundStatus) {
+            await this.updateRefundStatusCronJob(refund, refundStatus.refundStatus);
+          }
+        }
+      } 
+    } catch (error) {
+      console.error('Error during refund status check:', error.message);
     }
   }
   
@@ -471,9 +593,6 @@ class AuthenticationService {
 
     return user;
   }
-
-
-
 
 
   async handleUpdateTel(data) {

@@ -33,10 +33,12 @@ export function init(connection) {
       },
       inspectionStatus: {
         type: DataTypes.ENUM(
-            'pending',
-            'accepted',
-            'decline',
-            'notCreated',
+            'pending', // date for inspection has been created but property owner has not accepted
+            'accepted', // date for inspection has been accepted 
+            'declined', // date for inspection not suitable
+            'refunded', // either tenant or landlord rejected the compatibility so fund refunded
+            'disbursed', // tenant and landlord  has accepted themself fund disbursed
+            'notCreated', //created after fund transfer but no date has been scheduled
         ),
         allowNull: false,
         defaultValue:"notCreated"

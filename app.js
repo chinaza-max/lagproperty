@@ -30,11 +30,11 @@ class Server {
         await DB.connectDB()
 
 
-        cron.schedule('0 */2 * * *', async () => {
+      cron.schedule('0 */2 * * *', async () => {
+        
+      })
 
 
-          
-        })
     }
      
     initializeMiddlewaresAndRoutes(){
