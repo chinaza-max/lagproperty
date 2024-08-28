@@ -12,6 +12,8 @@ import { Tenant,
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
 import authUtil from "../utils/auth.util.js";
+import userService from "../service/user.service.js";
+
 import mailService from "../service/mail.service.js";
 import axios from'axios';
 
@@ -277,6 +279,8 @@ class AuthenticationService {
 
     const { eventType, eventData } = data
 
+    
+
     const { transactionReference, paymentReference, amount, userId, buildingId, transactionType} = eventData;
 
     try {
@@ -402,7 +406,7 @@ class AuthenticationService {
     const authToken = await this.getAuthTokenMonify();
   
     try {
-      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/merchant/transactions/query?transactionReference=${transactionReference}`, {
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/transactions/query?transactionReference=${transactionReference}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -415,9 +419,31 @@ class AuthenticationService {
       throw error;
     }
   }
+
+
+
+  async  getTransactionStatusSingleTransfer(transactionReference) {
+    const authToken = await this.getAuthTokenMonify();
+  
+    try {
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single/summary?transactionReference=${transactionReference}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      return response.data.responseBody;
+    } catch (error) {
+      console.error('Error fetching transaction status:', error);
+      throw error;
+    }
+  }
+
   
   
-  async  updateTransactionStatusCronJob(transaction, status) {
+  
+  async  updateTransactionStatusCronJobWebHook(transaction, status) {
     try {
       transaction.paymentStatus = status;
       await transaction.save();
@@ -436,6 +462,7 @@ class AuthenticationService {
         });
 
       }
+     
 
       console.log(`Transaction ${transaction.transactionReference} updated to ${status}`);
     } catch (error) {
@@ -444,7 +471,40 @@ class AuthenticationService {
   }
 
 
-  async checktransactionUpdate() {
+
+  async  updateTransactionStatusCronJobSingleTransfer(transaction, status) {
+    try {
+      transaction.paymentStatus = status;
+      await transaction.save();
+
+      if(status=="SUCCESS"&&transaction.transactionType=='commissionOrRent'){
+
+        const TenantModelResult=await this.TenantModel.findOne({
+          where:{
+            buildingId:transaction.buildingId
+          }
+        })
+        
+        if(!TenantModelResult||TenantModelResult.status=='terminated'){
+
+          this.TenantModel.create({
+            buildingId:transaction.buildingId,
+            prospectiveTenantId:transaction.prospectiveTenantId,
+            status:'active',
+            rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
+          })
+        }
+
+      }
+     
+    } catch (error) {
+      console.error('Error updating transaction:', error.message);
+    }
+  }
+
+
+  async checktransactionUpdateWebHook() {
+
     try {
       // Get all transactions with 'pending' or 'unverified' status
       const transactions = await this.TransactionModel.findAll({
@@ -462,10 +522,10 @@ class AuthenticationService {
         // Check and update each transaction
         for (const transaction of transactions) {
 
-          const transactionStatus = await getTransactionStatus(transaction.transactionReference, authToken);
+          const transactionStatus = await this.getTransactionStatus(transaction.transactionReference, authToken);
   
           if (transactionStatus) {
-            await this.updateTransactionStatusCronJob(transaction, transactionStatus.paymentStatus);
+            await this.updateTransactionStatusCronJobWebHook(transaction, transactionStatus.paymentStatus);
           }
         }
       } else {
@@ -476,6 +536,38 @@ class AuthenticationService {
     }
   }
 
+  async checktransactionUpdateSingleTransfer() {
+
+    try {
+      // Get all transactions with 'pending' or 'unverified' status
+      const transactions = await this.TransactionModel.findAll({
+        where: {
+          paymentStatus: ['pending', 'unverified']
+        }
+      });
+  
+      if (transactions.length > 0) {
+
+        // Get Monify authentication token
+        const authToken = await this.getAuthTokenMonify();
+        if (!authToken) return;
+  
+        // Check and update each transaction
+        for (const transaction of transactions) {
+
+          const transactionStatus = await this.getTransactionStatusSingleTransfer(transaction.transactionReference, authToken);
+  
+          if (transactionStatus) {
+            await this.updateTransactionStatusCronJobSingleTransfer(transaction, transactionStatus.status);
+          }
+        }
+      } else {
+        console.log('No pending or unverified transactions found');
+      }
+    } catch (error) {
+      console.error('Error during cron job:', error.message);
+    }
+  }
 
   async updateRefundStatusCronJob(refund, responseBody) {
     try {

@@ -27,7 +27,7 @@ export function init(connection) {
         ),
         allowNull: true,
       },
-      rentNextDuedATE: {
+      rentNextDueDate: {
         type: DataTypes.DATE,
         allowNull: true,
       }, 

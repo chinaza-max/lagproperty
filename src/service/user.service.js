@@ -17,7 +17,7 @@ import {  Op, Sequelize, where } from "sequelize";
 import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-
+import { addMonths } from 'date-fns';
 
 import {
   NotFoundError,
@@ -413,7 +413,8 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-        
+        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'transaction has been initiated check transaction status'
+
         await inspection.update({
           inspectionStatus:'accepted',
           propertyManagerStatus:true
@@ -422,13 +423,12 @@ class UserService {
         if(inspection.tenentStatus===true){
 
           const BuildingModelResult= await this.BuildingModel.findOne({
-            where: { id: inspectionId.buildingId, isDeleted: false }
+            where: { id: inspection.buildingId, isDeleted: false }
           })
 
           const TransactionModelResult2= await this.TransactionModel.findOne({
-            where: { id: inspectionId.transactionReference, isDeleted: false }
+            where: { id: inspection.transactionReference, isDeleted: false }
           })
-
 
           const PropertyManagerModelResult= await this.PropertyManagerModel.findByPk(BuildingModelResult.propertyManagerId)
     
@@ -441,13 +441,13 @@ class UserService {
               amount:TransactionModelResult2.amount,
               transactionReference:this.generateReference(),
               paymentReference:inspection.transactionReference,
-              transactionType:'rent'
+              transactionType:'commissionOrRent'
             });
 
             const transferDetails = {
-              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
+              amount: this.calculateDistribution(1000, 'landlord', false, 'initial deposit'),
               reference: TransactionModelResult.id,
-              narration: 'Rent Payment',
+              narration: 'Rent Payment ',
               destinationBankCode: PropertyManagerModelResult.landlordBankCode,
               destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
               currency: 'NGN',
@@ -460,11 +460,56 @@ class UserService {
             }
           }
           else{
+            const authToken = await authService.getAuthTokenMonify();
+            const TransactionModelResult = await this.TransactionModel.create({
+              user: inspection.transactionReference,
+              buildingId:inspectionId.buildingId,
+              amount:TransactionModelResult2.amount,
+              transactionReference:this.generateReference(),
+              paymentReference:inspection.transactionReference,
+              transactionType:'commissionOrRent'
+            });
+            const transferDetails = {
+              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
+              reference: TransactionModelResult.id,
+              narration: 'Rent Payment ',
+              destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+              destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+              currency: 'NGN',
+              sourceAccountNumber: serverConfig.MONNIFY_ACC
+            };
 
+            const transferResponse = await this.initiateTransfer(authToken, transferDetails);
+            if(transferResponse){
+                this.updateTransferTransaction(this.TransactionModel, transferResponse);
+            }
+
+            //BELOW IS FOR AGENT TRANSFER
+
+            const TransactionModelResult2 = await this.TransactionModel.create({
+              user: inspection.transactionReference,
+              buildingId:inspectionId.buildingId,
+              amount:TransactionModelResult2.amount,
+              transactionReference:this.generateReference(),
+              paymentReference:inspection.transactionReference,
+              transactionType:'commissionOrRent'
+            });
+            const transferDetails2 = {
+              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
+              reference: TransactionModelResult.id,
+              narration: 'commission',
+              destinationBankCode: PropertyManagerModelResult.agentBankCode,
+              destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
+              currency: 'NGN',
+              sourceAccountNumber: serverConfig.MONNIFY_ACC
+            };
+
+            const transferResponse2 = await this.initiateTransfer(authToken, transferDetails2);
+            if(transferResponse2){
+                this.updateTransferTransaction(this.TransactionModel, transferResponse2);
+            }
           }
 
-
-       
         }
 
       }
@@ -477,9 +522,103 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
+        
+        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'transaction has been initiated check transaction status'
+
+        
 
         if(inspection.propertyManagerStatus===true){
 
+            const BuildingModelResult= await this.BuildingModel.findOne({
+              where: { id: inspection.buildingId, isDeleted: false }
+            })
+  
+            const TransactionModelResult2= await this.TransactionModel.findOne({
+              where: { id: inspection.transactionReference, isDeleted: false }
+            })
+  
+            const PropertyManagerModelResult= await this.PropertyManagerModel.findByPk(BuildingModelResult.propertyManagerId)
+      
+            if(PropertyManagerModelResult=='landLord'){
+              const authToken = await authService.getAuthTokenMonify();
+  
+              const TransactionModelResult = await this.TransactionModel.create({
+                user: inspection.transactionReference,
+                buildingId:inspectionId.buildingId,
+                amount:TransactionModelResult2.amount,
+                transactionReference:this.generateReference(),
+                paymentReference:inspection.transactionReference,
+                transactionType:'commissionOrRent'
+              });
+  
+              const transferDetails = {
+                amount: this.calculateDistribution(1000, 'landlord', false, 'initial deposit'),
+                reference: TransactionModelResult.id,
+                narration: 'Rent Payment ',
+                destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+                destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+                currency: 'NGN',
+                sourceAccountNumber: serverConfig.MONNIFY_ACC
+              };
+  
+              const transferResponse = await this.initiateTransfer(authToken, transferDetails);
+              if(transferResponse){
+                  this.updateTransferTransaction(this.TransactionModel, transferResponse);
+              }
+              
+            }
+            else{
+              const authToken = await authService.getAuthTokenMonify();
+              const TransactionModelResult = await this.TransactionModel.create({
+                user: inspection.transactionReference,
+                buildingId:inspectionId.buildingId,
+                amount:TransactionModelResult2.amount,
+                transactionReference:this.generateReference(),
+                paymentReference:inspection.transactionReference,
+                transactionType:'commissionOrRent'
+              });
+              const transferDetails = {
+                amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
+                reference: TransactionModelResult.id,
+                narration: 'Rent Payment ',
+                destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+                destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+                currency: 'NGN',
+                sourceAccountNumber: serverConfig.MONNIFY_ACC
+              };
+  
+              const transferResponse = await this.initiateTransfer(authToken, transferDetails);
+              if(transferResponse){
+                  this.updateTransferTransaction(this.TransactionModel, transferResponse);
+              }
+  
+              //BELOW IS FOR AGENT TRANSFER
+  
+              const TransactionModelResult2 = await this.TransactionModel.create({
+                user: inspection.transactionReference,
+                buildingId:inspectionId.buildingId,
+                amount:TransactionModelResult2.amount,
+                transactionReference:this.generateReference(),
+                paymentReference:inspection.transactionReference,
+                transactionType:'commissionOrRent'
+              });
+              const transferDetails2 = {
+                amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
+                reference: TransactionModelResult.id,
+                narration: 'commission',
+                destinationBankCode: PropertyManagerModelResult.agentBankCode,
+                destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
+                currency: 'NGN',
+                sourceAccountNumber: serverConfig.MONNIFY_ACC
+              };
+  
+              const transferResponse2 = await this.initiateTransfer(authToken, transferDetails2);
+              if(transferResponse2){
+                  this.updateTransferTransaction(this.TransactionModel, transferResponse2);
+              }
+            }
+  
+          
         }
 
       }
@@ -496,16 +635,60 @@ class UserService {
 
 
   async updateTransferTransaction(db, transferData){
-    const TransactionModelResult=db.findOne({
-      where:{
-        transactionReference:transferData.responseBody.reference}
-    })
 
+    try {
+      const TransactionModelResult=db.findOne({
+        where:{
+          transactionReference:transferData.responseBody.reference
+        }
+      })
+      if (TransactionModelResult) {
+
+        await TransactionModelResult.update({
+          paymentStatus:transferData.responseBody.status
+        });
   
+        if(transferData.responseBody.status==="SUCCESS"){
+
+          const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
+
+          const TenantModelResult=await this.TenantModel.findOne({
+            where:{
+              buildingId:TransactionModelResult.buildingId
+            }
+          })
+
+          if(!TenantModelResult||TenantModelResult.status=='terminated'){
+            this.TenantModel.create({
+              buildingId:TransactionModelResult.buildingId,
+              prospectiveTenantId:TransactionModelResult.prospectiveTenantId,
+              status:'active',
+              rentNextDueDate:this.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
+            })
+          }
+        }
+  
+      } else {
+        console.log('Transaction not found with reference:', reference);
+      }
 
 
+    } catch (error) {
+      console.error('An error occurred while updating the transaction:', error.message);
+    }
 
   }
+
+
+  calculateRentNextDueDate(months, fromDate = new Date()) {
+    if (!Number.isInteger(months) || months <= 0) {
+      throw new Error('The number of months must be a positive integer.');
+    }
+  
+    const rentNextDueDate = addMonths(fromDate, months);
+    return rentNextDueDate;
+  }
+
   async  initiateTransfer(token, transferDetails) {
     const response = await axios.post(
       `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,

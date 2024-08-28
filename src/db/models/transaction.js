@@ -35,7 +35,7 @@ export function init(connection) {
         type: DataTypes.ENUM(
             'rent',
             'appointmentAndRent',
-            'commission',
+            'commissionOrRent',
           ),
         allowNull: false,
       },

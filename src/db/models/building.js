@@ -86,7 +86,7 @@ export function init(connection) {
         allowNull: false,
       },
       rentalDuration: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       price: {
