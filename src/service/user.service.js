@@ -13,7 +13,7 @@ import userUtil from "../utils/user.util.js";
 import authService from "../service/auth.service.js";
 import bcrypt from'bcrypt';
 import serverConfig from "../config/server.js";
-import {  Op, Sequelize } from "sequelize";
+import {  Op, Sequelize, where } from "sequelize";
 import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
@@ -445,17 +445,19 @@ class UserService {
             });
 
             const transferDetails = {
-              amount: 200,
+              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
               reference: TransactionModelResult.id,
               narration: 'Rent Payment',
               destinationBankCode: PropertyManagerModelResult.landlordBankCode,
               destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
               currency: 'NGN',
-              sourceAccountNumber: '5948568393'
+              sourceAccountNumber: serverConfig.MONNIFY_ACC
             };
 
             const transferResponse = await this.initiateTransfer(authToken, transferDetails);
-  
+            if(transferResponse){
+                this.updateTransferTransaction(this.TransactionModel, transferResponse);
+            }
           }
           else{
 
@@ -493,7 +495,31 @@ class UserService {
   }
 
 
+  async updateTransferTransaction(db, transferData){
+    const TransactionModelResult=db.findOne({
+      where:{
+        transactionReference:transferData.responseBody.reference}
+    })
+
   
+
+
+
+  }
+  async  initiateTransfer(token, transferDetails) {
+    const response = await axios.post(
+      `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+      transferDetails,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    return response.data;
+  }
+
   async handleChat(data, file) {
 
     const validationResult= await userUtil.verifyHandleChat.validateAsync(data);
@@ -545,6 +571,34 @@ class UserService {
   
     return `REF-${timestamp}-${randomString}`;
   }
+
+
+  calculateDistribution(amount, type, hasAgent, paymentType) {
+    let landlordShare = 0;
+    let agentShare = 0;
+    let appShare = 0;
+
+    if (paymentType === 'initial deposit') {
+        if (hasAgent) {
+            agentShare = amount * 0.10;
+            appShare = amount * 0.05;
+            landlordShare = amount - agentShare - appShare;
+        } else {
+            appShare = amount * 0.05;
+            landlordShare = amount - appShare;
+        }
+    } else if (paymentType === 'rent') {
+        appShare = amount * 0.05;
+        landlordShare = amount - appShare;
+    }
+
+    return {
+        landlordShare,
+        agentShare,
+        appShare
+    };
+}
+
 
   async  initiateRefund(refundMetaData, authToken) {
     const refundPayload = {

@@ -15,6 +15,7 @@ class ServerConfig {
    MONNIFY_IP = process.env.MONNIFY_IP;
    MONNIFY_BASE_URL = process.env.MONNIFY_BASE_URL;
    MONNIFY_API_KEY = process.env.MONNIFY_API_KEY;
+   MONNIFY_ACC = process.env.MONNIFY_ACC;
 
      
 
