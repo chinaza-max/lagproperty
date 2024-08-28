@@ -15,6 +15,13 @@ import { Model, DataTypes } from "sequelize";
             allowNull: false,
             defaultValue: 'PENDING',
         },
+        role: {
+          type: DataTypes.ENUM(
+            'list',
+            'rent'
+          ),
+          allowNull: false,
+        },
         transactionReference: {
             type: DataTypes.STRING,
             allowNull: false

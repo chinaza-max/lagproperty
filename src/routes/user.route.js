@@ -23,7 +23,9 @@ class UserRoutes extends UserController {
 
 
     this.router.post("/inspectionAction", this.inspectionAction);
+    this.router.post("/chat",uploadHandler.image.single('image'), this.chat);
 
+    
 
     this.router.get("/whoIAm", this.whoIAm);
     

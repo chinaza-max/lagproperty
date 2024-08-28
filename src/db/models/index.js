@@ -14,6 +14,8 @@ import RefundLog , { init as initRefundLog } from "./RefundLog.js";
 
 
 
+
+
 function associate() {
 
 
@@ -27,37 +29,37 @@ function associate() {
 
 
   Building.hasMany(TenantReview, {
-    foreignKey: 'buidingId',
+    foreignKey: 'buildingId',
     as: "BuildingReview",
   });
   TenantReview.belongsTo(Building, {
-    foreignKey: 'buidingId',
+    foreignKey: 'buildingId',
   })
 
 
   PropertyManager.hasMany(PropertyManagerReview, {
-    foreignKey: 'tenentId',
+    foreignKey: 'propertyManagerId',
     as: "PropertyManagerReview",
   });
   PropertyManagerReview.belongsTo(PropertyManager, {
-    foreignKey: 'tenentId',
+    foreignKey: 'propertyManagerId',
   })
 
 
   ProspectiveTenant.hasMany(Inspection, {
-    foreignKey: 'tenentId',
-    as: "Inspection",
+    foreignKey: 'tenantId',
+    as: "Inspection", 
   });
   Inspection.belongsTo(ProspectiveTenant, {
-    foreignKey: 'tenentId',
+    foreignKey: 'tenantId',
   })
 
   Building.hasMany(Inspection, {
-    foreignKey: 'buidingId',
+    foreignKey: 'buildingId',
     as: "BuildingInspection",
   });
   Inspection.belongsTo(Building, {
-    foreignKey: 'buidingId',
+    foreignKey: 'buildingId',
   })
 
   PropertyManager.hasMany(Building, {

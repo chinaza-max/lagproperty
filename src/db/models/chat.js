@@ -34,6 +34,13 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      role: {
+        type: DataTypes.ENUM(
+          'list',
+          'rent'
+        ),
+        allowNull: false,
+      },  
       repliedMessageId: {
         type: DataTypes.INTEGER ,
         allowNull: true,

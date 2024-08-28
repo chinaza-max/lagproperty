@@ -16,11 +16,11 @@ export function init(connection) {
         allowNull: false,
       },
       buildingId: {
-        type: DataTypes.INTEGER ,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       tenantId: {
-        type: DataTypes.INTEGER ,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       propertyManagerStatus: {
@@ -43,10 +43,7 @@ export function init(connection) {
         allowNull: false,
         defaultValue:"notCreated"
       },
-      inspectionDeclineMessage: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
+    
       inspectionMode: {
         type: DataTypes.ENUM(
             'inPerson',
@@ -78,7 +75,7 @@ export function init(connection) {
         allowNull: true,
       },
       note: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       notificationAllowed: {

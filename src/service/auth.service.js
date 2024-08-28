@@ -7,6 +7,7 @@ import { Tenant,
      RefundLog , 
      Building , 
      Inspection , 
+     ProspectiveTenant , 
      EmailandTelValidation
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
@@ -32,6 +33,9 @@ class AuthenticationService {
   BuildingModel=Building;
   InspectionModel=Inspection;
   RefundLogModel=RefundLog
+  ProspectiveTenantModel=ProspectiveTenant
+
+  
 
   
 
@@ -106,11 +110,13 @@ class AuthenticationService {
     }
     else{
 
-      let existingUser = await this.isUserEmailExisting(emailAddress, this.TenantModel );
+
+      let existingUser = await this.isUserEmailExisting(emailAddress, this.ProspectiveTenantModel );
       if (existingUser != null)throw new ConflictError(existingUser);
       
+      
       try {
-        const user = await this.TenantModel.create({
+        const user = await this.ProspectiveTenantModel.create({
           firstName,
           lastName,
           emailAddress,
@@ -142,7 +148,7 @@ class AuthenticationService {
     let relatedUser
 
     if(validateFor=='rent'){
-      relatedUser = await this.TenantModel.findOne({
+      relatedUser = await this.ProspectiveTenantModel.findOne({
         where: { id: userId },
       });
     }
@@ -193,7 +199,7 @@ class AuthenticationService {
     else{
       try {
 
-        matchedUser=await this.TenantModel.findOne({
+        matchedUser=await this.ProspectiveTenantModel.findOne({
           where: {
         [Op.or]: [
           { emailAddress:emailOrPhone},
@@ -344,7 +350,7 @@ class AuthenticationService {
         });
       }
       else{
-        relatedUser = await this.TenantModel.findOne({
+        relatedUser = await this.ProspectiveTenantModel.findOne({
           where: { id: userId },
         });
       }
@@ -471,10 +477,42 @@ class AuthenticationService {
   }
 
 
-  async updateRefundStatusCronJob(refund, status) {
+  async updateRefundStatusCronJob(refund, responseBody) {
     try {
-      refund.refundStatus = status;
-      await refund.save();
+
+      if (responseBody.refundStatus=="COMPLETED") {
+
+        const RefundLogModelResult = await this.RefundLogModel.findByPk(responseBody.refundReference);
+        await RefundLogModelResult.update({
+          refundStatus: 'COMPLETED'
+        });
+
+
+        const inspection = await this.InspectionModel.findOne({
+          where: { transactionReference: responseBody.transactionReference, isDeleted: false }
+        });
+
+        if(RefundLogModelResult.role=='list'){
+
+          await inspection.update({
+            inspectionStatus: 'refunded',
+            note:refundResponse.responseBody.refundReason,
+            propertyManagerStatus:false
+          });
+        }else{
+          await inspection.update({
+            inspectionStatus: 'refunded',
+            note:refundResponse.responseBody.refundReason,
+            tenentStatus:false
+          });
+        }
+
+      } 
+      else {
+        refund.update({
+          refundStatus:refundResponse.responseBody.refundStatus
+        })
+      }
   
     } catch (error) {
       console.error('Error updating refund:', error.message);
@@ -502,7 +540,6 @@ class AuthenticationService {
     }
   }
   
-  
 
   async checkRefundUpdate() {
     try {
@@ -525,7 +562,7 @@ class AuthenticationService {
           const refundStatus = await this.getRefundStatus(refund.transactionReference, authToken);
   
           if (refundStatus) {
-            await this.updateRefundStatusCronJob(refund, refundStatus.refundStatus);
+            await this.updateRefundStatusCronJob(refund, refundStatus);
           }
         }
       } 
@@ -642,7 +679,7 @@ class AuthenticationService {
       });  
 
     }else{
-      user =  await this.TenantModel.findOne({
+      user =  await this.ProspectiveTenantModel.findOne({
         where: {
           emailAddress, 
           isEmailValid:true,
@@ -791,7 +828,7 @@ class AuthenticationService {
       });
     }
     else{
-      relatedUser = await this.TenantModel.findOne({
+      relatedUser = await this.ProspectiveTenantModel.findOne({
         where: { id: relatedEmailoRTelValidationCode.userId },
       });
     }

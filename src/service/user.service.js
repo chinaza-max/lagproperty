@@ -6,6 +6,7 @@ import {
   Inspection,
   RefundLog,
   ProspectiveTenant,
+  Chat,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -38,7 +39,7 @@ class UserService {
   InspectionModel=Inspection
   RefundLogModel=RefundLog
   ProspectiveTenantModel=ProspectiveTenant
-
+  ChatModel=Chat
 
   
 
@@ -102,10 +103,10 @@ class UserService {
 
       try {
         if(lasrraId){
-          await this.TenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
+          await this.ProspectiveTenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
   
         }else{
-          await this.TenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } })
+          await this.ProspectiveTenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } })
         }
       } catch (error) {
         throw new SystemError(error.name,  error.parent)
@@ -201,14 +202,9 @@ class UserService {
     type,
     page , 
     pageSize, 
-    transactionReference,
     inspectionId,
-    buildingId,
-    tenantId,
     inspectionMode,
     fullDate,
-    inspectionStatus,
-    inspectionDeclineMessage,
     emailAddress,
     tel,
     fullName,
@@ -300,13 +296,13 @@ class UserService {
         });
 
         const RefundLogModelResult2 = await this.RefundLogModel.findOne({
-          where: { transactionReference: inspectionId.transactionReference, isDeleted: false }
+          where: { 
+            transactionReference: inspectionId.transactionReference,
+            isDeleted: false }
         });
 
+        if(RefundLogModelResult2.refundStatus==='COMPLETED') return "refund already made"
 
-        if(RefundLogModelResult2.refundStatus!='COMPLETED'){
-
-    
 
         const transactionResult = await this.TransactionModel.findOne({
           where: { transactionReference: inspection.transactionReference, 
@@ -314,7 +310,7 @@ class UserService {
         });
 
         const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
-          where: { transactionReference: inspection.transactionReference, 
+          where: { id: inspection.tenantId, 
             isDeleted: false }
         });
       
@@ -324,8 +320,8 @@ class UserService {
 
         const refund = await this.RefundLogModel.create({
           transactionReference: inspection.transactionReference,
+          role
         });
-
 
         const authToken = await authService.getAuthTokenMonify();
 
@@ -341,27 +337,41 @@ class UserService {
 
         const refundResponse = await this.initiateRefund(refundMetaData ,authToken);
       
-        if (refundResponse.responseBody.refundStatus=="COMPLETED") {
-          const RefundLogModelResult = await this.RefundLogModel.findByPk(refundResponse.responseBody.refundReference);
-          await RefundLogModelResult.update({
-            inspectionStatus: 'refunded',
-            refundStatus: refundResponse.responseBody.refundStatus,
-            note
-          });
-      
-          return inspection;
-        } else {
-          // Handle the failure scenario, e.g., by throwing an error or logging it
-          throw new Error('Refund failed: ' + refundResponse.responseMessage);
-        }
+          if (refundResponse.responseBody.refundStatus=="COMPLETED") {
 
-        }
-        else{
+            const RefundLogModelResult = await this.RefundLogModel.findByPk(refundResponse.responseBody.refundReference);
+            await RefundLogModelResult.update({
+              refundStatus: 'COMPLETED'
+            });
 
-          return "refund already made "
-        }
+            if(RefundLogModelResult.role=='list'){
+              await inspection.update({
+                inspectionStatus: 'refunded',
+                note:refundResponse.responseBody.refundReason,
+                propertyManagerStatus:false
+              });
+            }else{
+              await inspection.update({
+                inspectionStatus: 'refunded',
+                note:refundResponse.responseBody.refundReason,
+                tenentStatus:false
+              });
+            }
+
+            return 'refund completed';
+          } 
+          else {
+            refund.update({
+              refundStatus:refundResponse.responseBody.refundStatus
+            })
+          }
+       
       }      
-      else if (type === 'accept') {
+      else if (type === 'acceptInspection') {
+
+
+        if(role=='rent')throw new BadRequestError("Not a property owner")
+
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         })
@@ -377,7 +387,7 @@ class UserService {
         return inspection;
   
       }
-      else if (type === 'decline') {
+      else if (type === 'declineInspection') {
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         });
@@ -388,11 +398,90 @@ class UserService {
   
         await inspection.update({
           inspectionStatus:'decline',
+          note
         });
   
         return inspection;
   
       }
+      else if(type==='acceptTenant'){
+        
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        })
+  
+        if (!inspection) {
+          throw new NotFoundError('Inspection not found');
+        }
+        
+        await inspection.update({
+          inspectionStatus:'accepted',
+          propertyManagerStatus:true
+        });
+
+        if(inspection.tenentStatus===true){
+
+          const BuildingModelResult= await this.BuildingModel.findOne({
+            where: { id: inspectionId.buildingId, isDeleted: false }
+          })
+
+          const TransactionModelResult2= await this.TransactionModel.findOne({
+            where: { id: inspectionId.transactionReference, isDeleted: false }
+          })
+
+
+          const PropertyManagerModelResult= await this.PropertyManagerModel.findByPk(BuildingModelResult.propertyManagerId)
+    
+          if(PropertyManagerModelResult=='landLord'){
+            const authToken = await authService.getAuthTokenMonify();
+
+            const TransactionModelResult = await this.TransactionModel.create({
+              user: inspection.transactionReference,
+              buildingId:inspectionId.buildingId,
+              amount:TransactionModelResult2.amount,
+              transactionReference:this.generateReference(),
+              paymentReference:inspection.transactionReference,
+              transactionType:'rent'
+            });
+
+            const transferDetails = {
+              amount: 200,
+              reference: TransactionModelResult.id,
+              narration: 'Rent Payment',
+              destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+              destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+              currency: 'NGN',
+              sourceAccountNumber: '5948568393'
+            };
+
+            const transferResponse = await this.initiateTransfer(authToken, transferDetails);
+  
+          }
+          else{
+
+          }
+
+
+       
+        }
+
+      }
+  
+      else if(type==='releaseFund'){
+        const inspection = await this.InspectionModel.findOne({
+          where: { id: inspectionId, isDeleted: false }
+        })
+  
+        if (!inspection) {
+          throw new NotFoundError('Inspection not found');
+        }
+
+        if(inspection.propertyManagerStatus===true){
+
+        }
+
+      }
+  
     } catch (error) {
 
       throw new SystemError(error.name,  error.parent)
@@ -403,6 +492,59 @@ class UserService {
 
   }
 
+
+  
+  async handleChat(data, file) {
+
+    const validationResult= await userUtil.verifyHandleChat.validateAsync(data);
+    
+    const { userId, receiverId, messageType, message, repliedMessageId, role } = validationResult;
+
+    try { 
+      let imageUrl=''
+      if(file){
+        
+        if(serverConfig.NODE_ENV == "production"){
+          imageUrl =
+          serverConfig.DOMAIN +
+          file.path.replace("/home", "");
+        }
+        else if(serverConfig.NODE_ENV == "development"){
+    
+          imageUrl = serverConfig.DOMAIN+file.path.replace("public", "");
+        }
+  
+      }
+
+      const newChat = await this.ChatModel.create({
+        senderId: userId,
+        receiverId,
+        messageType,
+        role,
+        message: messageType === 'text' ? message : null,
+        image: messageType === 'file' ? imageUrl : null,
+        repliedMessageId: repliedMessageId || null,
+      });
+  
+      return newChat;
+
+   
+ 
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+ 
+
+
+  }
+  generateReference() {
+    const timestamp = Date.now(); // Current timestamp in milliseconds
+    const randomString = Math.random().toString(36).substring(2, 8).toUpperCase(); // Random alphanumeric string
+  
+    return `REF-${timestamp}-${randomString}`;
+  }
 
   async  initiateRefund(refundMetaData, authToken) {
     const refundPayload = {

@@ -15,7 +15,6 @@ export default class UserController {
       const { file } = req;
 
 
-
       let my_bj = {
         ...data,
         userId:req.user.id,
@@ -95,6 +94,39 @@ export default class UserController {
     }
     
   }
+
+  async chat(req, res, next) {
+
+    try {
+      const data = req.body;        
+      const { file } = req;
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id,
+        role:req.user.role,
+        image:{
+          size:file?.size
+        }
+      }
+
+       await userService.handleChat(my_bj, file);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "updated successfully",
+      });
+       
+        
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
+
 
 
 

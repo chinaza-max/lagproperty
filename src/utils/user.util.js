@@ -75,6 +75,30 @@ class UserUtil {
     propertyLocation: Joi.string().required()
   });
 
+
+  verifyHandleChat= Joi.object({
+    role: Joi.string().required().valid(
+      'rent',
+      'list'
+    ),
+    userId: Joi.number().integer().positive().required(),
+    receiverId: Joi.number().integer().required(),
+    messageType: Joi.string().valid('text', 'file').required(),
+    message: Joi.when('messageType', {
+      is: 'text',
+      then: Joi.string().required(),
+      otherwise: Joi.string().allow(null, ''),
+    }),
+    repliedMessageId: Joi.number().integer().optional(),
+    image: Joi.when('messageType', {
+      is: 'file',
+      then: Joi.object({
+        size: Joi.number().positive().less(3000000).required(),
+      }).required(),
+      otherwise: Joi.optional(),
+    })
+  });
+
   verifyHandleInspectionAction=Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('tenant', 'propertyManager').required(),
@@ -86,8 +110,12 @@ class UserUtil {
         'getAcceptedInspection',
         'createInspection',
         'refund',
-        'accept',
-        'decline'
+        'acceptInspection',
+        'declineInspection',
+        'acceptTenant',
+        'rejectTenant',
+        'releaseFund',
+        'rejectBuilding',
       )
       .required()
       .label('Type'),
@@ -123,15 +151,15 @@ class UserUtil {
       .valid('inPerson', 'videoChat')
       .when('type', {
         is: 'createInspection',
-        then: Joi.optional(),
+        then: Joi.required(),
         otherwise: Joi.forbidden(),
-      }),
+    }),
+    
     fullDate: Joi.date().when('type', {
       is: 'createInspection',
-      then: Joi.optional(),
+      then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
-
 
     inspectionStatus: Joi.string()
       .valid('pending', 'accepted', 'decline', 'notCreated')
@@ -139,39 +167,41 @@ class UserUtil {
         is: 'updateInspection',
         then: Joi.required(),
         otherwise: Joi.forbidden(),
-      }),
-    inspectionDeclineMessage: Joi.string().when('type', {
-      is: 'updateInspection',
-      then: Joi.optional(),
-      otherwise: Joi.forbidden(),
     }),
+
     emailAddress: Joi.string().email().when('type', {
       is: 'createInspection',
-      then: Joi.optional(),
+      then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
     tel: Joi.number().when('type', {
       is: 'createInspection',
-      then: Joi.optional(),
+      then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
     fullName: Joi.string().when('type', {
       is: 'createInspection',
-      then: Joi.optional(),
+      then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
     gender: Joi.string()
       .valid('Male', 'Female')
       .when('type', {
         is: 'createInspection',
-        then: Joi.optional(),
+        then: Joi.required(),
         otherwise: Joi.forbidden(),
       }),
     note: Joi.string().when('type', {
-      is: 'createInspection',
+      is: Joi.valid('createInspection', 'declineInspection'),
       then: Joi.optional(),
       otherwise: Joi.forbidden(),
     }),
+    inspectionId: Joi.string().when('type', {
+      is: Joi.valid('acceptInspection', 'declineInspection'),
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+
   });
 
 

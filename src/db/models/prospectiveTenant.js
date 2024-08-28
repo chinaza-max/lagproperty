@@ -113,7 +113,7 @@ export function init(connection) {
       },
       propertyPreference: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        defaultValue: '[]',
         get() {
           const rawValue = this.getDataValue('propertyPreference');
           return rawValue ? JSON.parse(rawValue) : [];
