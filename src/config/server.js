@@ -11,7 +11,7 @@ class ServerConfig {
 
 
    
-   CLIENT_SECRET_MONIFY  = process.env.CLIENT_SECRET_MONIFY;
+   MONNIFY_CLIENT_SECRET  = process.env.MONNIFY_CLIENT_SECRET;
    MONNIFY_IP = process.env.MONNIFY_IP;
    MONNIFY_BASE_URL = process.env.MONNIFY_BASE_URL;
    MONNIFY_API_KEY = process.env.MONNIFY_API_KEY;

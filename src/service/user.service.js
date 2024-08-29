@@ -310,14 +310,14 @@ class UserService {
         });
 
         const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
-          where: { id: inspection.tenantId, 
+          where: { id: inspection.prospectiveTenantId, 
             isDeleted: false }
         });
       
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-
+        const transactionReference=this.generateReference()
         const refund = await this.RefundLogModel.create({
           transactionReference: inspection.transactionReference,
           role
@@ -413,7 +413,7 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'transaction has been initiated check transaction status'
+        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'Tenant has been accepted already'
 
         await inspection.update({
           inspectionStatus:'accepted',
@@ -425,7 +425,6 @@ class UserService {
           const BuildingModelResult= await this.BuildingModel.findOne({
             where: { id: inspection.buildingId, isDeleted: false }
           })
-
           const TransactionModelResult2= await this.TransactionModel.findOne({
             where: { id: inspection.transactionReference, isDeleted: false }
           })
@@ -434,19 +433,23 @@ class UserService {
     
           if(PropertyManagerModelResult=='landLord'){
             const authToken = await authService.getAuthTokenMonify();
-
-            const TransactionModelResult = await this.TransactionModel.create({
-              user: inspection.transactionReference,
-              buildingId:inspectionId.buildingId,
-              amount:TransactionModelResult2.amount,
-              transactionReference:this.generateReference(),
-              paymentReference:inspection.transactionReference,
+            const transactionReference=this.generateReference()
+            await this.TransactionModel.create({
+              user: inspection.prospectiveTenantId,
+              buildingId:inspection.buildingId,
+              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
+              transactionReference,
+              paymentReference:"firstRent"+"_"+this.generateReference(),
               transactionType:'commissionOrRent'
             });
 
+
+            landlordShare,
+            agentShare,
+            appShare
             const transferDetails = {
-              amount: this.calculateDistribution(1000, 'landlord', false, 'initial deposit'),
-              reference: TransactionModelResult.id,
+              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare ,   
+              reference:transactionReference,
               narration: 'Rent Payment ',
               destinationBankCode: PropertyManagerModelResult.landlordBankCode,
               destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
@@ -454,24 +457,29 @@ class UserService {
               sourceAccountNumber: serverConfig.MONNIFY_ACC
             };
 
-            const transferResponse = await this.initiateTransfer(authToken, transferDetails);
-            if(transferResponse){
+              await this.initiateTransfer(authToken, transferDetails);
+           /* if(transferResponse){
                 this.updateTransferTransaction(this.TransactionModel, transferResponse);
-            }
+            }*/
+            
+
           }
           else{
             const authToken = await authService.getAuthTokenMonify();
-            const TransactionModelResult = await this.TransactionModel.create({
-              user: inspection.transactionReference,
+            const transactionReference=this.generateReference()
+            await this.TransactionModel.create({
+              user: inspection.prospectiveTenantId,
               buildingId:inspectionId.buildingId,
-              amount:TransactionModelResult2.amount,
-              transactionReference:this.generateReference(),
-              paymentReference:inspection.transactionReference,
+              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
+              transactionReference,
+              paymentReference:"firstRent"+"_"+this.generateReference(),
               transactionType:'commissionOrRent'
             });
+
+
             const transferDetails = {
-              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
-              reference: TransactionModelResult.id,
+              amount: this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare,
+              reference: transactionReference,
               narration: 'Rent Payment ',
               destinationBankCode: PropertyManagerModelResult.landlordBankCode,
               destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
@@ -479,24 +487,25 @@ class UserService {
               sourceAccountNumber: serverConfig.MONNIFY_ACC
             };
 
-            const transferResponse = await this.initiateTransfer(authToken, transferDetails);
-            if(transferResponse){
+            await this.initiateTransfer(authToken, transferDetails);
+          /*  if(transferResponse){
                 this.updateTransferTransaction(this.TransactionModel, transferResponse);
-            }
+            }*/
 
             //BELOW IS FOR AGENT TRANSFER
+            const transactionReference2=this.generateReference()
 
-            const TransactionModelResult2 = await this.TransactionModel.create({
-              user: inspection.transactionReference,
+            await this.TransactionModel.create({
+              user:  inspection.prospectiveTenantId,
               buildingId:inspectionId.buildingId,
-              amount:TransactionModelResult2.amount,
-              transactionReference:this.generateReference(),
-              paymentReference:inspection.transactionReference,
+              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
+              transactionReference:transactionReference2,
+              paymentReference:"commission"+"_"+this.generateReference(),
               transactionType:'commissionOrRent'
             });
             const transferDetails2 = {
-              amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
-              reference: TransactionModelResult.id,
+              amount: this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare,
+              reference:transactionReference2,
               narration: 'commission',
               destinationBankCode: PropertyManagerModelResult.agentBankCode,
               destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
@@ -504,10 +513,10 @@ class UserService {
               sourceAccountNumber: serverConfig.MONNIFY_ACC
             };
 
-            const transferResponse2 = await this.initiateTransfer(authToken, transferDetails2);
-            if(transferResponse2){
+             await this.initiateTransfer(authToken, transferDetails2);
+           /* if(transferResponse2){
                 this.updateTransferTransaction(this.TransactionModel, transferResponse2);
-            }
+            }*/
           }
 
         }
@@ -542,6 +551,8 @@ class UserService {
             if(PropertyManagerModelResult=='landLord'){
               const authToken = await authService.getAuthTokenMonify();
   
+
+              
               const TransactionModelResult = await this.TransactionModel.create({
                 user: inspection.transactionReference,
                 buildingId:inspectionId.buildingId,

@@ -30,7 +30,7 @@ export function init(connection) {
       rentNextDueDate: {
         type: DataTypes.DATE,
         allowNull: true,
-      }, 
+      },         
       isDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

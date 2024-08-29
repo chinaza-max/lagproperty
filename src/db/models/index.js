@@ -47,11 +47,11 @@ function associate() {
 
 
   ProspectiveTenant.hasMany(Inspection, {
-    foreignKey: 'tenantId',
+    foreignKey: 'prospectiveTenantId',
     as: "Inspection", 
   });
   Inspection.belongsTo(ProspectiveTenant, {
-    foreignKey: 'tenantId',
+    foreignKey: 'prospectiveTenantId',
   })
 
   Building.hasMany(Inspection, {

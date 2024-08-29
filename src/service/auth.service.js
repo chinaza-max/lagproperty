@@ -13,7 +13,7 @@ import { Tenant,
 import serverConfig from "../config/server.js";
 import authUtil from "../utils/auth.util.js";
 import userService from "../service/user.service.js";
-
+import { Buffer } from 'buffer';
 import mailService from "../service/mail.service.js";
 import axios from'axios';
 
@@ -279,9 +279,8 @@ class AuthenticationService {
 
     const { eventType, eventData } = data
 
-    
-
-    const { transactionReference, paymentReference, amount, userId, buildingId, transactionType} = eventData;
+    const { transactionReference, paymentReference, amountPaid} = eventData;
+    const {  userId, buildingId, transactionType} = eventData.customer;
 
     try {
 
@@ -289,20 +288,22 @@ class AuthenticationService {
         where: { transactionReference },
       });
 
-      if(existingTransaction ) return
+
+      if(!existingTransaction ){
 
       const transaction = await this.TransactionModel.create({
         userId,
         buildingId,
-        amount,
+        amount:amountPaid,
         transactionReference,
         paymentReference,
         transactionType,
       });
 
       const transactionStatus = await this.getTransactionStatus(transactionReference);
-
+      return
       transaction.paymentStatus = transactionStatus.paymentStatus;
+
       await transaction.save();
 
       if(transaction.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
@@ -315,11 +316,90 @@ class AuthenticationService {
         await this.InspectionModel.create({
           transactionReference,
           buildingId,
-          tenantId:userId,
+          prospectiveTenantId:userId,
         });
 
       }
+      }else{
 
+        const transactionStatus = await this.getTransactionStatus(transactionReference);
+
+        try {
+          const TransactionModelResult=this.TransactionModel.findOne({
+            where:{
+              transactionReference
+            }
+          })
+          if (TransactionModelResult) {
+
+            if(TransactionModelResult.paymentReference.startsWith("firstRent")){
+
+            
+              await TransactionModelResult.update({
+                paymentStatus:transactionStatus.paymentStatus
+              });
+        
+              if(transactionStatus.paymentStatus==="PAID"){
+
+                const InspectionModelResult=this.InspectionModel.findOne({
+                  where:{
+                    buildingId,
+                    prospectiveTenantId:userId
+                  }
+                })
+      
+                InspectionModelResult.update({
+                  landlordPaidStatus:true
+                })
+      
+                const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
+      
+                const TenantModelResult=await this.TenantModel.findOne({
+                  where:{
+                    buildingId:TransactionModelResult.buildingId
+                  },
+                  order: [['createdAt', 'DESC']]
+                })
+      
+                if(!TenantModelResult||TenantModelResult.status=='terminated'){
+                  this.TenantModel.create({
+                    buildingId:TransactionModelResult.buildingId,
+                    prospectiveTenantId:TransactionModelResult.prospectiveTenantId,
+                    status:'active',
+                    rentNextDueDate:this.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
+                  })
+                }
+              }
+      
+            } 
+            else if(paymentReference.startsWith("commission")){
+
+
+              const InspectionModelResult=this.InspectionModel.findOne({
+                where:{
+                  buildingId,
+                  prospectiveTenantId:userId
+                },
+                order: [['createdAt', 'DESC']]
+              })
+    
+              InspectionModelResult.update({
+                agentPaidStatus:true
+              })
+              await TransactionModelResult.update({
+                paymentStatus:transactionStatus.paymentStatus
+              });
+            }
+
+          } else {
+            console.log('Transaction not found with reference:', reference);
+          }
+          
+        } catch (error) {
+          console.error('An error occurred while updating the transaction:', error.message);
+        }
+      
+      }
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
     }
@@ -379,14 +459,15 @@ class AuthenticationService {
     }
   }
 
-  async  getAuthTokenMonify() {
-
-    const apiKey = serverConfig.MONNIFY_API_KEY;
-    const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
-    const authHeader = `Basic ${base64.encode(`${apiKey}:${clientSecret}`)}`;
-    
+  async  getAuthTokenMonify() {             
 
     try {
+
+      const apiKey = serverConfig.MONNIFY_API_KEY;
+      const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
+      const authHeader = `Basic ${Buffer.from(`${apiKey}:${clientSecret}`).toString('base64')}`;
+
+
       const response = await axios.post(`${serverConfig.MONNIFY_BASE_URL}/api/v1/auth/login`, {}, {
         headers: {
           Authorization: authHeader,
@@ -404,18 +485,25 @@ class AuthenticationService {
 
   async  getTransactionStatus(transactionReference) {
     const authToken = await this.getAuthTokenMonify();
-  
+    
     try {
-      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/transactions/query?transactionReference=${transactionReference}`, {
+
+      const encodedTransactionReference = encodeURIComponent("MNFY|76|20211117154810|000001");
+
+      const response = await axios.get(`https://sandbox.monnify.com/api/v2/merchant/transactions/query?transactionReference=${encodedTransactionReference}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
       });
-  
+         
+      //console.log(response.data.responseBody)
+
       return response.data.responseBody;
-    } catch (error) {
-      console.error('Error fetching transaction status:', error);
+    } catch (error) {   
+      console.error('Error fetching transaction status:', error.message);
+       
+      //console.error('Error fetching transaction status:', error);
       throw error;
     }
   }
@@ -458,7 +546,7 @@ class AuthenticationService {
         await this.InspectionModel.create({
           transactionReference,
           buildingId:transaction.buildingId,
-          tenantId:transaction.userId,
+          prospectiveTenantId:transaction.userId,
         });
 
       }
@@ -558,7 +646,7 @@ class AuthenticationService {
           const transactionStatus = await this.getTransactionStatusSingleTransfer(transaction.transactionReference, authToken);
   
           if (transactionStatus) {
-            await this.updateTransactionStatusCronJobSingleTransfer(transaction, transactionStatus.status);
+            await this.updateTransactionStatusCronJobSingleTransfer(transaction, transactionStatus.paymentStatus);
           }
         }
       } else {

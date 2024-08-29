@@ -19,7 +19,7 @@ export function init(connection) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      tenantId: {
+      prospectiveTenantId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -43,7 +43,14 @@ export function init(connection) {
         allowNull: false,
         defaultValue:"notCreated"
       },
-    
+      agentPaidStatus: {
+        type: DataTypes.BOOLEAN,
+        defaultValue:false
+      },
+      landlordPaidStatus: {
+        type: DataTypes.BOOLEAN,
+        defaultValue:false
+      },
       inspectionMode: {
         type: DataTypes.ENUM(
             'inPerson',
@@ -78,6 +85,7 @@ export function init(connection) {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

@@ -36,6 +36,7 @@ export function init(connection) {
             'rent',
             'appointmentAndRent',
             'commissionOrRent',
+            'refund',
           ),
         allowNull: false,
       },
