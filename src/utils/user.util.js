@@ -99,9 +99,25 @@ class UserUtil {
     })
   });
 
+
+  verifyHandleGetMyProperty=Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    type: Joi.string()
+      .valid(
+        'all',
+        'vacant',
+        'occupied'
+      )
+      .required()
+      .label('Type'),
+      pageSize: Joi.number().integer(),
+      page: Joi.number().integer()
+  })
+
   verifyHandleInspectionAction=Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid('tenant', 'propertyManager').required(),
+    role: Joi.string().valid('list', 'rent').required(),
     type: Joi.string()
       .valid(
         'getNotCreatedInspection',
@@ -210,6 +226,59 @@ class UserUtil {
   })
 
 
+  handleGetALLreviewTenant= Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    tenantId: Joi.number().integer().required(),
+    page: Joi.number().integer().min(1).default(1), 
+    pageSize: Joi.number().integer().min(1).default(10) 
+  });
+
+
+  verifyHandleGetTenantsWithDueRent= Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    page: Joi.number().integer().min(1).default(1),
+    pageSize: Joi.number().integer().min(1).default(10) 
+  });
+
+  verifyHandleReviewTenant= Joi.object({
+    userId: Joi.number().integer().required(),
+    tenantId: Joi.number().integer().required(),
+    review: Joi.string().required(),
+  });
+
+  verifyHandleQuitNoticeAction= Joi.object({
+    type: Joi.string().valid('send', 'acknowledged', 'get', 'delete').required(),
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    tenantId: Joi.number().when('type', {
+      is: Joi.string().valid('send', 'get'),
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    quitNoticeId: Joi.date().when('type', {
+      is: 'acknowledged',
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    noticeDate: Joi.date().when('type', {
+      is: 'send',
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    quitDate: Joi.date().when('type', {
+      is: 'send',
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    reason: Joi.string().when('type', {
+      is: 'send',
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+  });
+  
 
   verifyHandleListBuilding= Joi.object({
     userId: Joi.number().required(),

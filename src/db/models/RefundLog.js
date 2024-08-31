@@ -11,7 +11,10 @@ import { Model, DataTypes } from "sequelize";
           autoIncrement: true,
         },
         refundStatus: {
-            type: DataTypes.ENUM('PENDING', 'COMPLETED', 'FAILED'),
+            type: DataTypes.ENUM('PAID', 'OVERPAID', 'PARTIALLY_PAID'
+                , 'PENDING', 'ABANDONED', 'CANCELLED'
+                , 'FAILED', 'REVERSED', 'EXPIRED'
+            ),
             allowNull: false,
             defaultValue: 'PENDING',
         },
@@ -25,6 +28,18 @@ import { Model, DataTypes } from "sequelize";
         transactionReference: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        inspectionId: {
+          type: DataTypes.STRING,
+          allowNull: true
+        },  
+        refundReason: {
+          type: DataTypes.TEXT,
+          allowNull: true
+        },    
+        refundTransactionReference: {
+          type: DataTypes.STRING,
+          allowNull: false
         },  
         isDeleted: {
           type: DataTypes.BOOLEAN,

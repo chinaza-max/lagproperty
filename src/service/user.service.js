@@ -7,6 +7,8 @@ import {
   RefundLog,
   ProspectiveTenant,
   Chat,
+  QuitNotice,
+  PropertyManagerReview,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -40,6 +42,11 @@ class UserService {
   RefundLogModel=RefundLog
   ProspectiveTenantModel=ProspectiveTenant
   ChatModel=Chat
+  QuitNoticeModel=QuitNotice
+  PropertyManagerReviewModel=PropertyManagerReview
+
+
+  
 
   
 
@@ -119,6 +126,231 @@ class UserService {
   }
 
 
+  
+
+  
+  
+  async handleGetUpcomingInspection(data) {
+
+    const { userId, page, pageSize } = await userUtil.verifyHandleGetTenantsWithDueRent.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      const { count, rows } = await this.TenantModel.findAndCountAll({
+        include: [
+          {
+            model: this.BuildingModel,
+            as: 'BuildingReview',
+            where: { propertyManagerId:userId },
+          },
+          {
+            model: this.ProspectiveTenantModel,
+            as: 'rentalhistory',
+          }
+        ],
+        where: {
+          [Op.or]: [
+            { status: 'rentDue' },
+            { status: 'terminated' }
+          ],
+          isDeleted: false,
+          rentNextDueDate: {
+            [Op.lte]: new Date() // Ensure due date is in the past or today
+          }
+        },
+        limit,
+        offset,
+      });
+
+      return {
+        data: rows,
+        pagination: {
+          totalItems: count,
+          currentPage: page,
+          totalPages: Math.ceil(count / pageSize),
+          pageSize: pageSize,
+        },
+      }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+  async handleGetTenantsWithDueRent(data) {
+
+    const { userId, page, pageSize } = await userUtil.verifyHandleGetTenantsWithDueRent.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      const { count, rows } = await this.TenantModel.findAndCountAll({
+        include: [
+          {
+            model: this.BuildingModel,
+            as: 'BuildingReview',
+            where: { propertyManagerId:userId },
+          },
+          {
+            model: this.ProspectiveTenantModel,
+            as: 'rentalhistory',
+          }
+        ],
+        where: {
+          [Op.or]: [
+            { status: 'rentDue' },
+            { status: 'terminated' }
+          ],
+          isDeleted: false,
+          rentNextDueDate: {
+            [Op.lte]: new Date() // Ensure due date is in the past or today
+          }
+        },
+        limit,
+        offset,
+      });
+
+      return {
+        data: rows,
+        pagination: {
+          totalItems: count,
+          currentPage: page,
+          totalPages: Math.ceil(count / pageSize),
+          pageSize: pageSize,
+        },
+      }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+  async handleGetALLreviewTenant(data) {
+
+    const { tenantId, page, pageSize } = await userUtil.verifyHandleReviewTenant.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      const { count, rows } = await PropertyManagerReview.findAndCountAll({
+        where: {
+          tenantId: tenantId,
+          isDeleted: false,
+        },
+        limit,
+        offset,
+      });
+
+      return {
+        data: rows,
+        pagination: {
+          totalItems: count,
+          currentPage: page,
+          totalPages: Math.ceil(count / pageSize),
+          pageSize: pageSize,
+        },
+      }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+  async handleReviewTenant(data) {
+
+    let { 
+      userId,
+      role,
+      tenantId,
+      review,
+    } = await userUtil.verifyHandleReviewTenant.validateAsync(data);
+    
+    if(role=='rent') throw new BadRequestError("Tenant dont have this access")
+
+    try {
+      await PropertyManagerReview.create({
+        propertyManagerId:userId,
+        tenantId:tenantId,
+        review: review,
+      });
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+  async handleQuitNoticeAction(data) {
+
+    let { 
+      userId,
+      role,
+      tenantId,
+      quitNoticeId,
+      ...updateData
+    } = await userUtil.verifyHandleQuitNoticeAction.validateAsync(data);
+    
+
+    if(role=='rent') throw new BadRequestError("Tenant dont have this access")
+
+      if (type === 'send') {
+        // Create a new quit notice
+        const newQuitNotice = await this.QuitNoticeModel.create({
+          propertyManagerId: userId,
+          tenantId: tenantId,
+          ...updateData,
+        });
+        return newQuitNotice;
+      }
+      else  if (type === 'get') {
+        const quitNotices = await this.QuitNoticeModel.findAll({
+          where: { tenantId: tenantId, isDeleted: false },
+          order: [['noticeDate', 'DESC']],
+        });
+        return quitNotices;
+      }
+      else  if (type === 'acknowledged') {
+        // Acknowledge a particular quit notice
+        const quitNoticeToUpdate = await this.QuitNoticeModel.findOne({
+          where: { id: quitNoticeId},
+        });
+  
+        if (!quitNoticeToUpdate) {
+          throw new NotFoundError('Quit notice not found');
+        }
+  
+        quitNoticeToUpdate.type = 'acknowledged';
+        await quitNoticeToUpdate.save();
+        return quitNoticeToUpdate;
+      }
+      else  if (type === 'delete') {
+
+        const quitNoticeToDelete = await this.QuitNoticeModel.findByPk(quitNoticeId)
+  
+        if (!quitNoticeToDelete) {
+          throw new NotFoundError('Quit notice not found');
+        }
+  
+        quitNoticeToDelete.isDeleted = true;
+        await quitNoticeToDelete.save();
+        return quitNoticeToDelete;
+      }
+    
+    
+
+  }
+
   async handleListBuilding(data,files) {
 
     let { 
@@ -194,6 +426,64 @@ class UserService {
 
 
   
+  async handleGetMyProperty(data) {
+
+    let { 
+    userId,
+    role,
+    type,
+    page 
+    } = await userUtil.verifyHandleGetMyProperty.validateAsync(data);
+    
+
+    try {
+
+      if(role=='list'){
+          
+        const offset = (page - 1) * pageSize;
+        const limit = pageSize;
+
+        let whereCondition = {
+          propertyManagerId:userId
+        };
+
+        if (type === 'vacant') {
+          whereCondition = {
+            availability: {
+              [Op.or]: ['vacant', 'booked'], 
+            },
+          };
+        } else if (type === 'occupied') {
+          whereCondition = {
+            availability: 'occupied',
+          };
+        }
+    
+        const buildings = await this.BuildingModel.findAndCountAll({
+          where: type !== 'all' ? whereCondition : undefined, // No condition if type is 'all'
+          limit,
+          offset,
+        });
+      
+        return {
+          data: buildings.rows,
+          totalItems: buildings.count,
+          currentPage: page,
+          totalPages: Math.ceil(buildings.count / pageSize),
+        };
+      }
+      
+  
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+ 
+
+
+  }
+  
   async handleInspectionAction(data) {
 
     let { 
@@ -231,11 +521,53 @@ class UserService {
           totalPages: Math.ceil(notCreatedInspections.count / pageSize),
         };
   
-      } else if (type === 'getPendingInspection') {
+      }
+      else if (type === 'getPendingInspection') {
         const pendingInspections = await this.InspectionModel.findAndCountAll({
           where: { inspectionStatus: 'pending', isDeleted: false },
           limit,
           offset,
+          include: [
+            {
+              model: Building,
+              as: 'BuildingInspection',
+              attributes: [
+                'id',
+                'propertyManagerId',
+                'propertyPreference',
+                'propertyLocation',
+                'city',
+                'address',
+                'lat',
+                'lng',
+                'numberOfFloors',
+                'numberOfRooms',
+                'amenity',
+                'roomPreference',
+                'availability',
+                'furnishingStatus',
+                'rentalDuration',
+                'price',
+                'electricityBill',
+                'wasteBill',
+                'commissionBill',
+                'propertyDescription',
+                'bedroomSizeLength',
+                'bedroomSizeWidth',
+                'bedroomSizeImage',
+                'kitchenSizeLength',
+                'kitchenSizeWidth',
+                'kitchenSizeImage',
+                'livingRoomSizeLength',
+                'livingRoomSizeWidth',
+                'livingRoomSizeImage',
+                'diningAreaSizeLength',
+                'diningAreaSizeWidth',
+                'diningAreaSizeImage',
+                'propertyTerms',
+              ], 
+        },
+        ],
         });
         return {
           data: pendingInspections.rows,
@@ -244,11 +576,55 @@ class UserService {
           totalPages: Math.ceil(pendingInspections.count / pageSize),
         };
   
-      } else if (type === 'getDeclineInspection') {
+      } 
+      else if (type === 'getDeclineInspection') {
         const declinedInspections = await this.InspectionModel.findAndCountAll({
-          where: { inspectionStatus: 'decline', isDeleted: false },
-          limit,
-          offset,
+          where: { 
+            inspectionStatus: 'decline',
+            isDeleted: false },
+            limit,
+            offset,
+            include: [
+            {
+              model: Building,
+              as: 'BuildingInspection',
+              attributes: [
+                'id',
+                'propertyManagerId',
+                'propertyPreference',
+                'propertyLocation',
+                'city',
+                'address',
+                'lat',
+                'lng',
+                'numberOfFloors',
+                'numberOfRooms',
+                'amenity',
+                'roomPreference',
+                'availability',
+                'furnishingStatus',
+                'rentalDuration',
+                'price',
+                'electricityBill',
+                'wasteBill',
+                'commissionBill',
+                'propertyDescription',
+                'bedroomSizeLength',
+                'bedroomSizeWidth',
+                'bedroomSizeImage',
+                'kitchenSizeLength',
+                'kitchenSizeWidth',
+                'kitchenSizeImage',
+                'livingRoomSizeLength',
+                'livingRoomSizeWidth',
+                'livingRoomSizeImage',
+                'diningAreaSizeLength',
+                'diningAreaSizeWidth',
+                'diningAreaSizeImage',
+                'propertyTerms',
+              ], 
+        },
+        ]
         });
         return {
           data: declinedInspections.rows,
@@ -257,11 +633,54 @@ class UserService {
           totalPages: Math.ceil(declinedInspections.count / pageSize),
         };
   
-      } else if (type === 'getAcceptedInspection') {
+      } 
+      else if (type === 'getAcceptedInspection') {
         const acceptedInspections = await this.InspectionModel.findAndCountAll({
-          where: { inspectionStatus: 'accepted', isDeleted: false },
-          limit,
-          offset,
+          where: { 
+            inspectionStatus: 'accepted', isDeleted: false },
+            limit,
+            offset,
+            include: [
+            {
+              model: Building,
+              as: 'BuildingInspection',
+              attributes: [
+                'id',
+                'propertyManagerId',
+                'propertyPreference',
+                'propertyLocation',
+                'city',
+                'address',
+                'lat',
+                'lng',
+                'numberOfFloors',
+                'numberOfRooms',
+                'amenity',
+                'roomPreference',
+                'availability',
+                'furnishingStatus',
+                'rentalDuration',
+                'price',
+                'electricityBill',
+                'wasteBill',
+                'commissionBill',
+                'propertyDescription',
+                'bedroomSizeLength',
+                'bedroomSizeWidth',
+                'bedroomSizeImage',
+                'kitchenSizeLength',
+                'kitchenSizeWidth',
+                'kitchenSizeImage',
+                'livingRoomSizeLength',
+                'livingRoomSizeWidth',
+                'livingRoomSizeImage',
+                'diningAreaSizeLength',
+                'diningAreaSizeWidth',
+                'diningAreaSizeImage',
+                'propertyTerms',
+              ], 
+        },
+        ]
         });
         return {
           data: acceptedInspections.rows,
@@ -270,7 +689,8 @@ class UserService {
           totalPages: Math.ceil(acceptedInspections.count / pageSize),
         };
   
-      } else if (type === 'createInspection') {
+      } 
+      else if (type === 'createInspection') {
 
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
@@ -317,17 +737,20 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
+
         const transactionReference=this.generateReference()
         const refund = await this.RefundLogModel.create({
-          transactionReference: inspection.transactionReference,
+          refundTransactionReference: inspection.transactionReference,
+          inspectionId: inspection.id,
+          refundReason: note, 
           role
         });
 
         const authToken = await authService.getAuthTokenMonify();
 
         const refundMetaData={
-          transactionReference: inspection.transactionReference,
-          refundReference :refund.id,
+          transactionReference: transactionReference,
+          refundReference:"refund_inspection"+"_"+transactionReference,
           refundAmount: transactionResult.amount, 
           refundReason: note, 
           customerNote:note,
@@ -339,25 +762,21 @@ class UserService {
       
           if (refundResponse.responseBody.refundStatus=="COMPLETED") {
 
-            const RefundLogModelResult = await this.RefundLogModel.findByPk(refundResponse.responseBody.refundReference);
+            const RefundLogModelResult = await this.RefundLogModel.findOne({
+              where:{
+                transactionReference:refundResponse.responseBody.refundReference
+              }
+            });
             await RefundLogModelResult.update({
-              refundStatus: 'COMPLETED'
+              refundStatus: 'PAID'
             });
 
-            if(RefundLogModelResult.role=='list'){
-              await inspection.update({
-                inspectionStatus: 'refunded',
-                note:refundResponse.responseBody.refundReason,
-                propertyManagerStatus:false
-              });
-            }else{
-              await inspection.update({
-                inspectionStatus: 'refunded',
-                note:refundResponse.responseBody.refundReason,
-                tenentStatus:false
-              });
-            }
-
+            await inspection.update({
+              inspectionStatus: 'refunded',
+              note:refundResponse.responseBody.refundReason,
+              propertyManagerStatus:false
+            });
+           
             return 'refund completed';
           } 
           else {
@@ -368,7 +787,6 @@ class UserService {
        
       }      
       else if (type === 'acceptInspection') {
-
 
         if(role=='rent')throw new BadRequestError("Not a property owner")
 
@@ -522,7 +940,6 @@ class UserService {
         }
 
       }
-  
       else if(type==='releaseFund'){
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }

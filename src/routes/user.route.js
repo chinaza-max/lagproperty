@@ -24,6 +24,12 @@ class UserRoutes extends UserController {
 
     this.router.post("/inspectionAction", this.inspectionAction);
     this.router.post("/chat",uploadHandler.image.single('image'), this.chat);
+    this.router.get("/getMyProperty", this.getMyProperty);
+    this.router.post("/quitNoticeAction", this.quitNoticeAction);
+    this.router.post("/reviewTenant", this.reviewTenant);
+    this.router.get("/getALLreviewTenant", this.getALLreviewTenant);
+    this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
+    this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
 
     
 

@@ -275,6 +275,50 @@ class AuthenticationService {
   }
 
 
+
+  async handleWebHookMonifyRefund(data) {
+
+    const { eventType, eventData } = data
+
+    const { transactionReference, paymentReference, amountPaid} = eventData;
+    const {  userId, buildingId, transactionType} = eventData.customer;
+
+
+    try {
+
+      const transactionStatus = await this.getTransactionStatus(transactionReference);
+
+
+      if(paymentReference.startsWith("refund_inspection")){
+            
+        const RefundLogModelResult  = await this.RefundLogModel.findOne({
+          where: { transactionReference },
+        });
+
+        const InspectionModelResult  = await this.InspectionModel.findOne({
+          where: { transactionReference },
+        });
+
+        await RefundLogModelResult.update({
+          paymentStatus:transactionStatus.paymentStatus
+        });
+
+        if(transactionStatus.paymentStatus==="PAID"){
+          await InspectionModelResult.update({
+            inspectionStatus: 'refunded',
+            note:refundResponse.responseBody.refundReason,
+          });
+        }
+
+      }
+
+    } catch (error) {
+        console.log(error)
+    }
+   
+
+  }
+
   async handleWebHookMonify(data) {
 
     const { eventType, eventData } = data
@@ -496,15 +540,15 @@ class AuthenticationService {
           'Content-Type': 'application/json',
         },
       });
-         
+
       //console.log(response.data.responseBody)
 
       return response.data.responseBody;
     } catch (error) {   
-      console.error('Error fetching transaction status:', error.message);
+      console.error('Error fetching transaction status:', error?.message);
        
-      //console.error('Error fetching transaction status:', error);
-      throw error;
+      console.error('Error fetching transaction status:', error.response.data);
+      //throw error;
     }
   }
 

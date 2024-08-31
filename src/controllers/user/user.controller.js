@@ -69,6 +69,168 @@ export default class UserController {
   }
 
 
+  
+  async getUpcomingInspection(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetUpcomingInspection(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        response
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+  
+  async getTenantsWithDueRent(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetTenantsWithDueRent(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        response
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+  
+  async getALLreviewTenant(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetALLreviewTenant(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        response
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
+  async reviewTenant(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+       await userService.handleReviewTenant(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+  async quitNoticeAction(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+       await userService.handleQuitNoticeAction(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
+  async getMyProperty(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id,
+        role:req.user.role
+      }
+
+       await userService.handleGetMyProperty(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "updated successfully",
+      });
+       
+        
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
   async inspectionAction(req, res, next) {
 
     try {

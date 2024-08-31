@@ -295,7 +295,26 @@ export default class AuthenticationController {
   }
 
 
-  
+  async webHookMonifyRefund(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      await authService.handleWebHookMonifyRefund(req.body);
+
+      return res.status(200).json({
+        status: 200,
+        message: "web hook received successufully"
+      })
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
 
   async webHookMonify(
     req,

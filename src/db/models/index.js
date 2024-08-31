@@ -11,6 +11,7 @@ import PropertyManager, { init as initPropertyManager } from "./propertyManager.
 import PropertyManagerReview, { init as initPropertyManagerReview } from "./propertyManagerReview.js";
 import Transaction , { init as initTransaction } from "./transaction.js";
 import RefundLog , { init as initRefundLog } from "./RefundLog.js";
+import QuitNotice , { init as initQuitNotice } from "./quitNotice.js";
 
 
 
@@ -26,6 +27,18 @@ function associate() {
   Tenant.belongsTo(ProspectiveTenant, {
     foreignKey: 'prospectiveTenantId',
   })
+
+  
+  
+
+  Tenant.hasMany(QuitNotice, {
+    foreignKey: 'tenantId',
+    as: "myQuitNotice",
+  });
+  QuitNotice.belongsTo(Tenant, {
+    foreignKey: 'tenantId',
+  })
+
 
 
   Building.hasMany(TenantReview, {
@@ -70,7 +83,6 @@ function associate() {
     foreignKey: 'propertyManagerId',
   })
 
-
   Chat.belongsTo(Chat, { 
     as: 'RepliedMessage',
     foreignKey: 'repliedMessageId' 
@@ -105,6 +117,7 @@ export {
   PropertyManagerReview,
   Transaction,
   RefundLog,
+  QuitNotice,
   Tenant
 }
 
@@ -122,6 +135,7 @@ export function init(connection) {
   initTransaction(connection)
   initTenant(connection)
   initRefundLog(connection)
+  initQuitNotice(connection)
 
   associate();
   authenticateConnection(connection)

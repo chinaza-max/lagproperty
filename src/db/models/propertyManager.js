@@ -125,7 +125,7 @@ export function init(connection) {
         defaultValue:false ,
       }
     }, {
-      tableName: 'propertyManager',
+      tableName: 'PropertyManager',
       sequelize: connection,
       timestamps: true,
       underscored:false
