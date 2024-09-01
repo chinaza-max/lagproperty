@@ -305,7 +305,9 @@ class UserUtil {
       'selfContains', 
       'roomAndParlour', 
       'all'
-    ).required()
+    ).required(),
+    page: Joi.number().integer().min(1).default(1),
+    pageSize: Joi.number().integer().min(1).default(10) 
   });
 
   verifyHandleGetTenantsWithDueRent= Joi.object({

@@ -463,16 +463,28 @@ class AuthenticationService {
 
       try {
 
+       // const transactionReference='MFDS6920240901013034010653H1X7Y7'
+       // const transactionStatus = await this.getTransactionStatus(transactionReference);
+
+        const transactionStatus = await this.getTransactionStatus2('referen00ce---1290035');
+
+        console.log(transactionStatus)
+        return transactionStatus
+        
+        return
           const token=await this.getAuthTokenMonify()
-          const transferDetails={
+
+          const transferDetails={         
             "amount": 200,
-            "reference":"referen00ce---1290034",
-            "narration":"911 Transaction",
-            "destinationBankCode": "057",
+            "reference":"referen00ce---1290035",
+            "narration":"911 Transaction" ,
+            "destinationBankCode": "057", 
             "destinationAccountNumber": "2085886393",
             "currency": "NGN",
-            "sourceAccountNumber": "5948568393"
+            "sourceAccountNumber":"5948568393"
           }
+
+          //
           const res=await  this.initiateTransfer(token,transferDetails)
 
           console.log(res)
@@ -575,21 +587,45 @@ class AuthenticationService {
 
   async  getTransactionStatus(transactionReference) {
     const authToken = await this.getAuthTokenMonify();
-    
+
+
     try {
-
-      const encodedTransactionReference = encodeURIComponent("MNFY|76|20211117154810|000001");
-
-      const response = await axios.get(`https://sandbox.monnify.com/api/v2/merchant/transactions/query?transactionReference=${encodedTransactionReference}`, {
+      const encodedTransactionReference = encodeURIComponent(transactionReference)
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/merchant/transactions/query?transactionReference=${encodedTransactionReference}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
       });
 
       //console.log(response.data.responseBody)
 
       return response.data.responseBody;
+    } catch (error) {   
+      console.error('Error fetching transaction status:', error?.message);
+       
+      console.error('Error fetching transaction status:', error.response.data);
+      //throw error;
+    }
+  }
+
+  async  getTransactionStatus2(transactionReference) {
+    const authToken = await this.getAuthTokenMonify();
+    
+    try {
+
+      const encodedTransactionReference = encodeURIComponent(transactionReference);
+
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single/summary?reference=${encodedTransactionReference}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+   
+      return response.data.responseBody;
+
     } catch (error) {   
       console.error('Error fetching transaction status:', error?.message);
        

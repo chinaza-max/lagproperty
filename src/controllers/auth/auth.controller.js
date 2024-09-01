@@ -327,7 +327,7 @@ export default class AuthenticationController {
 
       return res.status(200).json({
         status: 200,
-        message: "web hook received successufully"
+        message: "web hook received successufull"
       })
     } catch (error) {
       next(error);
@@ -344,12 +344,13 @@ export default class AuthenticationController {
   ) {
     try {
 
-      await authService.handleInitiatePayment(req.body);
+      const response=await authService.handleInitiatePayment(req.body);
 
 
       return res.status(200).json({
         status: 200,
-        message: "successufully"
+        message: "successufull",
+        data: response
       });
     } catch (error) {
       next(error);

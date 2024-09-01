@@ -366,11 +366,12 @@ export default class UserController {
         role:req.user.role
       }
 
-       await userService.handleGetMyProperty(my_bj);
+      const response= await userService.handleGetMyProperty(my_bj);
   
       return res.status(200).json({
         status: 200,
-        message: "updated successfully",
+        message: "successfull",
+        data:response
       });
        
         

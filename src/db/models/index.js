@@ -44,7 +44,6 @@ function associate() {
   })
 
 
-
   Building.hasMany(TenantReview, {
     foreignKey: 'buildingId',
     as: "BuildingReview",
@@ -85,6 +84,16 @@ function associate() {
     as: "BuildingRefundLog",
   });
   RefundLog.belongsTo(Building, {
+    foreignKey: 'buildingId',
+  })
+
+
+
+  Building.hasMany(Tenant, {
+    foreignKey: 'buildingId',
+    as: "BuildingTenant",
+  });
+  Tenant.belongsTo(Building, {
     foreignKey: 'buildingId',
   })
 
