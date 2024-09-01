@@ -28,7 +28,11 @@ function associate() {
     foreignKey: 'prospectiveTenantId',
   })
 
-  
+  Chat.belongsTo(Chat, {
+    as: 'RepliedMessage',
+    foreignKey: 'repliedMessageId',
+  });
+
   
 
   Tenant.hasMany(QuitNotice, {
@@ -61,7 +65,7 @@ function associate() {
 
   ProspectiveTenant.hasMany(Inspection, {
     foreignKey: 'prospectiveTenantId',
-    as: "Inspection", 
+    as: "MyInspection", 
   });
   Inspection.belongsTo(ProspectiveTenant, {
     foreignKey: 'prospectiveTenantId',
@@ -75,6 +79,15 @@ function associate() {
     foreignKey: 'buildingId',
   })
 
+
+  Building.hasMany(RefundLog, {
+    foreignKey: 'buildingId',
+    as: "BuildingRefundLog",
+  });
+  RefundLog.belongsTo(Building, {
+    foreignKey: 'buildingId',
+  })
+
   PropertyManager.hasMany(Building, {
     foreignKey: 'propertyManagerId',
     as: "propertyManagerBuilding",
@@ -83,10 +96,7 @@ function associate() {
     foreignKey: 'propertyManagerId',
   })
 
-  Chat.belongsTo(Chat, { 
-    as: 'RepliedMessage',
-    foreignKey: 'repliedMessageId' 
-  });
+ 
 
 
   //console.log(BusinessSpot.associations)

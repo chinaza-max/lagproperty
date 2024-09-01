@@ -70,6 +70,157 @@ export default class UserController {
 
 
   
+  async getInspectionDetails(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetInspectionDetails(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+  
+  async getTransactionRefund(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetTransactionRefund(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+  
+  async getTransaction(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetTransaction(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+  
+  async getChat(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetChat(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+
+
+  async getBuildingDetails(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetBuildingDetails(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+
+  async getBuildings(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetBuildings(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+  
   async getUpcomingInspection(req, res, next) {
 
     try {
@@ -89,12 +240,10 @@ export default class UserController {
         response
       });
       
-     
     } catch (error) {
       console.log(error);
       next(error)
     }
-    
   }
   
   async getTenantsWithDueRent(req, res, next) {
@@ -151,6 +300,7 @@ export default class UserController {
     
   }
 
+  
 
   async reviewTenant(req, res, next) {
 
@@ -242,11 +392,12 @@ export default class UserController {
         role:req.user.role
       }
 
-       await userService.handleInspectionAction(my_bj);
+      const response=await userService.handleInspectionAction(my_bj);
   
       return res.status(200).json({
         status: 200,
-        message: "updated successfully",
+        message: "successfull",
+        response
       });
        
         

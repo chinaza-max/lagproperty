@@ -9,6 +9,7 @@ import {
   Chat,
   QuitNotice,
   PropertyManagerReview,
+  TenantReview,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -22,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { addMonths } from 'date-fns';
 
 import {
-  NotFoundError,
+  NotFoundError,   
   ConflictError,
   BadRequestError,
   SystemError
@@ -44,6 +45,7 @@ class UserService {
   ChatModel=Chat
   QuitNoticeModel=QuitNotice
   PropertyManagerReviewModel=PropertyManagerReview
+  TenantReviewModel=TenantReview
 
 
   
@@ -128,7 +130,488 @@ class UserService {
 
   
 
+
   
+
+  async handleGetInspectionDetails(data) {
+
+    const { userId ,role , inspectionId} = await userUtil.verifyHandleGetInspectionDetails.validateAsync(data);
+
+    try {
+  
+      const inspection = await this.InspectionModel.findOne({
+        where: { id:inspectionId },
+        attributes: {
+          exclude: ['password'] 
+        },
+        include: [
+          {
+            model: Building,
+            as: 'BuildingInspection',
+          },
+          {
+            model: this.ProspectiveTenantModel,
+            as: 'MyInspection',
+            attributes: {
+              exclude: ['password']
+            }
+          }
+        ]
+      });
+
+      if (!inspection) {
+          throw new NotFoundError('Inspection not found')
+      }
+
+      return inspection
+    
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+
+  async handleGetTransactionRefund(data) {
+
+    const { userId ,role , page, pageSize,} = await userUtil.verifyHandleGetTransactionRefund.validateAsync(data);
+
+    try {
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
+      
+      let transactions;
+
+      if (role === 'rent') {
+
+        transactions = await this.RefundLogModel.findAll({
+          where: {
+            prospectiveTenantId:userId 
+          },
+          order: [['createdAt', 'DESC']],
+          limit,
+          offset
+        });
+
+      }
+      else if(role === 'list'){
+        transactions = await this.RefundLogModel.findAll({
+          where: {
+            isDeleted:false
+          },
+          order: [['createdAt', 'DESC']],
+          include: [{
+            model: this.BuildingModel,
+            where: {
+              prospectiveTenantId: userId
+            }
+          }],
+          limit,
+          offset
+        });
+      }
+
+
+      return transactions
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+  async handleGetTransaction(data) {
+
+    const { userId, type ,role , page, pageSize,} = await userUtil.verifyHandleGetTransaction.validateAsync(data);
+
+    try {
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
+      
+      let transactions;
+
+      if (role === 'rent') {
+
+        transactions = await this.TransactionModel.findAll({
+          where: {
+            userId 
+          },
+          order: [['createdAt', 'DESC']],
+          limit,
+          offset
+        });
+
+      }
+      else if(role === 'list'){
+        transactions = await this.TransactionModel.findAll({
+          where: {
+            isDeleted:false
+          },
+          order: [['createdAt', 'DESC']],
+          include: [{
+            model: this.BuildingModel,
+            where: {
+              userId: userId
+            }
+          }],
+          limit,
+          offset
+        });
+      }
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+  async handleGetBuildingDetails(data) {
+
+    const { userId, buildingId} = await userUtil.verifyHandleGetBuildingDetails.validateAsync(data);
+
+    try {
+      const buildingDetails = await this.BuildingModel.findOne({
+        where: { id: buildingId, isDeleted: false },
+        include:[ {
+          model: this.PropertyManagerModel,
+          as: 'propertyManagerBuilding',
+          attributes: {
+            exclude: [
+              'password',
+              'agentBankCode',
+              'agentBankAccount',
+              'landlordBankCode',
+              'landlordBankAccount',
+              'lasrraId',
+              'nin',
+              'isDeleted',
+              'disableAccount',
+              'notificationAllowed',
+              'role'
+            ]
+          }
+        },
+        {
+          model:this.TenantReviewModel,
+          as: 'BuildingReview',
+          attributes: ['id', 'reviewText', 'rating', 'createdAt'],
+        }
+      ]
+      });
+  
+      if (!buildingDetails) {
+        throw new NotFoundError('BuildingNotFound', 'Building not found');
+      }
+  
+      return buildingDetails;
+  
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+  async handleGetBuildings(data) {
+
+    const { userId, page, pageSize, type} = await userUtil.verifyHandleGetBuildings.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      
+      let whereClause = {};
+      let orderClause = [];
+      let buildings = []
+      let totalCount = 0
+
+      if (['flats', 'duplex', 'selfContains', 'roomAndParlour'].includes(type)) {
+        
+        buildings = await this.BuildingModel.findAll({
+            where:{
+              propertyPreference:type,
+              availability:'vacant',
+              isDeleted:false
+            },
+            offset,
+            limit
+        });
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            propertyPreference:type,
+            availability:'vacant',
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+      }
+      else if(type=='all'){
+
+        buildings = await this.BuildingModel.findAll({
+          where:{
+            availability:'vacant',
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            propertyPreference:type,
+            availability:'vacant',
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+      }
+      else if(type == 'topRated'){
+
+        const { count, rows }  = await this.BuildingModel.findAll({
+          where:{
+            availability:'vacant',
+            isDeleted:false
+          },
+          attributes: [
+            'id',
+            'propertyPreference',
+            // Calculate average rating, default to 0 if no reviews
+            [fn('COALESCE', fn('AVG', col('TenantReviews.rating')), 0), 'averageRating'],
+            // Count number of reviews
+            [fn('COUNT', col('TenantReviews.id')), 'reviewCount']
+          ],
+          include: [
+            {
+              model: TenantReview,
+              as: 'TenantReviews',
+              attributes: [],
+              required: false, 
+            }
+          ],
+          group: ['Building.id'],
+          order: [[literal('averageRating'), 'DESC']],
+          offset,
+          limit,
+          subQuery: false
+        });
+
+        buildings = rows.map(building => ({
+          ...building.toJSON(),
+          averageRating: parseFloat(building.getDataValue('averageRating')) || 0,
+          reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
+        }));
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            availability:'vacant',
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+      }
+      else if(type == 'popular'){
+
+        const { count, rows }  = await this.BuildingModel.findAll({
+          where:{
+            availability:'vacant',
+            isDeleted:false
+          },
+          attributes: [
+            'id',
+            'propertyPreference',
+            // Calculate average rating, default to 0 if no reviews
+            [fn('COALESCE', fn('AVG', col('TenantReviews.rating')), 0), 'averageRating'],
+            // Count number of reviews
+            [fn('COUNT', col('TenantReviews.id')), 'reviewCount']
+            [fn('COUNT', col('Tenants.id')), 'tenantCount'],
+          ],
+          include: [
+            {
+              model: TenantReview,
+              as: 'TenantReviews',
+              attributes: [],
+              required: false, 
+            }
+          ],
+          group: ['Building.id'],
+          order: [[literal('tenantCount'), 'DESC']],
+          offset,
+          limit,
+          subQuery: false
+        });
+
+        buildings = rows.map(building => ({
+          ...building.toJSON(),
+          averageRating: parseFloat(building.getDataValue('averageRating')) || 0,
+          reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
+        }));
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            availability:'vacant',
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+      }
+
+      else if(type == 'recommended'){
+
+        const user = await this.ProspectiveTenantModel.findByPk(userId);
+        if (!user) {
+          throw new NotFoundError('User not found');
+        }
+
+        const { propertyPreference, rentalDuration } = user;
+
+
+        const { count, rows }  = await this.BuildingModel.findAll({
+          where:{
+            availability:'vacant',
+            propertyPreference: {
+              [Op.in]: propertyPreference,
+            },
+            rentalDuration: rentalDuration,
+            isDeleted:false
+          },
+          attributes: [
+            'id',
+            'propertyPreference',
+            // Calculate average rating, default to 0 if no reviews
+            [fn('COALESCE', fn('AVG', col('TenantReviews.rating')), 0), 'averageRating'],
+            // Count number of reviews
+            [fn('COUNT', col('TenantReviews.id')), 'reviewCount']
+          ],
+          include: [
+            {
+              model: TenantReview,
+              as: 'TenantReviews',
+              attributes: [],
+              required: false, 
+            }
+          ],
+          group: ['Building.id'],
+          order: [[literal('averageRating'), 'DESC']],
+          offset,
+          limit,
+          subQuery: false
+        });
+
+        buildings = rows.map(building => ({
+          ...building.toJSON(),
+          averageRating: parseFloat(building.getDataValue('averageRating')) || 0,
+          reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
+        }));
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            availability:'vacant',
+            propertyPreference: {
+              [Op.in]: propertyPreference,
+            },
+            rentalDuration: rentalDuration,
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+      }
+
+      else if(type == 'bestOffer'){
+
+        const user = await this.ProspectiveTenantModel.findByPk(userId);
+        if (!user) {
+          throw new NotFoundError('User not found');
+        }
+
+        const { budgetMin, budgetMax } = user;
+
+
+        const { count, rows }  = await this.BuildingModel.findAll({
+          where:{
+            availability:'vacant',
+            price: {
+              [Op.between]: [budgetMin, budgetMax],
+            },
+            rentalDuration: rentalDuration,
+            isDeleted:false
+          },
+          attributes: [
+            'id',
+            'propertyPreference',
+            // Calculate average rating, default to 0 if no reviews
+            [fn('COALESCE', fn('AVG', col('TenantReviews.rating')), 0), 'averageRating'],
+            // Count number of reviews
+            [fn('COUNT', col('TenantReviews.id')), 'reviewCount']
+          ],
+          include: [
+            {
+              model: TenantReview,
+              as: 'TenantReviews',
+              attributes: [],
+              required: false, 
+            }
+          ],
+          group: ['Building.id'],
+          order: [['price', 'ASC']],
+          offset,
+          limit,
+          subQuery: false
+        });
+
+        buildings = rows.map(building => ({
+          ...building.toJSON(),
+          averageRating: parseFloat(building.getDataValue('averageRating')) || 0,
+          reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
+        }));
+
+        totalCount = await this.BuildingModel.count({
+          where:{
+            availability:'vacant',
+            propertyPreference: {
+              [Op.in]: propertyPreference,
+            },
+            rentalDuration: rentalDuration,
+            isDeleted:false
+          },
+          offset,
+          limit
+        });
+
+      }
+
+  
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    return {
+      totalCount,
+      totalPages,
+      currentPage: page,
+      pageSize,
+      buildings: buildings,
+    };
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
   
   async handleGetUpcomingInspection(data) {
 
@@ -138,41 +621,69 @@ class UserService {
     const limit = pageSize;
 
     try {
-      const { count, rows } = await this.TenantModel.findAndCountAll({
-        include: [
-          {
-            model: this.BuildingModel,
-            as: 'BuildingReview',
-            where: { propertyManagerId:userId },
-          },
-          {
-            model: this.ProspectiveTenantModel,
-            as: 'rentalhistory',
-          }
-        ],
-        where: {
-          [Op.or]: [
-            { status: 'rentDue' },
-            { status: 'terminated' }
-          ],
-          isDeleted: false,
-          rentNextDueDate: {
-            [Op.lte]: new Date() // Ensure due date is in the past or today
-          }
-        },
-        limit,
-        offset,
-      });
+      
+      const today = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(today.getDate() + 3);
 
-      return {
-        data: rows,
-        pagination: {
-          totalItems: count,
-          currentPage: page,
-          totalPages: Math.ceil(count / pageSize),
-          pageSize: pageSize,
+    const totalCount = await Inspection.count({
+      include: [
+        {
+          model: this.BuildingModel,
+          as: 'BuildingInspection',
+          include: [
+            {
+              model: this.PropertyManagerModel,
+              as: 'propertyManagerBuilding',
+              where: { id: userId },
+            },
+          ],
         },
-      }
+      ],
+      where: {
+        fullDate: {
+          [Op.between]: [today, threeDaysFromNow], // Filter for inspections within today and the next 3 days
+        },
+        isDeleted: false,
+      },
+    });
+
+    const upcomingInspections = await Inspection.findAll({
+      include: [
+        {
+          model: Building,
+          as: 'Building',
+          include: [
+            {
+              model: PropertyManager,
+              as: 'PropertyManager',
+              where: { id: userId },
+            },
+          ],
+        },
+      ],
+      where: {
+        fullDate: {
+          [Op.between]: [today, threeDaysFromNow], // Filter for inspections within today and the next 3 days
+        },
+        isDeleted: false,
+      },
+      limit,
+      offset,
+      order: [['fullDate', 'ASC']], // Order by date
+    });
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    return {
+      totalCount,
+      totalPages,
+      currentPage: page,
+      pageSize,
+      inspections: upcomingInspections,
+    };
+
+      
 
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
@@ -509,185 +1020,406 @@ class UserService {
       const limit = pageSize;
   
       if (type === 'getNotCreatedInspection') {
-        const notCreatedInspections = await this.InspectionModel.findAndCountAll({
-          where: { inspectionStatus: 'notCreated', isDeleted: false },
-          limit,
-          offset,
-        });
-        return {
-          data: notCreatedInspections.rows,
-          totalItems: notCreatedInspections.count,
-          currentPage: page,
-          totalPages: Math.ceil(notCreatedInspections.count / pageSize),
-        };
-  
+
+        if(role==="list"){
+               
+            const notCreatedInspections = await this.InspectionModel.findAndCountAll({
+              where: { 
+                inspectionStatus: 'notCreated', 
+                isDeleted: false 
+              },
+              include: [{
+                model: this.BuildingModel,
+                where: { propertyManagerId: userId },
+                required: true
+              }],
+              limit,
+              offset,
+            });
+            return {
+              data: notCreatedInspections.rows,
+              totalItems: notCreatedInspections.count,
+              currentPage: page,
+              totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+            };
+        }
+        else{
+          const notCreatedInspections = await this.InspectionModel.findAndCountAll({
+            where: { 
+              inspectionStatus: 'notCreated', 
+              prospectiveTenantId:userId,
+              isDeleted: false 
+            },
+            limit,
+            offset,
+          });
+          return {
+            data: notCreatedInspections.rows,
+            totalItems: notCreatedInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+          };
+        }
+    
       }
       else if (type === 'getPendingInspection') {
-        const pendingInspections = await this.InspectionModel.findAndCountAll({
-          where: { inspectionStatus: 'pending', isDeleted: false },
-          limit,
-          offset,
-          include: [
-            {
-              model: Building,
-              as: 'BuildingInspection',
-              attributes: [
-                'id',
-                'propertyManagerId',
-                'propertyPreference',
-                'propertyLocation',
-                'city',
-                'address',
-                'lat',
-                'lng',
-                'numberOfFloors',
-                'numberOfRooms',
-                'amenity',
-                'roomPreference',
-                'availability',
-                'furnishingStatus',
-                'rentalDuration',
-                'price',
-                'electricityBill',
-                'wasteBill',
-                'commissionBill',
-                'propertyDescription',
-                'bedroomSizeLength',
-                'bedroomSizeWidth',
-                'bedroomSizeImage',
-                'kitchenSizeLength',
-                'kitchenSizeWidth',
-                'kitchenSizeImage',
-                'livingRoomSizeLength',
-                'livingRoomSizeWidth',
-                'livingRoomSizeImage',
-                'diningAreaSizeLength',
-                'diningAreaSizeWidth',
-                'diningAreaSizeImage',
-                'propertyTerms',
-              ], 
-        },
-        ],
-        });
-        return {
-          data: pendingInspections.rows,
-          totalItems: pendingInspections.count,
-          currentPage: page,
-          totalPages: Math.ceil(pendingInspections.count / pageSize),
-        };
+
+
+        if(role==='list'){
+          const pendingInspections = await this.InspectionModel.findAndCountAll({
+            where: { inspectionStatus: 'pending', isDeleted: false },
+            limit,
+            offset,
+            include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+                /*attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], */
+                where: { propertyManagerId: userId },
+            },
+          ],
+          });
+          return {
+            data: pendingInspections.rows,
+            totalItems: pendingInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(pendingInspections.count / pageSize),
+          };
+        }else{
+          const pendingInspections = await this.InspectionModel.findAndCountAll({
+            where: {
+               inspectionStatus: 'pending', 
+               prospectiveTenantId:userId,
+               isDeleted: false },
+            limit,
+            offset,
+            include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+                /*attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], */
+              },
+          ],
+          });
+          return {
+            data: pendingInspections.rows,
+            totalItems: pendingInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(pendingInspections.count / pageSize),
+          };
+        }
+
+       
   
       } 
       else if (type === 'getDeclineInspection') {
-        const declinedInspections = await this.InspectionModel.findAndCountAll({
-          where: { 
-            inspectionStatus: 'decline',
-            isDeleted: false },
-            limit,
-            offset,
-            include: [
-            {
-              model: Building,
-              as: 'BuildingInspection',
-              attributes: [
-                'id',
-                'propertyManagerId',
-                'propertyPreference',
-                'propertyLocation',
-                'city',
-                'address',
-                'lat',
-                'lng',
-                'numberOfFloors',
-                'numberOfRooms',
-                'amenity',
-                'roomPreference',
-                'availability',
-                'furnishingStatus',
-                'rentalDuration',
-                'price',
-                'electricityBill',
-                'wasteBill',
-                'commissionBill',
-                'propertyDescription',
-                'bedroomSizeLength',
-                'bedroomSizeWidth',
-                'bedroomSizeImage',
-                'kitchenSizeLength',
-                'kitchenSizeWidth',
-                'kitchenSizeImage',
-                'livingRoomSizeLength',
-                'livingRoomSizeWidth',
-                'livingRoomSizeImage',
-                'diningAreaSizeLength',
-                'diningAreaSizeWidth',
-                'diningAreaSizeImage',
-                'propertyTerms',
-              ], 
-        },
-        ]
-        });
-        return {
-          data: declinedInspections.rows,
-          totalItems: declinedInspections.count,
-          currentPage: page,
-          totalPages: Math.ceil(declinedInspections.count / pageSize),
-        };
+
+        if(role==='list'){
+          const declinedInspections = await this.InspectionModel.findAndCountAll({
+            where: { 
+              inspectionStatus: 'decline',
+              isDeleted: false 
+            },
+              limit,
+              offset,
+              include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+                attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], 
+                where: { propertyManagerId: userId },
+                required: true
+              },
+          ]
+          });
+          return {
+            data: declinedInspections.rows,
+            totalItems: declinedInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(declinedInspections.count / pageSize),
+          };
+        }
+        else{
+          const declinedInspections = await this.InspectionModel.findAndCountAll({
+            where: { 
+              inspectionStatus: 'decline',
+              prospectiveTenantId:userId,
+              isDeleted: false 
+            },
+              limit,
+              offset,
+              include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+                attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], 
+          },
+          ]
+          });
+          return {
+            data: declinedInspections.rows,
+            totalItems: declinedInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(declinedInspections.count / pageSize),
+          };
+        }
+      
   
       } 
       else if (type === 'getAcceptedInspection') {
-        const acceptedInspections = await this.InspectionModel.findAndCountAll({
-          where: { 
-            inspectionStatus: 'accepted', isDeleted: false },
-            limit,
-            offset,
-            include: [
-            {
-              model: Building,
-              as: 'BuildingInspection',
-              attributes: [
-                'id',
-                'propertyManagerId',
-                'propertyPreference',
-                'propertyLocation',
-                'city',
-                'address',
-                'lat',
-                'lng',
-                'numberOfFloors',
-                'numberOfRooms',
-                'amenity',
-                'roomPreference',
-                'availability',
-                'furnishingStatus',
-                'rentalDuration',
-                'price',
-                'electricityBill',
-                'wasteBill',
-                'commissionBill',
-                'propertyDescription',
-                'bedroomSizeLength',
-                'bedroomSizeWidth',
-                'bedroomSizeImage',
-                'kitchenSizeLength',
-                'kitchenSizeWidth',
-                'kitchenSizeImage',
-                'livingRoomSizeLength',
-                'livingRoomSizeWidth',
-                'livingRoomSizeImage',
-                'diningAreaSizeLength',
-                'diningAreaSizeWidth',
-                'diningAreaSizeImage',
-                'propertyTerms',
-              ], 
-        },
-        ]
-        });
-        return {
-          data: acceptedInspections.rows,
-          totalItems: acceptedInspections.count,
-          currentPage: page,
-          totalPages: Math.ceil(acceptedInspections.count / pageSize),
-        };
+
+
+        if(role==='list'){
+          const acceptedInspections = await this.InspectionModel.findAndCountAll({
+            where: { 
+              inspectionStatus: 'accepted', isDeleted: false },
+              limit,
+              offset,
+              include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+              /*  attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], */
+                where: { propertyManagerId: userId },
+                required: true
+          },
+          ]
+          });
+          return {
+            data: acceptedInspections.rows,
+            totalItems: acceptedInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(acceptedInspections.count / pageSize),
+          };
+        }
+        else{
+          const acceptedInspections = await this.InspectionModel.findAndCountAll({
+            where: { 
+              inspectionStatus: 'accepted',
+              prospectiveTenantId:userId,
+              isDeleted: false },
+              limit,
+              offset,
+              include: [
+              {
+                model: Building,
+                as: 'BuildingInspection',
+                attributes: [
+                  'id',
+                  'propertyManagerId',
+                  'propertyPreference',
+                  'propertyLocation',
+                  'city',
+                  'address',
+                  'lat',
+                  'lng',
+                  'numberOfFloors',
+                  'numberOfRooms',
+                  'amenity',
+                  'roomPreference',
+                  'availability',
+                  'furnishingStatus',
+                  'rentalDuration',
+                  'price',
+                  'electricityBill',
+                  'wasteBill',
+                  'commissionBill',
+                  'propertyDescription',
+                  'bedroomSizeLength',
+                  'bedroomSizeWidth',
+                  'bedroomSizeImage',
+                  'kitchenSizeLength',
+                  'kitchenSizeWidth',
+                  'kitchenSizeImage',
+                  'livingRoomSizeLength',
+                  'livingRoomSizeWidth',
+                  'livingRoomSizeImage',
+                  'diningAreaSizeLength',
+                  'diningAreaSizeWidth',
+                  'diningAreaSizeImage',
+                  'propertyTerms',
+                ], 
+          },
+          ]
+          });
+          return {
+            data: acceptedInspections.rows,
+            totalItems: acceptedInspections.count,
+            currentPage: page,
+            totalPages: Math.ceil(acceptedInspections.count / pageSize),
+          };
+        }
+      
   
       } 
       else if (type === 'createInspection') {
@@ -742,7 +1474,9 @@ class UserService {
         const refund = await this.RefundLogModel.create({
           refundTransactionReference: inspection.transactionReference,
           inspectionId: inspection.id,
+          buildingId: inspection.buildingId,
           refundReason: note, 
+          prospectiveTenantId: inspection.prospectiveTenantId, 
           role
         });
 

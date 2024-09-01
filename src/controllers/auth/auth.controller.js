@@ -336,6 +336,25 @@ export default class AuthenticationController {
 
 
 
+  
+  async initiatePayment(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      await authService.handleInitiatePayment(req.body);
+
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async resetPassword(
     req,

@@ -30,8 +30,16 @@ import { Model, DataTypes } from "sequelize";
             allowNull: false
         },
         inspectionId: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           allowNull: true
+        },  
+        prospectiveTenantId: {
+          type: DataTypes.INTEGER,
+          allowNull: false
+        },  
+        buildingId: {
+          type: DataTypes.INTEGER,
+          allowNull: false
         },  
         refundReason: {
           type: DataTypes.TEXT,

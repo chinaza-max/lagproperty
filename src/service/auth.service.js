@@ -308,6 +308,15 @@ class AuthenticationService {
             inspectionStatus: 'refunded',
             note:refundResponse.responseBody.refundReason,
           });
+
+          const BuildingModelResult  = await this.BuildingModel.findOne({
+            where: { id:RefundLogModelResult.buildingId },
+          });
+
+          await BuildingModelResult.update({
+            availability:'vacant'
+          });
+
         }
 
       }
@@ -331,7 +340,6 @@ class AuthenticationService {
       const existingTransaction  = await this.TransactionModel.findOne({
         where: { transactionReference },
       });
-
 
       if(!existingTransaction ){
 
@@ -450,6 +458,30 @@ class AuthenticationService {
 
   }
 
+  
+  async handleInitiatePayment(data) {
+
+      try {
+
+          const token=await this.getAuthTokenMonify()
+          const transferDetails={
+            "amount": 200,
+            "reference":"referen00ce---1290034",
+            "narration":"911 Transaction",
+            "destinationBankCode": "057",
+            "destinationAccountNumber": "2085886393",
+            "currency": "NGN",
+            "sourceAccountNumber": "5948568393"
+          }
+          const res=await  this.initiateTransfer(token,transferDetails)
+
+          console.log(res)
+      } catch (error) {
+          console.log(error)
+      }
+
+  }
+
   async handleResetPassword(data) {
 
     var {  password, resetPasswordKey } =
@@ -501,6 +533,20 @@ class AuthenticationService {
     } catch (error) {
       throw new ServerError("Failed to update password");
     }
+  }
+
+  async  initiateTransfer(token, transferDetails) {
+    const response = await axios.post(
+      `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+      transferDetails,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    return response.data;
   }
 
   async  getAuthTokenMonify() {             
