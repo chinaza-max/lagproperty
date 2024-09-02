@@ -370,7 +370,7 @@ class UserService {
 
       if (['flats', 'duplex', 'selfContains', 'roomAndParlour'].includes(type)) {
         
-        buildings = await this.BuildingModel.findAll({
+        const { count, rows } = await this.BuildingModel.findAndCountAll({
             where:{
               propertyPreference:type,
               availability:'vacant',
@@ -380,7 +380,7 @@ class UserService {
             limit
         });
 
-        totalCount = await this.BuildingModel.count({
+       /* totalCount = await this.BuildingModel.count({
           where:{
             propertyPreference:type,
             availability:'vacant',
@@ -388,12 +388,15 @@ class UserService {
           },
           offset,
           limit
-        });
+        });*/
 
+
+        buildings=rows ?rows:[]
+        totalCount=count
       }
       else if(type=== 'all'){
 
-        buildings = await this.BuildingModel.findAll({
+        const { count, rows } = await this.BuildingModel.findAndCountAll({
           where:{
             availability:'vacant',
             isDeleted:false
@@ -402,15 +405,10 @@ class UserService {
           limit
         });
 
-        totalCount = await this.BuildingModel.count({
-          where:{
-            propertyPreference:type,
-            availability:'vacant',
-            isDeleted:false
-          },
-          offset,
-          limit
-        });
+
+        buildings=rows? rows:[]
+        totalCount=count
+
       }
       else if(type === 'topRated'){
 
@@ -434,7 +432,7 @@ class UserService {
               required: false, 
             }
           ],
-         /* group: ['Building.id'],*/
+          group: ['Building.id'],
           order: [[literal('averageRating'), 'DESC']],
           offset,
           limit,
@@ -456,8 +454,9 @@ class UserService {
           offset,
           limit
         });*/
-        totalCount=count
+        totalCount=count.length
       }
+
       else if(type === 'popular'){
 
         const { count, rows } = await this.BuildingModel.findAndCountAll({
@@ -486,8 +485,7 @@ class UserService {
             }
           ],
         /*  group: ['Building.id', 'Building.propertyPreference'],*/
-        group: ['Building.id', ...buildingAttributes],
-
+          group: ['Building.id'],
           order: [[literal('tenantCount'), 'DESC']],
           offset,
           limit,
@@ -507,7 +505,7 @@ class UserService {
       
 
         //totalCount = count.length;
-        totalCount = count;
+        totalCount = count.length;
 
 
       }
@@ -551,6 +549,7 @@ class UserService {
             }
           ],
          /* group: ['Building.id'],*/
+          group: ['Building.id'],
           order: [[literal('averageRating'), 'DESC']],
           offset,
           limit,
@@ -578,7 +577,8 @@ class UserService {
         });
         */
 
-        totalCount = count;
+        totalCount = count.length;
+
 
       }
 
@@ -616,6 +616,7 @@ class UserService {
             }
           ],
          /* group: ['Building.id'],*/
+          group: ['Building.id'],
           order: [['price', 'ASC']],
           offset,
           limit,
@@ -641,10 +642,8 @@ class UserService {
           limit
         });
         */
-      
-        
-        totalCount = count;
 
+        totalCount = count.length;
       
       }
 
