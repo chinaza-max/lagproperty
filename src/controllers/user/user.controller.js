@@ -169,7 +169,7 @@ export default class UserController {
       next(error)
     }
   }
-
+  
 
   async getBuildingDetails(req, res, next) {
 

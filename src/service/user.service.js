@@ -30,7 +30,6 @@ import {
   SystemError
 
 } from "../errors/index.js";
-import { Console } from "console";
 import { type } from "os";
 
 class UserService {
@@ -274,12 +273,12 @@ class UserService {
 
     const { userId, buildingId} = await userUtil.verifyHandleGetBuildingDetails.validateAsync(data);
 
+
     try {
       const buildingDetails = await this.BuildingModel.findOne({
         where: { id: buildingId, isDeleted: false },
         include:[ {
           model: this.PropertyManagerModel,
-          as: 'propertyManagerBuilding',
           attributes: {
             exclude: [
               'password',
@@ -299,7 +298,7 @@ class UserService {
         {
           model:this.TenantReviewModel,
           as: 'BuildingReview',
-          attributes: ['id', 'reviewText', 'rating', 'createdAt'],
+          attributes: ['id', 'review', 'rating', 'createdAt']
         }
       ]
       });
@@ -312,7 +311,6 @@ class UserService {
   
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
-
     }
     
   }
@@ -1963,10 +1961,100 @@ class UserService {
       throw new SystemError(error.name,  error.parent)
 
     }
- 
-
-
   }
+
+
+
+  async handleGetChat(data) {
+
+    const validationResult= await userUtil.verifyHandleGetChat.validateAsync(data);
+    
+    const { userId, type, partnerId, role } = validationResult;
+
+    console.log(role)
+    try { 
+      
+      let chatMessages;
+
+      // Define the role opposites
+      const oppositeRole = (role) => (role === 'list' ? 'rent' : 'list');
+    
+      if (type === 'chatDetail') {
+        chatMessages = await this.ChatModel.findAll({
+          where: {
+            isDeleted: false,
+            [Op.or]: [
+              { senderId: userId, receiverId: partnerId, role },
+              { senderId: partnerId, receiverId: userId, role: oppositeRole(role) },
+            ],
+          },
+          include: [
+            {
+              model: Chat,
+              as: 'RepliedMessage',
+              attributes: ['id', 'message', 'messageType'],
+            },
+          ],
+          order: [['createdAt', 'ASC']]
+        });
+      } 
+      else if (type === 'summary') {
+
+     
+        const chatMap = new Map();
+
+        // Fetch summary of chat messages for a given userId
+        let allchat = await this.ChatModel.findAll({
+          where: {
+            isDeleted: false,
+            [Op.or]: [
+              // Case when the user is the sender
+              { senderId: userId, role },
+              // Case when the user is the receiver and the opposite role is checked
+              { receiverId: userId, role: oppositeRole(role) },
+            ],
+          },
+          include: [
+            {
+              model: Chat,
+              as: 'RepliedMessage',
+              attributes: ['id', 'message', 'messageType'],
+            },
+          ],
+        });
+
+        allchat.forEach((message) => {
+          const key = `${message.senderId}-${message.receiverId}`;
+          
+          if (!chatMap.has(key)) {
+            chatMap.set(key, message);
+          } else {
+            const existingMessage = chatMap.get(key);
+            if (new Date(message.createdAt) > new Date(existingMessage.createdAt)) {
+              chatMap.set(key, message);
+            }
+          }
+        });
+
+
+        chatMessages= Array.from(chatMap.values());
+
+      } 
+    
+      return chatMessages;
+
+ 
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+  }
+
+
+
+
+
   generateReference() {
     const timestamp = Date.now(); // Current timestamp in milliseconds
     const randomString = Math.random().toString(36).substring(2, 8).toUpperCase(); // Random alphanumeric string

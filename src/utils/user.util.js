@@ -284,13 +284,13 @@ class UserUtil {
   });
 
 
-/*
+
   verifyHandleGetBuildingDetails= Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     buildingId: Joi.number().required(),
   });
-*/
+
 
   verifyHandleGetBuildings= Joi.object({
     userId: Joi.number().required(),
