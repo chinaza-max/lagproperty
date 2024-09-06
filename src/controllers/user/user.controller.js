@@ -70,6 +70,57 @@ export default class UserController {
 
 
   
+  async tenant(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleTenant(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+
+  
+  async rentAction(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleRentAction(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
+  
   async getInspectionDetails(req, res, next) {
 
     try {
@@ -224,6 +275,7 @@ export default class UserController {
   async getUpcomingInspection(req, res, next) {
 
     try {
+
       const data = req.query;        
 
       let my_bj = {
@@ -237,7 +289,7 @@ export default class UserController {
       return res.status(200).json({
         status: 200,
         message: "successfull",
-        response
+        data:response
       });
       
     } catch (error) {
@@ -398,7 +450,7 @@ export default class UserController {
       return res.status(200).json({
         status: 200,
         message: "successfull",
-        response
+        data:response
       });
        
         

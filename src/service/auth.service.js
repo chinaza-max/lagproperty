@@ -275,6 +275,23 @@ class AuthenticationService {
   }
 
 
+  
+  async authorizeTransfer(body) {
+
+   
+
+    try {
+
+      const transactionStatus = await this.authorizeSingleTransfer(body.reference,body.authorizationCode);
+
+
+    } catch (error) {
+        console.log(error)
+    }
+   
+
+  }
+
 
   async handleWebHookMonifyRefund(data) {
 
@@ -328,12 +345,124 @@ class AuthenticationService {
 
   }
 
+  
+
+  async handleWebHookMonifyDisbursement(data) {
+
+
+
+    const { eventData } = data
+ 
+   
+    const {reference } = eventData;
+    
+    const paymentReference=reference
+
+    try {
+
+      const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
+
+      try {
+        const TransactionModelResult= await this.TransactionModel.findOne({
+          where:{
+            paymentReference:paymentReference
+          }
+        })
+
+        if (TransactionModelResult) {
+
+          if(transactionStatus.reference.startsWith("firstRent")){
+
+            await TransactionModelResult.update({
+              paymentStatus:transactionStatus.status
+            });
+      
+
+            console.log(transactionStatus)
+            if(transactionStatus.status==="SUCCESS"){
+
+              const InspectionModelResult=await this.InspectionModel.findOne({
+                where:{
+                  id:TransactionModelResult.inspectionId
+                }
+              })
+
+    
+              InspectionModelResult.update({
+                landlordPaidStatus:true
+              })
+
+
+              if(InspectionModelResult.agentPaidStatus==true){
+                console.log("transactionStatus 3")
+
+                InspectionModelResult.update({
+                  inspectionStatus:"disbursed"
+                })
+              }
+    
+                const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
+
+                this.TenantModel.create({
+                  buildingId:TransactionModelResult.buildingId,
+                  prospectiveTenantId:TransactionModelResult.userId,
+                  status:'active',
+                  rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
+                })
+
+            }
+    
+          } 
+          else if(transactionStatus.reference.startsWith("commission")){
+
+
+            await TransactionModelResult.update({
+              paymentStatus:transactionStatus.status
+            });
+
+            if(transactionStatus.status==="SUCCESS"){
+
+
+              const InspectionModelResult=this.InspectionModel.findOne({
+                where:{
+                  id:TransactionModelResult.inspectionId
+                },
+                order: [['createdAt', 'DESC']]
+              })
+    
+              InspectionModelResult.update({
+                agentPaidStatus:true
+              })
+
+              if(InspectionModelResult.landlordPaidStatus==true){
+                InspectionModelResult.update({
+                  inspectionStatus:"disbursed"
+                })
+              }
+
+            }
+
+          }
+
+        }
+        
+      } catch (error) {
+        console.error('An error occurred while updating the transaction:', error.message);
+      }
+
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+    }
+
+  }
+
+
   async handleWebHookMonify(data) {
 
     const { eventType, eventData } = data
 
     const { transactionReference, paymentReference, amountPaid} = eventData;
-    const {  userId, buildingId, transactionType} = eventData.customer;
+    const {  userId, buildingId, transactionType} = eventData.metaData;
 
     try {
 
@@ -353,105 +482,35 @@ class AuthenticationService {
       });
 
       const transactionStatus = await this.getTransactionStatus(transactionReference);
-      return
-      transaction.paymentStatus = transactionStatus.paymentStatus;
 
-      await transaction.save();
+        console.log(transactionStatus)
 
-      if(transaction.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
+        transaction.paymentStatus = transactionStatus.paymentStatus;
 
-        const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
-        BuildingModelResponse.update({
-          availability:"booked"
-        });
+        await transaction.save();
 
-        await this.InspectionModel.create({
-          transactionReference,
-          buildingId,
-          prospectiveTenantId:userId,
-        });
+        if(transaction.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
 
-      }
-      }else{
+          const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
+          BuildingModelResponse.update({
+            availability:"booked"
+          });
 
-        const transactionStatus = await this.getTransactionStatus(transactionReference);
+          console.log("transactionReference")
+          console.log(transactionReference)
+          console.log(transactionReference)
 
-        try {
-          const TransactionModelResult=this.TransactionModel.findOne({
-            where:{
-              transactionReference
-            }
-          })
-          if (TransactionModelResult) {
+          console.log("transactionReference")
 
-            if(TransactionModelResult.paymentReference.startsWith("firstRent")){
+          await this.InspectionModel.create({
+            transactionReference,
+            buildingId,
+            prospectiveTenantId:userId,
+          });
 
-            
-              await TransactionModelResult.update({
-                paymentStatus:transactionStatus.paymentStatus
-              });
-        
-              if(transactionStatus.paymentStatus==="PAID"){
-
-                const InspectionModelResult=this.InspectionModel.findOne({
-                  where:{
-                    buildingId,
-                    prospectiveTenantId:userId
-                  }
-                })
-      
-                InspectionModelResult.update({
-                  landlordPaidStatus:true
-                })
-      
-                const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
-      
-                const TenantModelResult=await this.TenantModel.findOne({
-                  where:{
-                    buildingId:TransactionModelResult.buildingId
-                  },
-                  order: [['createdAt', 'DESC']]
-                })
-      
-                if(!TenantModelResult||TenantModelResult.status=='terminated'){
-                  this.TenantModel.create({
-                    buildingId:TransactionModelResult.buildingId,
-                    prospectiveTenantId:TransactionModelResult.prospectiveTenantId,
-                    status:'active',
-                    rentNextDueDate:this.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
-                  })
-                }
-              }
-      
-            } 
-            else if(paymentReference.startsWith("commission")){
-
-
-              const InspectionModelResult=this.InspectionModel.findOne({
-                where:{
-                  buildingId,
-                  prospectiveTenantId:userId
-                },
-                order: [['createdAt', 'DESC']]
-              })
-    
-              InspectionModelResult.update({
-                agentPaidStatus:true
-              })
-              await TransactionModelResult.update({
-                paymentStatus:transactionStatus.paymentStatus
-              });
-            }
-
-          } else {
-            console.log('Transaction not found with reference:', reference);
-          }
-          
-        } catch (error) {
-          console.error('An error occurred while updating the transaction:', error.message);
         }
-      
       }
+     
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
     }
@@ -608,6 +667,54 @@ class AuthenticationService {
       //throw error;
     }
   }
+
+
+  async  getTransactionStatusDisbursement(Reference) {
+    const authToken = await this.getAuthTokenMonify();
+
+    try {
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single/summary?reference=${Reference}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+
+      return response.data.responseBody;
+    } catch (error) {   
+      console.error('Error fetching transaction status:', error?.message);
+       
+      console.error('Error fetching transaction status:', error.response.data);
+      //throw error;
+    }
+  }
+
+  async authorizeSingleTransfer(reference, authorizationCode) {
+    const authToken = await this.getAuthTokenMonify();
+
+    try {
+      const response = await axios.post(`${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single/validate-otp`, 
+      {
+        reference,
+        authorizationCode
+      }, 
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Handle the response
+      return response.data.responseBody;
+    } catch (error) {
+      console.error('Error authorizing single transfer:', error?.message); 
+      console.error('Error authorizing single transfer:', error.response?.data);
+      throw error;
+    }
+  }
+
 
   async  getTransactionStatus2(transactionReference) {
     const authToken = await this.getAuthTokenMonify();

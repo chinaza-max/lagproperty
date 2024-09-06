@@ -23,6 +23,10 @@ export function init(connection) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      inspectionId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      }, 
       transactionReference: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -35,7 +39,8 @@ export function init(connection) {
         type: DataTypes.ENUM(
             'rent',
             'appointmentAndRent',
-            'commissionOrRent',
+            'fistRent',
+            'commission',
             'refund',
           ),
         allowNull: false,

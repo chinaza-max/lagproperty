@@ -22,6 +22,10 @@ class AuthRoutes extends AuthController {
 
     this.router.post("/webHookMonify",/* this.validateMonnifyIP, this.validateTransactionHash,*/ this.webHookMonify);
     this.router.post("/webHookMonifyRefund",/* this.validateMonnifyIP, this.validateTransactionHash,*/ this.webHookMonifyRefund);
+    this.router.post("/webHookMonifyDisbursement",/* this.validateMonnifyIP, this.validateTransactionHash,*/ this.webHookMonifyDisbursement);
+
+    this.router.post("/authorizeTransfer",/* this.validateMonnifyIP, this.validateTransactionHash,*/ this.authorizeTransfer);
+
 
   }
 }

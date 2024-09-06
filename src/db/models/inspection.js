@@ -12,7 +12,7 @@ export function init(connection) {
         autoIncrement: true,
       },
       transactionReference: {
-        type: DataTypes.INTEGER ,
+        type: DataTypes.STRING ,
         allowNull: false,
       },
       buildingId: {

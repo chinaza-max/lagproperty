@@ -21,7 +21,8 @@ import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { addMonths } from 'date-fns';
-import { fn, col, literal} from 'sequelize';
+import { fn, col, literal} from 'sequelize';   
+import axios from'axios';
 
 import {
   NotFoundError,   
@@ -128,10 +129,112 @@ class UserService {
   }
 
 
-  
-
 
   
+  async handleTenant(data) {
+
+    const { userId ,role , type , page ,pageSize} = await userUtil.verifyHandleTenant.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      
+      let tenantData = await this.TenantModel.findAndCountAll({
+          where: {
+            status: { [Op.in]: ['active', 'rentDue'],}
+          },
+          include: [{
+            model: this.BuildingModel, // Including the Building model to get rent amount
+            attributes: ['price'], // Assuming 'price' is the rent amount in Building model
+          }],
+          offset,
+          limit
+        });
+      
+  
+      const totalPages = Math.ceil(tenantData.count / pageSize);
+  
+      return {
+        data: tenantData.rows,
+        totalItems: tenantData.count,
+        currentPage: parseInt(page, 10),
+        pageSize: limit,
+        totalPages
+      };
+    
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+  async handleRentAction(data) {
+
+    const { userId ,role , type , page ,pageSize} = await userUtil.verifyHandleRentAction.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize
+
+    try {
+      
+      let tenantData;
+
+      if (type === "recentRent") {
+        // Fetch tenants with rent recently received
+        tenantData = await this.TenantModel.findAndCountAll({
+          where: {
+            status: 'active', 
+            rentNextDueDate: {
+              [Op.ne]: null, 
+            }
+          },
+          order: [
+            ['rentNextDueDate', 'DESC'] // Order by most recent rent date
+          ],
+          offset,
+          limit
+        });
+  
+      } 
+      else if (type === "tenantInvoicesDue") {
+        // Fetch tenants with rent due
+        tenantData = await this.TenantModel.findAndCountAll({
+          where: {
+            status: 'rentDue',
+            rentNextDueDate: {
+              [Op.lte]: new Date(), 
+            }
+          },
+          order: [
+            ['rentNextDueDate', 'ASC'] 
+          ],
+          offset,
+          limit
+        });
+      } 
+  
+      const totalPages = Math.ceil(tenantData.count / pageSize);
+  
+      return {
+        data: tenantData.rows,
+        totalItems: tenantData.count,
+        currentPage: parseInt(page, 10),
+        pageSize: limit,
+        totalPages
+      }
+      
+    
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
 
   async handleGetInspectionDetails(data) {
 
@@ -675,20 +778,19 @@ class UserService {
 
     try {
       
-      const today = new Date();
+    const today = new Date();
     const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(today.getDate() + 3);
+    threeDaysFromNow.setDate(today.getDate() + 7);
 
-    const totalCount = await Inspection.count({
+
+    const  { count, rows }  = await Inspection.findAndCountAll({
       include: [
         {
           model: this.BuildingModel,
-          as: 'BuildingInspection',
           include: [
             {
               model: this.PropertyManagerModel,
-              as: 'propertyManagerBuilding',
-              where: { id: userId },
+              where: { id: userId }
             },
           ],
         },
@@ -697,28 +799,7 @@ class UserService {
         fullDate: {
           [Op.between]: [today, threeDaysFromNow], // Filter for inspections within today and the next 3 days
         },
-        isDeleted: false,
-      },
-    });
-
-    const upcomingInspections = await Inspection.findAll({
-      include: [
-        {
-          model: Building,
-          as: 'Building',
-          include: [
-            {
-              model: PropertyManager,
-              as: 'PropertyManager',
-              where: { id: userId },
-            },
-          ],
-        },
-      ],
-      where: {
-        fullDate: {
-          [Op.between]: [today, threeDaysFromNow], // Filter for inspections within today and the next 3 days
-        },
+        inspectionStatus:'accepted',
         isDeleted: false,
       },
       limit,
@@ -726,14 +807,16 @@ class UserService {
       order: [['fullDate', 'ASC']], // Order by date
     });
 
-    const totalPages = Math.ceil(totalCount / pageSize);
+    console.log(rows)
+
+    const totalPages = Math.ceil(count / pageSize);
 
     return {
-      totalCount,
+      totalCount:count,
       totalPages,
       currentPage: page,
       pageSize,
-      inspections: upcomingInspections,
+      data: rows,
     };
 
       
@@ -866,10 +949,12 @@ class UserService {
     } = await userUtil.verifyHandleQuitNoticeAction.validateAsync(data);
     
 
-    if(role=='rent') throw new BadRequestError("Tenant dont have this access")
 
       if (type === 'send') {
         // Create a new quit notice
+
+        if(role=='rent') throw new BadRequestError("Tenant dont have this access")
+
         const newQuitNotice = await this.QuitNoticeModel.create({
           propertyManagerId: userId,
           tenantId: tenantId,
@@ -910,7 +995,6 @@ class UserService {
         await quitNoticeToDelete.save();
         return quitNoticeToDelete;
       }
-    
     
 
   }
@@ -1023,8 +1107,6 @@ class UserService {
         }
     
 
-        console.log(whereCondition)
-
         const buildings = await this.BuildingModel.findAndCountAll({
           where: whereCondition, 
           limit,
@@ -1095,6 +1177,7 @@ class UserService {
               data: notCreatedInspections.rows,
               totalItems: notCreatedInspections.count,
               currentPage: page,
+              pageSize,
               totalPages: Math.ceil(notCreatedInspections.count / pageSize),
             };
         }
@@ -1112,6 +1195,7 @@ class UserService {
             data: notCreatedInspections.rows,
             totalItems: notCreatedInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(notCreatedInspections.count / pageSize),
           };
         }
@@ -1128,7 +1212,6 @@ class UserService {
             include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
                 /*attributes: [
                   'id',
                   'propertyManagerId',
@@ -1172,6 +1255,7 @@ class UserService {
             data: pendingInspections.rows,
             totalItems: pendingInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(pendingInspections.count / pageSize),
           };
         }else{
@@ -1185,7 +1269,6 @@ class UserService {
             include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
                 /*attributes: [
                   'id',
                   'propertyManagerId',
@@ -1228,6 +1311,7 @@ class UserService {
             data: pendingInspections.rows,
             totalItems: pendingInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(pendingInspections.count / pageSize),
           };
         }
@@ -1248,7 +1332,6 @@ class UserService {
               include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
                 attributes: [
                   'id',
                   'propertyManagerId',
@@ -1293,6 +1376,7 @@ class UserService {
             data: declinedInspections.rows,
             totalItems: declinedInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(declinedInspections.count / pageSize),
           };
         }
@@ -1308,7 +1392,6 @@ class UserService {
               include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
                 attributes: [
                   'id',
                   'propertyManagerId',
@@ -1351,12 +1434,12 @@ class UserService {
             data: declinedInspections.rows,
             totalItems: declinedInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(declinedInspections.count / pageSize),
           };
         }
       
       } 
-
       else if (type === 'getAcceptedInspection') {
       
         if(role==='list'){
@@ -1369,7 +1452,6 @@ class UserService {
               include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
               /*  attributes: [
                   'id',
                   'propertyManagerId',
@@ -1414,6 +1496,7 @@ class UserService {
             data: acceptedInspections.rows,
             totalItems: acceptedInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(acceptedInspections.count / pageSize),
           };
         }
@@ -1428,7 +1511,6 @@ class UserService {
               include: [
               {
                 model: Building,
-                as: 'BuildingInspection',
                 attributes: [
                   'id',
                   'propertyManagerId',
@@ -1471,11 +1553,11 @@ class UserService {
             data: acceptedInspections.rows,
             totalItems: acceptedInspections.count,
             currentPage: page,
+            pageSize,
             totalPages: Math.ceil(acceptedInspections.count / pageSize),
           };
         }
       
-  
       } 
       else if (type === 'createInspection') {
 
@@ -1483,6 +1565,10 @@ class UserService {
           where: { id: inspectionId, isDeleted: false }
         });
 
+        if (!inspection) {
+          throw new NotFoundError('Inspection not found');
+        }
+           
         await inspection.update({
           inspectionMode,
           fullDate,      
@@ -1582,17 +1668,32 @@ class UserService {
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         })
-  
+
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-        
-        await inspection.update({
-          inspectionStatus:'accepted',
-        });
-  
-        return inspection;
-  
+
+        const building = await this.BuildingModel.findOne({
+          where: { 
+            id: inspection.buildingId, 
+            propertyManagerId:userId, 
+            isDeleted: false 
+          }
+        })
+
+        if(building){
+
+          await inspection.update({
+            inspectionStatus:'accepted',
+          });
+    
+          return inspection;
+           
+        }
+        else{
+          throw new NotFoundError('Inspection not found for the building');
+        }
+
       }
       else if (type === 'declineInspection') {
         const inspection = await this.InspectionModel.findOne({
@@ -1602,11 +1703,19 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-  
-        await inspection.update({
-          inspectionStatus:'decline',
-          note
-        });
+        
+
+        if(note){
+          await inspection.update({
+            inspectionStatus:'decline',
+            note
+          });
+        }else{
+          await inspection.update({
+            inspectionStatus:'decline'
+          });
+        }
+       
   
         return inspection;
   
@@ -1614,7 +1723,10 @@ class UserService {
       else if(type==='acceptTenant'){
         
         const inspection = await this.InspectionModel.findOne({
-          where: { id: inspectionId, isDeleted: false }
+          where: { 
+            id: inspectionId, 
+            isDeleted: false 
+          }
         })
   
         if (!inspection) {
@@ -1623,7 +1735,6 @@ class UserService {
         if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'Tenant has been accepted already'
 
         await inspection.update({
-          inspectionStatus:'accepted',
           propertyManagerStatus:true
         });
 
@@ -1637,95 +1748,10 @@ class UserService {
           })
 
           const PropertyManagerModelResult= await this.PropertyManagerModel.findByPk(BuildingModelResult.propertyManagerId)
-    
-          if(PropertyManagerModelResult=='landLord'){
-            const authToken = await authService.getAuthTokenMonify();
-            const transactionReference=this.generateReference()
-            await this.TransactionModel.create({
-              user: inspection.prospectiveTenantId,
-              buildingId:inspection.buildingId,
-              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
-              transactionReference,
-              paymentReference:"firstRent"+"_"+this.generateReference(),
-              transactionType:'commissionOrRent'
-            });
+          
+          this.processDisbursement(PropertyManagerModelResult ,inspection ,TransactionModelResult2)
 
-
-            landlordShare,
-            agentShare,
-            appShare
-            const transferDetails = {
-              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare ,   
-              reference:transactionReference,
-              narration: 'Rent Payment ',
-              destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-              destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-              currency: 'NGN',
-              sourceAccountNumber: serverConfig.MONNIFY_ACC
-            };
-
-              await this.initiateTransfer(authToken, transferDetails);
-           /* if(transferResponse){
-                this.updateTransferTransaction(this.TransactionModel, transferResponse);
-            }*/
-            
-
-          }
-          else{
-            const authToken = await authService.getAuthTokenMonify();
-            const transactionReference=this.generateReference()
-            await this.TransactionModel.create({
-              user: inspection.prospectiveTenantId,
-              buildingId:inspectionId.buildingId,
-              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
-              transactionReference,
-              paymentReference:"firstRent"+"_"+this.generateReference(),
-              transactionType:'commissionOrRent'
-            });
-
-
-            const transferDetails = {
-              amount: this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare,
-              reference: transactionReference,
-              narration: 'Rent Payment ',
-              destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-              destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-              currency: 'NGN',
-              sourceAccountNumber: serverConfig.MONNIFY_ACC
-            };
-
-            await this.initiateTransfer(authToken, transferDetails);
-          /*  if(transferResponse){
-                this.updateTransferTransaction(this.TransactionModel, transferResponse);
-            }*/
-
-            //BELOW IS FOR AGENT TRANSFER
-            const transactionReference2=this.generateReference()
-
-            await this.TransactionModel.create({
-              user:  inspection.prospectiveTenantId,
-              buildingId:inspectionId.buildingId,
-              amount:this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare  ,
-              transactionReference:transactionReference2,
-              paymentReference:"commission"+"_"+this.generateReference(),
-              transactionType:'commissionOrRent'
-            });
-            const transferDetails2 = {
-              amount: this.calculateDistribution(TransactionModelResult2.amount, 'landlord', false, 'initial deposit').landlordShare,
-              reference:transactionReference2,
-              narration: 'commission',
-              destinationBankCode: PropertyManagerModelResult.agentBankCode,
-              destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
-              currency: 'NGN',
-              sourceAccountNumber: serverConfig.MONNIFY_ACC
-            };
-
-             await this.initiateTransfer(authToken, transferDetails2);
-           /* if(transferResponse2){
-                this.updateTransferTransaction(this.TransactionModel, transferResponse2);
-            }*/
-          }
-
+         
         }
 
       }
@@ -1739,8 +1765,12 @@ class UserService {
         }
         
         if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'transaction has been initiated check transaction status'
-
         
+      
+        await inspection.update({
+          tenentStatus:true
+        });
+      
 
         if(inspection.propertyManagerStatus===true){
 
@@ -1749,99 +1779,65 @@ class UserService {
             })
   
             const TransactionModelResult2= await this.TransactionModel.findOne({
-              where: { id: inspection.transactionReference, isDeleted: false }
+              where: { transactionReference: inspection.transactionReference, isDeleted: false }
             })
   
             const PropertyManagerModelResult= await this.PropertyManagerModel.findByPk(BuildingModelResult.propertyManagerId)
-      
-            if(PropertyManagerModelResult=='landLord'){
-              const authToken = await authService.getAuthTokenMonify();
-  
-
-              
-              const TransactionModelResult = await this.TransactionModel.create({
-                user: inspection.transactionReference,
-                buildingId:inspectionId.buildingId,
-                amount:TransactionModelResult2.amount,
-                transactionReference:this.generateReference(),
-                paymentReference:inspection.transactionReference,
-                transactionType:'commissionOrRent'
-              });
-  
-              const transferDetails = {
-                amount: this.calculateDistribution(1000, 'landlord', false, 'initial deposit'),
-                reference: TransactionModelResult.id,
-                narration: 'Rent Payment ',
-                destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-                destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-                currency: 'NGN',
-                sourceAccountNumber: serverConfig.MONNIFY_ACC
-              };
-  
-              const transferResponse = await this.initiateTransfer(authToken, transferDetails);
-              if(transferResponse){
-                  this.updateTransferTransaction(this.TransactionModel, transferResponse);
-              }
-              
-            }
-            else{
-              const authToken = await authService.getAuthTokenMonify();
-              const TransactionModelResult = await this.TransactionModel.create({
-                user: inspection.transactionReference,
-                buildingId:inspectionId.buildingId,
-                amount:TransactionModelResult2.amount,
-                transactionReference:this.generateReference(),
-                paymentReference:inspection.transactionReference,
-                transactionType:'commissionOrRent'
-              });
-              const transferDetails = {
-                amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
-                reference: TransactionModelResult.id,
-                narration: 'Rent Payment ',
-                destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-                destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-                currency: 'NGN',
-                sourceAccountNumber: serverConfig.MONNIFY_ACC
-              };
-  
-              const transferResponse = await this.initiateTransfer(authToken, transferDetails);
-              if(transferResponse){
-                  this.updateTransferTransaction(this.TransactionModel, transferResponse);
-              }
-  
-              //BELOW IS FOR AGENT TRANSFER
-  
-              const TransactionModelResult2 = await this.TransactionModel.create({
-                user: inspection.transactionReference,
-                buildingId:inspectionId.buildingId,
-                amount:TransactionModelResult2.amount,
-                transactionReference:this.generateReference(),
-                paymentReference:inspection.transactionReference,
-                transactionType:'commissionOrRent'
-              });
-              const transferDetails2 = {
-                amount: this.calculateDistribution(1000, 'landlord', true, 'initial deposit'),
-                reference: TransactionModelResult.id,
-                narration: 'commission',
-                destinationBankCode: PropertyManagerModelResult.agentBankCode,
-                destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
-                currency: 'NGN',
-                sourceAccountNumber: serverConfig.MONNIFY_ACC
-              };
-  
-              const transferResponse2 = await this.initiateTransfer(authToken, transferDetails2);
-              if(transferResponse2){
-                  this.updateTransferTransaction(this.TransactionModel, transferResponse2);
-              }
-            }
-  
+            
+            this.processDisbursement(PropertyManagerModelResult ,inspection ,TransactionModelResult2)
           
         }
 
       }
+      else if(type==='escrowBalance'){
+        
+        const buildings = await this.BuildingModel.findAll({
+          where: { propertyManagerId: userId },
+          attributes: ['id'],
+        });
+    
+        if (buildings.length === 0) {
+          return {totalBalance : 0};
+        }
+    
+        const buildingIds = buildings.map(building => building.id);
+    
+        // Fetch all inspections for the user's buildings with the specified criteria
+        const inspections = await this.InspectionModel.findAll({
+          where: {
+            buildingId: buildingIds,
+            propertyManagerStatus: null,
+            tenentStatus: null,
+            inspectionStatus: {
+              [Op.or]: ['accepted', 'pending', 'notCreated']
+            }
+          },
+          attributes: ['transactionReference']
+        });
+    
+        if (inspections.length === 0) {
+          return {totalBalance : 0};
+        }
+    
+        const transactionReferences = inspections.map(inspection => inspection.transactionReference);
+    
+        // Fetch all transactions for the transaction references found
+        const transactions = await this.TransactionModel.findAll({
+          where: {
+            transactionReference: transactionReferences
+          },
+          attributes: ['amount']
+        });
+    
+        // Calculate the total balance
+        const totalBalance = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+    
+        return {totalBalance : totalBalance};
+
+      }
   
     } catch (error) {
-
+      console.log(error)
       throw new SystemError(error.name,  error.parent)
 
     }
@@ -1850,6 +1846,109 @@ class UserService {
 
   }
 
+  async processDisbursement(PropertyManagerModelResult, inspection, TransactionModelResult){
+    
+    const TransactionModelResultAmount=TransactionModelResult.amount
+    try {
+      if(PropertyManagerModelResult=='landLord'){
+        const authToken = await authService.getAuthTokenMonify();
+  
+        const transactionReference=this.generateReference()
+        const paymentReference="firstRent"+"_"+this.generateReference()
+  
+         await this.TransactionModel.create({
+          userId: inspection.prospectiveTenantId,
+          inspectionId:inspection.id,
+          buildingId:inspection.buildingId,
+          amount:TransactionModelResult.amount,
+          transactionReference,
+          paymentReference,
+          transactionType:'fistRent'
+        });
+  
+        const transferDetails = {
+          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', false, 'initial deposit').landlordShare,
+          reference: paymentReference,
+          narration: 'Rent Payment ',
+          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+          destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+          currency: 'NGN',
+          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          async:true
+        };
+  
+        await this.initiateTransfer(authToken, transferDetails);
+      
+      }
+      else{
+
+        const transactionReference=this.generateReference()
+        const paymentReference="firstRent"+"_"+this.generateReference()
+  
+        const authToken = await authService.getAuthTokenMonify();
+
+        await this.TransactionModel.create({
+          userId: inspection.prospectiveTenantId,
+          inspectionId:inspection.id,
+          buildingId:inspection.buildingId,
+          amount:TransactionModelResultAmount,
+          transactionReference,
+          paymentReference,
+          transactionType:'fistRent'
+        });
+
+        const transferDetails = {
+          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'initial deposit').landlordShare,
+          reference: paymentReference,
+          narration: 'Rent Payment ',
+          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+          destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+          currency: 'NGN',
+          twoFaEnabled:false,
+          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          async:true
+        };
+  
+        await this.initiateTransfer(authToken, transferDetails);
+      
+  
+          
+        
+        //BELOW IS FOR AGENT TRANSFER
+  
+        const transactionReference2=this.generateReference()
+        const paymentReference2="commission"+"_"+this.generateReference()
+  
+
+        await this.TransactionModel.create({
+          userId: inspection.prospectiveTenantId,
+          inspectionId:inspection.id,
+          buildingId:inspection.buildingId,
+          amount:TransactionModelResultAmount,
+          transactionReference:transactionReference2,
+          paymentReference:paymentReference2,
+          transactionType:'commission'
+        });
+        const transferDetails2 = {
+          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'initial deposit').agentShare,
+          reference: paymentReference2,
+          narration: 'commission',
+          destinationBankCode: PropertyManagerModelResult.agentBankCode,
+          destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
+          currency: 'NGN',
+          twoFaEnabled:false,
+          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          async:true
+        };
+  
+        await this.initiateTransfer(authToken, transferDetails2);
+       
+      }
+    } catch (error) {
+        console.log(error)
+        throw(error)
+    }
+  }
 
   async updateTransferTransaction(db, transferData){
 
@@ -2030,7 +2129,11 @@ class UserService {
             chatMap.set(key, message);
           } else {
             const existingMessage = chatMap.get(key);
-            if (new Date(message.createdAt) > new Date(existingMessage.createdAt)) {
+
+            //console.log(existingMessage)
+            const messageTimestamp = new Date(message.createdAt).getTime();
+            const existingMessageTimestamp = new Date(existingMessage.createdAt).getTime();
+            if (messageTimestamp > existingMessageTimestamp) {
               chatMap.set(key, message);
             }
           }

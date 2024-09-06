@@ -4,18 +4,19 @@
     <script>
         function payWithMonnify() {
             MonnifySDK.initialize({
-                amount: 1000,
+                amount: 1000000,
                 currency: "NGN",
-                reference: new String((new Date()).getTime()),
+                reference: "appointmentAndRent"+"_"+new String((new Date()).getTime()),
                 customerFullName: "Damilare Ogunnaike",
-                customerEmail: "ogunnaike.damilare@gmail.com",
+                customerEmail: "mosesogbonna68@gmail.com",
                 apiKey: "MK_TEST_XLLJWNZ1HW",
                 contractCode: "1209006936",
                 paymentDescription: "Lahray World",
                 isTestMode:true,
                 metadata: {
-                    "userId": "Damilare",
-                    "buildingId": 1
+                    "userId": 1,
+                    "buildingId": 1,
+                    "transactionType":'appointmentAndRent'
                 },
             });
         }

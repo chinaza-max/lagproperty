@@ -36,7 +36,8 @@ class UserRoutes extends UserController {
     this.router.get("/getTransaction", this.getTransaction);
     this.router.get("/getTransactionRefund", this.getTransactionRefund);
     this.router.get("/getInspectionDetails", this.getInspectionDetails);
-
+    this.router.get("/rentAction", this.rentAction);
+    this.router.get("/tenant", this.tenant);
 
 
     

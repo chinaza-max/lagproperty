@@ -111,10 +111,31 @@ class UserUtil {
       )
       .required()
       .label('Type'),
-      pageSize: Joi.number().integer(),
-      page: Joi.number().integer()
+      pageSize: Joi.number().integer().required(),
+      page: Joi.number().integer().required(),
   })
 
+
+  verifyHandleTenant=Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    pageSize: Joi.number().integer().required(),
+    page: Joi.number().integer().required()
+  })
+
+  verifyHandleRentAction=Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    pageSize: Joi.number().integer().required(),
+    page: Joi.number().integer().required(),
+    type: Joi.string()
+    .valid(
+      'recentRent',
+      'tenantInvoicesDue',
+    )
+    .required()
+    .label('Type'),
+  })
 
   verifyHandleGetInspectionDetails=Joi.object({
     userId: Joi.number().required(),
@@ -127,8 +148,8 @@ class UserUtil {
   verifyHandleGetTransactionRefund=Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
-    pageSize: Joi.number().integer(),
-    page: Joi.number().integer()
+    pageSize: Joi.number().integer().required(),
+    page: Joi.number().integer().required(),
   })
 
   verifyHandleGetTransaction=Joi.object({
@@ -141,8 +162,8 @@ class UserUtil {
       )
       .required()
       .label('Type'), 
-      page: Joi.number().integer().min(1), 
-      pageSize: Joi.number().integer().min(1)
+      page: Joi.number().integer().min(1).required(), 
+      pageSize: Joi.number().integer().min(1).required(),
   })
 
 
@@ -181,11 +202,12 @@ class UserUtil {
         'rejectTenant',
         'releaseFund',
         'rejectBuilding',
+        'escrowBalance'
       )
       .required()
       .label('Type'),
       
-      pageSize: Joi.number()
+      pageSize: Joi.number().required()
       .integer()
       .min(1)
       .when('type', {
@@ -198,7 +220,7 @@ class UserUtil {
         then: Joi.required(),
         otherwise: Joi.forbidden(),
       }),
-      page: Joi.number()
+      page: Joi.number().required()
       .integer()
       .min(1)
       .when('type', {
@@ -261,8 +283,15 @@ class UserUtil {
       then: Joi.optional(),
       otherwise: Joi.forbidden(),
     }),
-    inspectionId: Joi.string().when('type', {
-      is: Joi.valid('acceptInspection', 'declineInspection'),
+    inspectionId: Joi.number().when('type', {
+
+      is: Joi.valid(
+        'acceptInspection',
+        'declineInspection',
+        'createInspection',
+        'acceptTenant',
+        'releaseFund'),
+
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
@@ -279,8 +308,8 @@ class UserUtil {
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     tenantId: Joi.number().integer().required(),
-    page: Joi.number().integer().min(1), 
-    pageSize: Joi.number().integer().min(1)
+    page: Joi.number().integer().min(1).required(), 
+    pageSize: Joi.number().integer().min(1).required(),
   });
 
 
@@ -306,15 +335,15 @@ class UserUtil {
       'roomAndParlour', 
       'all'
     ).required(),
-    page: Joi.number().integer().min(1).default(1),
-    pageSize: Joi.number().integer().min(1).default(10) 
+    page: Joi.number().integer().min(1).default(1).required(),
+    pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
   verifyHandleGetTenantsWithDueRent= Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
-    page: Joi.number().integer().min(1).default(1),
-    pageSize: Joi.number().integer().min(1).default(10) 
+    page: Joi.number().integer().min(1).default(1).required(),
+    pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
   verifyHandleReviewTenant= Joi.object({
