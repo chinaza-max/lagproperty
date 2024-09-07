@@ -317,7 +317,8 @@ class AuthenticationService {
         });
 
         await RefundLogModelResult.update({
-          paymentStatus:transactionStatus.paymentStatus
+          paymentStatus:transactionStatus.paymentStatus,
+          transactionReference :transactionReference
         });
 
         if(transactionStatus.paymentStatus==="PAID"){
@@ -354,7 +355,7 @@ class AuthenticationService {
     const { eventData } = data
  
    
-    const {reference } = eventData;
+    const {reference ,transactionReference} = eventData;
     
     const paymentReference=reference
 
@@ -374,7 +375,8 @@ class AuthenticationService {
           if(transactionStatus.reference.startsWith("firstRent")){
 
             await TransactionModelResult.update({
-              paymentStatus:transactionStatus.status
+              paymentStatus:transactionStatus.status,
+              transactionReference
             });
       
 
@@ -417,7 +419,8 @@ class AuthenticationService {
 
 
             await TransactionModelResult.update({
-              paymentStatus:transactionStatus.status
+              paymentStatus:transactionStatus.status,
+              transactionReference
             });
 
             
@@ -467,41 +470,31 @@ class AuthenticationService {
 
     try {
 
-      const existingTransaction  = await this.TransactionModel.findOne({
-        where: { transactionReference },
-      });
-
-      if(!existingTransaction ){
-
-      const transaction = await this.TransactionModel.create({
-        userId,
-        buildingId,
-        amount:amountPaid,
-        transactionReference,
-        paymentReference,
-        transactionType,
-      });
 
       const transactionStatus = await this.getTransactionStatus(transactionReference);
 
-        console.log(transactionStatus)
+       
 
-        transaction.paymentStatus = transactionStatus.paymentStatus;
+        if(transactionStatus.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
 
-        await transaction.save();
+          const transaction = await this.TransactionModel.create({
+            userId,
+            buildingId,
+            amount:amountPaid,
+            transactionReference,
+            paymentReference,
+            transactionType,
+          });
 
-        if(transaction.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
+          transaction.paymentStatus = transactionStatus.paymentStatus;
+
+          await transaction.save();
 
           const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
           BuildingModelResponse.update({
             availability:"booked"
           });
 
-          console.log("transactionReference")
-          console.log(transactionReference)
-          console.log(transactionReference)
-
-          console.log("transactionReference")
 
           await this.InspectionModel.create({
             transactionReference,
@@ -510,7 +503,46 @@ class AuthenticationService {
           });
 
         }
-      }
+        else if(paymentReference.startsWith("rentInvoice")){
+
+          const TransactionModelResult=await this.TransactionModel.findOne({
+            where:{
+              paymentReference:paymentReference
+            }
+          })
+
+          if(TransactionModelResult){
+            
+            await TransactionModelResult.update({
+              paymentStatus:transactionStatus.paymentStatus,
+              transactionReference
+            });
+
+          }
+
+          if(transactionStatus.paymentStatus=="PAID"){
+            const TenantModelResult=await this.TenantModel.findOne({
+              where:{
+                prospectiveTenantId:TransactionModelResult.userId,
+                buildingId:TransactionModelResult.buildingId
+              }
+            })
+  
+            TenantModel.update({
+              
+            })
+          }
+          
+
+         
+
+         
+
+
+
+        }
+
+      
      
     } catch (error) {
       throw new SystemError(error.name,  error.parent)

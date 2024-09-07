@@ -152,7 +152,7 @@ class UserUtil {
   })
 
 
-  handleSendInvoce=Joi.object({
+  verifyHandleSendInvoce=Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     userIdList: Joi.array()

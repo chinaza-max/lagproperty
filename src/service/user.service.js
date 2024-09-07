@@ -1235,7 +1235,7 @@ class UserService {
 
     let { 
         userIdList,
-    } = await userUtil.verifyHandleInspectionAction.validateAsync(data);
+    } = await userUtil.verifyHandleSendInvoce.validateAsync(data);
     
 
     try {
@@ -1275,13 +1275,19 @@ class UserService {
             }
           });
 
+          const PropertyManagerModelResult = await this.PropertyManagerModel.findOne({
+            where: {
+              id: building.propertyManagerId,
+            }
+          });
+
       
           if (!building) {
             console.error(`Building with ID ${tenant.buildingId} not found.`);
           }
       
           // Create a transaction record
-          const paymentReference = `rent-${Date.now()}-${userId}`;
+          const paymentReference = `rentInvoice-${Date.now()}-${userId}`;
           const amount = building.price; 
       
           await Transaction.create({
@@ -1292,19 +1298,29 @@ class UserService {
             transactionType: 'rent',
           });
 
+          const customerName=ProspectiveTenantResult.firstName+' '+ProspectiveTenantResult.lastName
+     
+
           const createInvoiceData= await this.createInvoice({
             amount:  building.price,
             invoiceReference: paymentReference,
-            customerName: ProspectiveTenantResult.firstName +' '+ProspectiveTenantResult.lastName,
+            customerName: customerName,
             customerEmail: ProspectiveTenantResult.emailAddress,
             description: 'Rent invoice',
             contractCode: '1209006936',
             expiryDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
-            redirectUrl: 'https://lagproperty.com'
+            redirectUrl: 'https://lagproperty.com',
           })
           // Send the invoice
 
-          await this.sendInvoiceEmail(createInvoiceData , format(new Date(dueDate), 'MMMM yyyy')); 
+          await this.sendInvoiceEmail(
+            createInvoiceData , 
+            format(new Date(tenant.rentNextDueDate), 'MMMM yyyy'), 
+            tenant.rentNextDueDate, 
+            building.rentalDuration, 
+            PropertyManagerModelResult.companyName, 
+            customerName
+          ); 
       
         } catch (error) {
           console.error('Error processing invoice:', error);
@@ -1387,10 +1403,12 @@ class UserService {
 
 
 
-  async sendInvoiceEmail(invoiceDetails ,rentFor) {
+  async sendInvoiceEmail(invoiceDetails ,rentFor,rentNextDueDate,month,companyName, customerName ) {
     try {
-      const { customerEmail, customerName, amount, invoiceReference, checkoutUrl, description } = invoiceDetails;
-  
+
+      const { customerEmail, amount, invoiceReference, checkoutUrl, description } = invoiceDetails;
+     
+
       const params = new URLSearchParams();
       params.append('invoiceReference', invoiceReference);
   
@@ -1405,10 +1423,12 @@ class UserService {
           description: description,
           checkoutUrl: checkoutUrl,
           rentFor,
+          rentNextDueDate,
+          month,
+          companyName,
           domain: serverConfig.DOMAIN,
         },
       });
-  
   
     } catch (error) {
       console.error('Error sending invoice email:', error);
@@ -1913,7 +1933,8 @@ class UserService {
 
         const transactionReference=this.generateReference()
         const refund = await this.RefundLogModel.create({
-          refundTransactionReference: inspection.transactionReference,
+          oldTransactionReference: inspection.transactionReference,
+          refundTransactionReference: "refund_inspection"+"_"+transactionReference,
           inspectionId: inspection.id,
           buildingId: inspection.buildingId,
           refundReason: note, 
@@ -1924,7 +1945,7 @@ class UserService {
         const authToken = await authService.getAuthTokenMonify();
 
         const refundMetaData={
-          transactionReference: transactionReference,
+          transactionReference: inspection.transactionReference,
           refundReference:"refund_inspection"+"_"+transactionReference,
           refundAmount: transactionResult.amount, 
           refundReason: note, 
@@ -2153,7 +2174,6 @@ class UserService {
       if(PropertyManagerModelResult=='landLord'){
         const authToken = await authService.getAuthTokenMonify();
   
-        const transactionReference=this.generateReference()
         const paymentReference="firstRent"+"_"+this.generateReference()
   
          await this.TransactionModel.create({
@@ -2161,7 +2181,6 @@ class UserService {
           inspectionId:inspection.id,
           buildingId:inspection.buildingId,
           amount:TransactionModelResult.amount,
-          transactionReference,
           paymentReference,
           transactionType:'fistRent'
         });
@@ -2182,7 +2201,6 @@ class UserService {
       }
       else{
 
-        const transactionReference=this.generateReference()
         const paymentReference="firstRent"+"_"+this.generateReference()
   
         const authToken = await authService.getAuthTokenMonify();
@@ -2192,7 +2210,6 @@ class UserService {
           inspectionId:inspection.id,
           buildingId:inspection.buildingId,
           amount:TransactionModelResultAmount,
-          transactionReference,
           paymentReference,
           transactionType:'fistRent'
         });
@@ -2216,7 +2233,6 @@ class UserService {
         
         //BELOW IS FOR AGENT TRANSFER
   
-        const transactionReference2=this.generateReference()
         const paymentReference2="commission"+"_"+this.generateReference()
   
 
@@ -2225,7 +2241,6 @@ class UserService {
           inspectionId:inspection.id,
           buildingId:inspection.buildingId,
           amount:TransactionModelResultAmount,
-          transactionReference:transactionReference2,
           paymentReference:paymentReference2,
           transactionType:'commission'
         });

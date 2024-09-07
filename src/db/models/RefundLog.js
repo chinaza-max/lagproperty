@@ -25,9 +25,13 @@ import { Model, DataTypes } from "sequelize";
           ),
           allowNull: false,
         },
-        transactionReference: {
+        oldTransactionReference: {//THIS REFERENCE IS FOR THE TRANSACTION MADE THAT IS ABOUT TO BE REFUNDED
             type: DataTypes.STRING,
             allowNull: false
+        },
+        transactionReference: {
+          type: DataTypes.STRING,
+          allowNull: false
         },
         inspectionId: {
           type: DataTypes.INTEGER,
