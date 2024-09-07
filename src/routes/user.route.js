@@ -23,6 +23,8 @@ class UserRoutes extends UserController {
 
 
     this.router.post("/inspectionAction", this.inspectionAction);
+    this.router.post("/sendInvoce", this.sendInvoce);
+
     this.router.post("/chat",uploadHandler.image.single('image'), this.chat);
     this.router.get("/getMyProperty", this.getMyProperty);
     this.router.post("/quitNoticeAction", this.quitNoticeAction);
@@ -38,6 +40,8 @@ class UserRoutes extends UserController {
     this.router.get("/getInspectionDetails", this.getInspectionDetails);
     this.router.get("/rentAction", this.rentAction);
     this.router.get("/tenant", this.tenant);
+    this.router.get("/ProspectiveTenantInformation", this.ProspectiveTenantInformation);
+    
 
 
     

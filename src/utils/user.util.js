@@ -116,6 +116,14 @@ class UserUtil {
   })
 
 
+  verifyHandleProspectiveTenantInformation=Joi.object({
+    userId: Joi.number().required(),
+    inspectionId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    pageSize: Joi.number().integer().required(),
+    page: Joi.number().integer().required()
+  })
+
   verifyHandleTenant=Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
@@ -143,6 +151,14 @@ class UserUtil {
     inspectionId: Joi.number().integer(),
   })
 
+
+  handleSendInvoce=Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    userIdList: Joi.array()
+    .items(Joi.number().integer().required())
+    .required() ,
+  })
 
 
   verifyHandleGetTransactionRefund=Joi.object({
@@ -348,7 +364,8 @@ class UserUtil {
 
   verifyHandleReviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
-    tenantId: Joi.number().integer().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    prospectiveTenantId: Joi.number().integer().required(),
     review: Joi.string().required(),
   });
 

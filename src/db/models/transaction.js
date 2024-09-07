@@ -29,7 +29,7 @@ export function init(connection) {
       }, 
       transactionReference: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       paymentReference: {
         type: DataTypes.STRING,
@@ -37,7 +37,6 @@ export function init(connection) {
       },
       transactionType: {
         type: DataTypes.ENUM(
-            'rent',
             'appointmentAndRent',
             'fistRent',
             'commission',

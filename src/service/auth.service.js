@@ -420,10 +420,11 @@ class AuthenticationService {
               paymentStatus:transactionStatus.status
             });
 
+            
             if(transactionStatus.status==="SUCCESS"){
 
 
-              const InspectionModelResult=this.InspectionModel.findOne({
+              const InspectionModelResult=await this.InspectionModel.findOne({
                 where:{
                   id:TransactionModelResult.inspectionId
                 },

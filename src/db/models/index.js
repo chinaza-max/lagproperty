@@ -62,6 +62,15 @@ function associate() {
   })
 
 
+  ProspectiveTenant.hasMany(PropertyManagerReview, {
+    foreignKey: 'prospectiveTenantId',
+    as: "PropertyManagerReview",
+  });
+  PropertyManagerReview.belongsTo(ProspectiveTenant, {
+    foreignKey: 'prospectiveTenantId',
+  })
+
+
   ProspectiveTenant.hasMany(Inspection, {
     foreignKey: 'prospectiveTenantId',
     as: "MyInspection", 

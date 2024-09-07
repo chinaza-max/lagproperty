@@ -69,6 +69,32 @@ export default class UserController {
   }
 
 
+
+  
+  async ProspectiveTenantInformation(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleProspectiveTenantInformation(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  }
   
   async tenant(req, res, next) {
 
@@ -419,6 +445,35 @@ export default class UserController {
       }
 
       const response= await userService.handleGetMyProperty(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+       
+        
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+  
+
+  async sendInvoce(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id,
+        role:req.user.role
+      }
+
+      const response=await userService.handleSendInvoce(my_bj);
   
       return res.status(200).json({
         status: 200,

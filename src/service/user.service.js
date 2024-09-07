@@ -20,7 +20,7 @@ import {  Op, Sequelize, where } from "sequelize";
 import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { addMonths } from 'date-fns';
+import { addMonths,  format} from 'date-fns';
 import { fn, col, literal} from 'sequelize';   
 import axios from'axios';
 
@@ -131,9 +131,70 @@ class UserService {
 
 
   
+  async handleProspectiveTenantInformation(data) {
+
+    const { userId,inspectionId  ,role , page ,pageSize} = await userUtil.verifyHandleProspectiveTenantInformation.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+
+      const inspectionResult = await this.InspectionModel.findOne({
+        where: { id: inspectionId, isDeleted: false }
+      })
+
+      if (!inspectionResult) {
+        throw new Error("Inspection not found.");
+      }
+      
+      let tenantData = await this.ProspectiveTenantModel.findOne({
+          where: {
+            id:inspectionResult.prospectiveTenantId
+          },
+          include: [{
+            as: "PropertyManagerReview",
+            model: this.PropertyManagerReviewModel,
+            limit, 
+            offset
+          }],
+          
+        });
+      
+        if (!tenantData) {
+          throw new NotFoundError('Tenant data not found');
+        }
+    
+        const totalItems = await this.PropertyManagerReviewModel.count({
+          where: {
+            prospectiveTenantId: inspectionResult.prospectiveTenantId
+          }
+        });
+    
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+  
+      return {
+        data: tenantData,
+        pagination:{
+        totalItems,
+        currentPage: parseInt(page, 10),
+        pageSize: limit,
+        totalPages
+        }
+      };
+    
+    } catch (error) {
+
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
   async handleTenant(data) {
 
-    const { userId ,role , type , page ,pageSize} = await userUtil.verifyHandleTenant.validateAsync(data);
+    const { userId ,role , page ,pageSize} = await userUtil.verifyHandleTenant.validateAsync(data);
 
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
@@ -145,8 +206,14 @@ class UserService {
             status: { [Op.in]: ['active', 'rentDue'],}
           },
           include: [{
-            model: this.BuildingModel, // Including the Building model to get rent amount
-            attributes: ['price'], // Assuming 'price' is the rent amount in Building model
+            model: this.BuildingModel, 
+            attributes: ['price'], 
+            where:{
+              propertyManagerId:userId
+            }
+          },{
+            model: this.ProspectiveTenantModel, 
+            attributes: ['id','maritalStatus','stateOfOrigin','image']
           }],
           offset,
           limit
@@ -157,10 +224,12 @@ class UserService {
   
       return {
         data: tenantData.rows,
+        pagination:{
         totalItems: tenantData.count,
         currentPage: parseInt(page, 10),
         pageSize: limit,
         totalPages
+        }
       };
     
     } catch (error) {
@@ -190,7 +259,14 @@ class UserService {
             rentNextDueDate: {
               [Op.ne]: null, 
             }
-          },
+          },  
+          include: [{
+            model: this.BuildingModel, 
+            attributes: ['id'], 
+            where:{
+              propertyManagerId:userId
+            }
+          }],
           order: [
             ['rentNextDueDate', 'DESC'] // Order by most recent rent date
           ],
@@ -208,6 +284,13 @@ class UserService {
               [Op.lte]: new Date(), 
             }
           },
+          include: [{
+            model: this.BuildingModel, 
+            attributes: ['id'], 
+            where:{
+              propertyManagerId:userId
+            }
+          }],  
           order: [
             ['rentNextDueDate', 'ASC'] 
           ],
@@ -220,10 +303,12 @@ class UserService {
   
       return {
         data: tenantData.rows,
+        pagination:{
         totalItems: tenantData.count,
         currentPage: parseInt(page, 10),
         pageSize: limit,
         totalPages
+        }
       }
       
     
@@ -887,9 +972,16 @@ class UserService {
     const limit = pageSize;
 
     try {
+
+      const TenantResult=await this.TenantModel.findByPk(tenantId)
+
+      if(!TenantResult){
+          throw new NotFoundError("Tenant not found ")
+      }
+
       const { count, rows } = await PropertyManagerReview.findAndCountAll({
         where: {
-          tenantId: tenantId,
+          prospectiveTenantId: TenantResult.prospectiveTenantId,
           isDeleted: false,
         },
         limit,
@@ -918,7 +1010,7 @@ class UserService {
     let { 
       userId,
       role,
-      tenantId,
+      prospectiveTenantId,
       review,
     } = await userUtil.verifyHandleReviewTenant.validateAsync(data);
     
@@ -927,11 +1019,12 @@ class UserService {
     try {
       await PropertyManagerReview.create({
         propertyManagerId:userId,
-        tenantId:tenantId,
+        prospectiveTenantId:prospectiveTenantId,
         review: review,
       });
 
     } catch (error) {
+      console
       throw new SystemError(error.name,  error.parent)
 
     }
@@ -1115,9 +1208,11 @@ class UserService {
       
         return {
           data: buildings.rows,
-          totalItems: buildings.count,
-          currentPage: page,
-          totalPages: Math.ceil(buildings.count / pageSize),
+          pagination:{
+            totalItems: buildings.count,
+            currentPage: page,
+            totalPages: Math.ceil(buildings.count / pageSize)
+        }
         };
       }
       
@@ -1132,6 +1227,195 @@ class UserService {
 
   }
   
+
+
+  
+
+  async handleSendInvoce(data) {
+
+    let { 
+        userIdList,
+    } = await userUtil.verifyHandleInspectionAction.validateAsync(data);
+    
+
+    try {
+
+      const processInvoices= async (userIdList) =>{
+        if (userIdList.length === 0) return;
+      
+        const userId = userIdList[0];
+        const remainingUserIdList = userIdList.slice(1);
+      
+        try {
+          
+          // Fetch tenant and building details
+          const tenant = await this.TenantModel.findOne({
+            where: {
+              id: userId,
+              isDeleted: false
+            }
+          });
+          
+          if (!tenant) {
+            throw new NotFoundError("Tenant not found ")
+
+          }
+      
+          const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
+            where: {
+              id: tenant.prospectiveTenantId,
+              isDeleted: false
+            }
+          });
+
+          const building = await this.BuildingModel.findOne({
+            where: {
+              id: tenant.buildingId,
+              isDeleted: false
+            }
+          });
+
+      
+          if (!building) {
+            console.error(`Building with ID ${tenant.buildingId} not found.`);
+          }
+      
+          // Create a transaction record
+          const paymentReference = `rent-${Date.now()}-${userId}`;
+          const amount = building.price; 
+      
+          await Transaction.create({
+            userId: tenant.id,
+            buildingId: tenant.buildingId,
+            amount: amount,
+            paymentReference: paymentReference,
+            transactionType: 'rent',
+          });
+
+          const createInvoiceData= await this.createInvoice({
+            amount:  building.price,
+            invoiceReference: paymentReference,
+            customerName: ProspectiveTenantResult.firstName +' '+ProspectiveTenantResult.lastName,
+            customerEmail: ProspectiveTenantResult.emailAddress,
+            description: 'Rent invoice',
+            contractCode: '1209006936',
+            expiryDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
+            redirectUrl: 'https://lagproperty.com'
+          })
+          // Send the invoice
+
+          await this.sendInvoiceEmail(createInvoiceData , format(new Date(dueDate), 'MMMM yyyy')); 
+      
+        } catch (error) {
+          console.error('Error processing invoice:', error);
+        }
+      
+        // Recursively process the remaining tenants
+        await processInvoices(remainingUserIdList);
+      }
+
+      processInvoices(userIdList);
+
+
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+
+  }
+
+
+
+  async  createInvoice({
+    amount,
+    invoiceReference,
+    customerName,
+    customerEmail,
+    description,
+    currencyCode = 'NGN', // Default currency code
+    contractCode,
+    expiryDate,
+    incomeSplitConfig,
+    redirectUrl
+  }) {
+    try {
+      // Prepare the request payload
+
+      const authToken = await authService.getAuthTokenMonify();
+
+      const payload = {
+        amount,
+        invoiceReference,
+        description,
+        currencyCode,
+        contractCode,
+        customerEmail,
+        customerName,
+        expiryDate,
+        incomeSplitConfig,
+        redirectUrl
+      };
+  
+      // Make the API request to create the invoice
+      const response = await axios.post(
+        `${serverConfig.MONNIFY_BASE_URL}/api/v1/invoice/create`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        }
+      );
+  
+      // Check if the request was successful
+      if (response.data.requestSuccessful) {
+        // Extract and return the invoice data
+        return response.data.responseBody;
+      } else {
+        // Log and handle the error
+        console.error('Invoice creation failed:', response.data.responseMessage);
+        return null;
+      }
+    } catch (error) {
+      // Handle any unexpected errors
+      console.error('Error creating invoice:', error);
+      return null;
+    }
+  }
+
+
+
+
+  async sendInvoiceEmail(invoiceDetails ,rentFor) {
+    try {
+      const { customerEmail, customerName, amount, invoiceReference, checkoutUrl, description } = invoiceDetails;
+  
+      const params = new URLSearchParams();
+      params.append('invoiceReference', invoiceReference);
+  
+      await mailService.sendMail({ 
+        to: customerEmail,
+        subject: `Rent Invoice for ${rentFor} – Action Required`,
+        templateName: "sendInvoice", 
+        variables: {
+          customerName: customerName,
+          amount: amount,
+          invoiceReference: invoiceReference,
+          description: description,
+          checkoutUrl: checkoutUrl,
+          rentFor,
+          domain: serverConfig.DOMAIN,
+        },
+      });
+  
+  
+    } catch (error) {
+      console.error('Error sending invoice email:', error);
+    }
+  }
+
+
   async handleInspectionAction(data) {
 
     let { 
@@ -1175,10 +1459,12 @@ class UserService {
             });
             return {
               data: notCreatedInspections.rows,
-              totalItems: notCreatedInspections.count,
-              currentPage: page,
-              pageSize,
-              totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+              pagination:{
+                totalItems: notCreatedInspections.count,
+                currentPage: page,
+                pageSize,
+                totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+              }
             };
         }
         else{
@@ -1193,10 +1479,12 @@ class UserService {
           });
           return {
             data: notCreatedInspections.rows,
+            pagination:{
             totalItems: notCreatedInspections.count,
             currentPage: page,
             pageSize,
             totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+            }
           };
         }
     
@@ -1253,10 +1541,12 @@ class UserService {
           });
           return {
             data: pendingInspections.rows,
-            totalItems: pendingInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(pendingInspections.count / pageSize),
+            pagination:{
+              totalItems: pendingInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(pendingInspections.count / pageSize),
+            }
           };
         }else{
           const pendingInspections = await this.InspectionModel.findAndCountAll({
@@ -1309,10 +1599,12 @@ class UserService {
           });
           return {
             data: pendingInspections.rows,
-            totalItems: pendingInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(pendingInspections.count / pageSize),
+            pagination:{
+              totalItems: pendingInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(pendingInspections.count / pageSize),
+            }
           };
         }
 
@@ -1374,10 +1666,12 @@ class UserService {
           });
           return {
             data: declinedInspections.rows,
-            totalItems: declinedInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(declinedInspections.count / pageSize),
+            pagination:{
+              totalItems: declinedInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(declinedInspections.count / pageSize),
+            }
           };
         }
         else{
@@ -1432,10 +1726,12 @@ class UserService {
           });
           return {
             data: declinedInspections.rows,
-            totalItems: declinedInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(declinedInspections.count / pageSize),
+            pagination:{
+              totalItems: declinedInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(declinedInspections.count / pageSize),
+            }
           };
         }
       
@@ -1494,10 +1790,12 @@ class UserService {
           });
           return {
             data: acceptedInspections.rows,
-            totalItems: acceptedInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(acceptedInspections.count / pageSize),
+            pagination:{
+              totalItems: acceptedInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(acceptedInspections.count / pageSize),
+            }
           };
         }
         else{
@@ -1551,10 +1849,12 @@ class UserService {
           });
           return {
             data: acceptedInspections.rows,
-            totalItems: acceptedInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(acceptedInspections.count / pageSize),
+            pagination:{
+              totalItems: acceptedInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(acceptedInspections.count / pageSize),
+            }
           };
         }
       
@@ -2223,21 +2523,7 @@ class UserService {
   async  sendEmailVerificationCode(emailAddress, userId ,password) {
 
     try {
-      
-        let keyExpirationMillisecondsFromEpoch = new Date().getTime() + 30 * 60 * 1000;
-        const verificationCode =Math.floor(Math.random() * 9000000) + 100000;
-    
-        await this.EmailandTelValidationAdminModel.upsert({
-          userId,
-          type: 'email',
-          verificationCode,
-          expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
-        }, {
-          where: {
-            userId
-          }
-        });
-    
+ 
         try {
 
           const params = new URLSearchParams();
@@ -2249,7 +2535,7 @@ class UserService {
             await mailService.sendMail({ 
               to: emailAddress,
               subject: "Account details and verification",
-              templateName: "adminWelcome",
+              templateName: "sendInvoice",
               variables: {
                 password,
                 email: emailAddress,

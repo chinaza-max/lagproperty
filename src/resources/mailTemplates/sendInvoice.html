@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style type="text/css">
+
+      *{
+        padding: 0;
+        margin: 0;
+      }
+      .background{
+        width: 100%;
+        height: 100%;
+        background-image: url('https://res.cloudinary.com/dvznn9s4g/image/upload/v1724371825/building_rdn10h.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 30px;
+      }
+
+      .container{
+        padding-top: 20px;
+        width: 95%;
+        height: 95%;
+        background-color: white;
+      }
+
+    </style>
+  </head>
+
+  <body class="background">
+      <div class="container">
+
+        <div style="width: 50px; height: 50px; margin: 0 auto;" > 
+          <img src="https://res.cloudinary.com/dvznn9s4g/image/upload/v1724450739/LagProperties_Logo_rioe5p.svg" alt=""> 
+        </div>
+        <h3></h3>
+
+        <p></p>
+
+
+        <div>
+          <a href="{{monthYear}}">CHECK OUT</a>
+        </div>
+
+        <table class="invoice-table">
+          <thead>
+              <tr>
+                  <th>Description</th>
+                  <th>Amount</th>
+                  <th>Due Date</th>
+                  <th>Invoice Reference</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td>Rent for {{monthYear}}</td>
+                  <td>&#8358;{{amountDue}}</td>
+                  <td>{{dueDate}}</td>
+                  <td>{{invoiceReference}}</td>
+              </tr>
+          </tbody>
+      </table>
+
+      </div>
+  </body>
+</html>
