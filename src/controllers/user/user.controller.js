@@ -367,7 +367,7 @@ export default class UserController {
       return res.status(200).json({
         status: 200,
         message: "successfull",
-        response
+        data:response
       });
       
      

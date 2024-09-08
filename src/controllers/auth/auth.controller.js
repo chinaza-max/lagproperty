@@ -400,6 +400,51 @@ export default class AuthenticationController {
     }
   }
 
+
+  
+  async pingme(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufully ping",
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+  
+  async validateBankAccount(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+      }
+      
+      const result=await authService.handleValidateBankAccount(my_bj);
+
+
+      return res.status(200).json({
+        status: 200,
+        message: "Password updated successufully",
+        data:result
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   async resetPassword(
     req,
     res,

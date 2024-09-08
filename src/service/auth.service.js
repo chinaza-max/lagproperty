@@ -642,6 +642,38 @@ class AuthenticationService {
 
   }
 
+
+  
+  async handleValidateBankAccount(data) {
+
+    var {  accountNumber, bankCode } =
+      await authUtil.validateHandleValidateBankAccount.validateAsync(data);
+
+    const accessToken = await this.getAuthTokenMonify()
+    try {
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v1/disbursements/account/validate`, {
+        params: {
+          accountNumber: accountNumber,
+          bankCode: bankCode
+        },
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+  
+      // Check if the request was successful
+      if (response.data.requestSuccessful) {
+        return response.data.responseBody; // Return the data if validation is successful
+      } else {
+        throw new Error('Validation failed');
+      }
+    } catch (error) {
+      throw new ServerError("Failed to update password");
+    }
+  }
+
+
   async handleResetPassword(data) {
 
     var {  password, resetPasswordKey } =

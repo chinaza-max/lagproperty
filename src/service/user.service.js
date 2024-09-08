@@ -423,6 +423,8 @@ class UserService {
 
       if (role === 'rent') {
 
+        
+
         transactions = await this.TransactionModel.findAll({
           where: {
             userId 
@@ -442,7 +444,7 @@ class UserService {
           include: [{
             model: this.BuildingModel,
             where: {
-              userId: userId
+              propertyManagerId: userId
             }
           }],
           limit,

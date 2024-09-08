@@ -306,6 +306,63 @@
 
 
 
+/**
+ * @swagger
+ * /auth/validateBankAccount:
+ *   post:
+ *     summary: Validate bank account details
+ *     description: Validates bank account details by checking the account number and bank code with an external API. Returns the validation result.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bankCode:
+ *                 type: string
+ *                 description: The bank code for the bank account
+ *                 example: "123456"
+ *               accountNumber:
+ *                 type: string
+ *                 description: The account number to validate
+ *                 example: "1234567890"
+ *     responses:
+ *       200:
+ *         description: Bank account validation successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                   example: "Bank account validated successfully"
+ *                 data:
+ *                   type: object
+ *                   description: The result of the validation
+ *                   properties:
+ *                     requestSuccessful:
+ *                       type: boolean
+ *                       description: Indicates if the validation request was successful
+ *                       example: true
+ *                     responseBody:
+ *                       type: object
+ *                       description: The response data from the validation API
+ *       400:
+ *         description: Bad request, validation error
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
+
 import { Router } from"express";
 import AuthController from "../controllers/auth/auth.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -325,6 +382,9 @@ class AuthRoutes extends AuthController {
     this.router.post("/loginUser", this.loginUser);
     this.router.post("/sendPasswordResetLink", this.sendPasswordResetLink);
     this.router.post("/resetPassword", this.resetPassword);
+    this.router.post("/validateBankAccount", this.validateBankAccount);
+    this.router.get("/pingme", this.pingme);
+
     this.router.post("/initiatePayment", this.initiatePayment);
     
 
