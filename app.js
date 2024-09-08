@@ -8,6 +8,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cron from "node-cron"
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsDoc from 'swagger-jsdoc';
 
 //import {  Op } from "sequelize";
      
@@ -15,6 +17,28 @@ import cron from "node-cron"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'LagProperty API',
+      version: '1.0.0',
+      description: 'API documentation for your system',
+    },
+    servers: [
+      {
+        url: `http://localhost:${serverConfig.PORT}/api/v1/`, // Your base URL
+        description: 'Local server',
+      },
+    ],
+  },
+  apis: ['./src/routes/*.js', './src/controllers/**/*.js'], // Define where your route/controller files are located
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
 
 class Server {
@@ -30,10 +54,10 @@ class Server {
         await DB.connectDB()
 
 
-      cron.schedule('0 */2 * * *', async () => {
-        checktransactionUpdateWebHook
+      //cron.schedule('0 */2 * * *', async () => {
+       /* checktransactionUpdateWebHook
         checktransactionUpdateSingleTransfer
-      })
+      })*/
 
 
     }
@@ -63,6 +87,8 @@ class Server {
         this.app.use(express.json());
         this.app.use(express.static(path.join(__dirname, 'public')));
         this.app.use(cors(corsOptions));
+        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
         this.app.use(routes); 
         this.app.use(systemMiddleware.errorHandler);
 
