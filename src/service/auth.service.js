@@ -37,13 +37,7 @@ class AuthenticationService {
   RefundLogModel=RefundLog
   ProspectiveTenantModel=ProspectiveTenant
 
-  
 
-  
-
-  
-
-   
 
 
   verifyToken(token) {
@@ -138,7 +132,6 @@ class AuthenticationService {
 
   }
 
-  
   async handleSendVerificationCodeEmailOrTel(data) {
 
     let { 
@@ -260,7 +253,6 @@ class AuthenticationService {
 
   }
 
-
   generatePassword(omitSpecial = false, passwordLength = 12) {
     var chars = omitSpecial
       ? "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -273,8 +265,6 @@ class AuthenticationService {
     }
     return password;
   }
-
-
   
   async authorizeTransfer(body) {
 
@@ -298,7 +288,6 @@ class AuthenticationService {
     const { eventType, eventData } = data
 
     const { transactionReference, paymentReference, amountPaid} = eventData;
-    const {  userId, buildingId, transactionType} = eventData.customer;
 
 
     try {
@@ -345,24 +334,37 @@ class AuthenticationService {
    
 
   }
-
   
 
   async handleWebHookMonifyDisbursement(data) {
 
-
-
     const { eventData } = data
  
-   
-    const {reference ,transactionReference} = eventData;
+    const {reference } = eventData;
     
     const paymentReference=reference
 
     try {
-
+      
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
+      this.handleDisbursement(transactionStatus)
+     
+    } catch (error) {
+      throw new SystemError(error.name,  error.parent)
+    }
 
+  }
+
+
+  async handleDisbursement(transactionStatus){
+
+
+    const  {reference, transactionReference}=transactionStatus
+    const paymentReference=reference
+
+    try {
+
+      
       try {
         const TransactionModelResult= await this.TransactionModel.findOne({
           where:{
@@ -380,7 +382,6 @@ class AuthenticationService {
             });
       
 
-            console.log(transactionStatus)
             if(transactionStatus.status==="SUCCESS"){
 
               const InspectionModelResult=await this.InspectionModel.findOne({
@@ -396,7 +397,6 @@ class AuthenticationService {
 
 
               if(InspectionModelResult.agentPaidStatus==true){
-                console.log("transactionStatus 3")
 
                 InspectionModelResult.update({
                   inspectionStatus:"disbursed"
@@ -447,6 +447,15 @@ class AuthenticationService {
             }
 
           }
+          else if(transactionStatus.reference.startsWith("rent")){
+
+
+            await TransactionModelResult.update({
+              paymentStatus:transactionStatus.status,
+              transactionReference
+            });
+
+          }
 
         }
         
@@ -457,99 +466,146 @@ class AuthenticationService {
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
     }
-
   }
 
 
-  async handleWebHookMonify(data) {
+  
+
+
+  async handleWebHookCollectionMonify(data) {
 
     const { eventType, eventData } = data
 
-    const { transactionReference, paymentReference, amountPaid} = eventData;
-    const {  userId, buildingId, transactionType} = eventData.metaData;
+    const { transactionReference} = eventData;
 
     try {
 
-
       const transactionStatus = await this.getTransactionStatus(transactionReference);
+      this.handlePaymentCollection(transactionStatus)
 
-       
-
-        if(transactionStatus.paymentStatus=="PAID"&&transactionType=='appointmentAndRent'){
-
-          const transaction = await this.TransactionModel.create({
-            userId,
-            buildingId,
-            amount:amountPaid,
-            transactionReference,
-            paymentReference,
-            transactionType,
-          });
-
-          transaction.paymentStatus = transactionStatus.paymentStatus;
-
-          await transaction.save();
-
-          const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
-          BuildingModelResponse.update({
-            availability:"booked"
-          });
-
-
-          await this.InspectionModel.create({
-            transactionReference,
-            buildingId,
-            prospectiveTenantId:userId,
-          });
-
-        }
-        else if(paymentReference.startsWith("rentInvoice")){
-
-          const TransactionModelResult=await this.TransactionModel.findOne({
-            where:{
-              paymentReference:paymentReference
-            }
-          })
-
-          if(TransactionModelResult){
-            
-            await TransactionModelResult.update({
-              paymentStatus:transactionStatus.paymentStatus,
-              transactionReference
-            });
-
-          }
-
-          if(transactionStatus.paymentStatus=="PAID"){
-            const TenantModelResult=await this.TenantModel.findOne({
-              where:{
-                prospectiveTenantId:TransactionModelResult.userId,
-                buildingId:TransactionModelResult.buildingId
-              }
-            })
-  
-            TenantModel.update({
-              
-            })
-          }
-          
-
-         
-
-         
-
-
-
-        }
-
-      
-     
     } catch (error) {
+      console.log(error)
       throw new SystemError(error.name,  error.parent)
     }
 
   }
 
+  async handlePaymentCollection(transactionStatus){
+    try {
+
+      if(transactionStatus.paymentReference.startsWith("appointmentAndRent")){
+        const {amountPaid ,metaData, paymentReference, transactionReference}=transactionStatus
+        const { userId, buildingId, transactionType}=metaData
+
+        const transaction = await this.TransactionModel.create({
+          userId,
+          buildingId,
+          amount:amountPaid,
+          transactionReference,
+          paymentReference,
+          transactionType,
+        });
+
+        transaction.paymentStatus = transactionStatus.paymentStatus;
+
+        await transaction.save();
+        if(transactionStatus.paymentStatus=="PAID"){
+
+        const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
+        BuildingModelResponse.update({
+          availability:"booked"
+        });
+
+        await this.InspectionModel.create({
+          transactionReference,
+          buildingId,
+          prospectiveTenantId:userId,
+        });
+
+      }
+      }
+      else if(transactionStatus.paymentReference.startsWith("rentInvoice")){
+
+        const TransactionModelResult=await this.TransactionModel.findOne({
+          where:{
+            paymentReference:transactionStatus.paymentReference
+          }
+        })
+
+        if(TransactionModelResult){
+          
+          await TransactionModelResult.update({
+            paymentStatus:transactionStatus.paymentStatus,
+            transactionReference:transactionStatus.transactionReference
+          });
+
+        }
+
+        if(transactionStatus.paymentStatus=="PAID"){
+          const TenantModelResult=await this.TenantModel.findOne({
+            where:{
+              prospectiveTenantId:TransactionModelResult.userId,
+              buildingId:TransactionModelResult.buildingId
+            }
+          })
+
+          const BuildingModelResult=await this.BuildingModel.findOne({
+            where:{
+              id:TransactionModelResult.buildingId
+            }
+          })
+
+          TenantModelResult.update({
+            status:'active',
+            rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration,TenantModelResult.rentNextDueDate)
+          })
+
+          this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
+        }
+
+      }
+
+  } catch (error) {
+    console.log(error)
+    throw new SystemError(error.name,  error.parent)
+  }
+  }
+
+
+  async disburseRent(BuildingModel,prospectiveTenantId){
+
+    const PropertyManagerModelResult=await this.PropertyManagerModel.findOne({
+      where:{
+        id:BuildingModel.propertyManagerId,
+      }
+    })
+
+    const paymentReference="rent"+"_"+this.generateReference()
+    const authToken = await authService.getAuthTokenMonify();
+
+      const TransactionModelResultAmount=BuildingModel.price
+
+        await this.TransactionModel.create({
+          userId: prospectiveTenantId,
+          buildingId:BuildingModel.id,
+          amount:TransactionModelResultAmount,
+          paymentReference,
+          transactionType:'rent'
+        });
+
+        const transferDetails = {
+          amount: userService.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'rent').landlordShare,
+          reference: paymentReference,
+          narration: 'Rent Payment ',
+          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+          destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+          currency: 'NGN',
+          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          async:true
+        };
+  
+        await this.initiateTransfer(authToken, transferDetails);
+  }
   
   async handleInitiatePayment(data) {
 

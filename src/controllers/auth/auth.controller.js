@@ -359,14 +359,14 @@ export default class AuthenticationController {
 
 
 
-  async webHookMonify(
+  async webHookCollectionMonify(
     req,
     res,
     next
   ) {
     try {
 
-      await authService.handleWebHookMonify(req.body);
+      await authService.handleWebHookCollectionMonify(req.body);
 
       return res.status(200).json({
         status: 200,
