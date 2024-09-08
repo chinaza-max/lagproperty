@@ -4,6 +4,8 @@
  *   post:
  *     summary: Update user profile
  *     description: Updates the user's profile with new information including personal details and an optional image. Differentiates based on user roles and includes additional fields for specific types.
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -114,6 +116,8 @@
  *   post:
  *     summary: List a building with multiple images
  *     description: Allows property managers to list a building by providing property details and uploading multiple images related to the building's different areas.
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -276,6 +280,8 @@
  *   post:
  *     summary: Handles various inspection-related actions.
  *     description: Perform actions related to inspections based on the provided action type. Actions include creating inspections, accepting, rejecting, and managing inspections.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Inspections
  *     requestBody:
@@ -411,6 +417,8 @@
  *   post:
  *     summary: Send an invoice to users.
  *     description: Send an invoice to a list of users based on their user IDs and the role of the user sending the invoice.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Invoice
  *     requestBody:
@@ -476,6 +484,8 @@
  *   post:
  *     summary: Send a message (text or file) in chat.
  *     description: This endpoint allows users to send either a text message or an image file in a chat. The request should include the message type, and if it's a file, the file is uploaded along with the message.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Chat
  *     requestBody:
@@ -553,6 +563,8 @@
  *   get:
  *     summary: Retrieve user property information.
  *     description: This endpoint retrieves the list of properties for the current user. The user can specify the type of properties (all, vacant, or occupied) and pagination parameters.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Property
  *     parameters:
@@ -640,6 +652,8 @@
  *   post:
  *     summary: Manage quit notice actions (send, acknowledge, get, delete).
  *     description: This endpoint allows property managers to send, view, acknowledge, or delete a quit notice. Tenants can view or acknowledge quit notices.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Quit Notice
  *     requestBody:
@@ -740,6 +754,8 @@
  *   post:
  *     summary: Review a prospective tenant.
  *     description: Allows property managers to submit reviews for prospective tenants. Tenants are not allowed to perform this action.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Tenant Review
  *     requestBody:
@@ -803,6 +819,8 @@
  *   get:
  *     summary: Retrieve all reviews for a specific tenant.
  *     description: Fetches all reviews for a prospective tenant, including pagination support. The tenant's ID must be provided. Only users with the 'list' role can access this endpoint.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Tenant Review
  *     parameters:
@@ -919,6 +937,8 @@
  *   get:
  *     summary: Get tenants with due or terminated rent.
  *     description: Fetch a list of tenants who have rent due or whose tenancy has been terminated. Supports pagination.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Tenants
  *     parameters:
@@ -1044,6 +1064,8 @@
  *   get:
  *     summary: Get upcoming inspections for a property manager.
  *     description: Retrieves a list of upcoming property inspections within the next 7 days for a specific property manager.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Inspection
  *     parameters:
@@ -1172,6 +1194,8 @@
  *   get:
  *     summary: Get available buildings based on type and user preferences
  *     description: Retrieves buildings based on the specified type (e.g., popular, recommended, bestOffer, topRated, etc.), user preferences, and pagination options.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Buildings
  *     parameters:
@@ -1299,6 +1323,8 @@
  *   get:
  *     summary: Get detailed information about a specific building.
  *     description: Fetches the details of a building including property manager information and tenant reviews.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Buildings
  *     parameters:
@@ -1426,6 +1452,8 @@
  *   get:
  *     summary: Retrieve chat messages based on type (chat detail or summary).
  *     description: Fetches either the detailed chat messages with a specific partner or a summary of chats for a user.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Chat
  *     parameters:
@@ -1545,6 +1573,8 @@
  *   get:
  *     summary: Retrieve transactions based on user role and type
  *     description: Fetches transactions for a user based on their role (either 'rent' or 'list'), and the type of transaction. Supports pagination for retrieving multiple transactions.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Transactions
  *     parameters:
@@ -1659,6 +1689,8 @@
  *   get:
  *     summary: Retrieve refund transaction logs based on user role
  *     description: Fetches refund transactions for a user based on their role (either 'rent' or 'list'). Supports pagination for retrieving multiple transactions.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Refund Transactions
  *     parameters:
@@ -1767,6 +1799,8 @@
  *   get:
  *     summary: Retrieve details of a specific inspection.
  *     description: Fetches detailed information of an inspection based on the inspection ID provided.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Inspections
  *     parameters:
@@ -1878,6 +1912,8 @@
  *   get:
  *     summary: Retrieve tenant actions based on type
  *     description: Fetches tenant data based on the specified action type, such as recent rent payments or invoices due. Supports pagination to manage large datasets.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Tenant Actions
  *     parameters:
@@ -2002,6 +2038,8 @@
  *   get:
  *     summary: Retrieve inspection details
  *     description: Fetches details of a specific inspection, including associated building and prospective tenant information. Requires an inspection ID and user role to ensure access control.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Inspections
  *     parameters:
@@ -2115,6 +2153,8 @@
  *   get:
  *     summary: Retrieve prospective tenant information with reviews.
  *     description: Fetches details of a prospective tenant based on an inspection ID and includes reviews with pagination.
+ *     security:
+ *       - BearerAuth: []
  *     tags:
  *       - Prospective Tenants
  *     parameters:
