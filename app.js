@@ -30,13 +30,15 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${serverConfig.PORT}/api/v1/`, // Your base URL
+        url: `${serverConfig.DOMAIN}/api/v1/`, // Your base URL
         description: 'Local server',
       },
     ],
   },
   apis: ['./src/routes/*.js', './src/controllers/**/*.js'], // Define where your route/controller files are located
 };
+//        url: `http://localhost:${serverConfig.PORT}/api/v1/`, // Your base URL
+
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
