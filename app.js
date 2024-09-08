@@ -31,7 +31,7 @@ const swaggerOptions = {
     servers: [
       {
         url: `${serverConfig.DOMAIN}/api/v1/`, // Your base URL
-        description: 'Local server',
+        description: 'live server',
       },
     ],
   },

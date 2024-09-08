@@ -14,6 +14,8 @@ class AuthenticationMiddlewares {
 
       const { authorization } = req.headers;
 
+      if ((req.path=='/')||(req.path=="/favicon.ico"))  return next();;
+
       if (!authorization) throw new BadRequestError("No token provided.");
 
       const token = authorization.split(" ")[1];
