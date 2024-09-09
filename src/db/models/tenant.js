@@ -25,7 +25,7 @@ export function init(connection) {
           'active',
           'rentDue'
         ),
-        allowNull: true,
+        allowNull: false,
       },
       rentNextDueDate: {
         type: DataTypes.DATE,

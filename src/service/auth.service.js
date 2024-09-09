@@ -405,12 +405,28 @@ class AuthenticationService {
     
                 const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
 
-                this.TenantModel.create({
-                  buildingId:TransactionModelResult.buildingId,
-                  prospectiveTenantId:TransactionModelResult.userId,
-                  status:'active',
-                  rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
-                })
+                if(BuildingModelResult){
+
+                  const TenantModelResult=await this.TenantModel.findOne({
+                        where:{
+                          status: {
+                            [Op.or]: ['active', 'rentDue']
+                          },
+                          buildingId:TransactionModelResult.buildingId
+                        }
+                  })
+
+                  if(!TenantModelResult){
+                    this.TenantModel.create({
+                      buildingId:TransactionModelResult.buildingId,
+                      prospectiveTenantId:TransactionModelResult.userId,
+                      status:'active',
+                      rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
+                    })
+                  }
+
+                }
+              
 
             }
     
@@ -449,7 +465,6 @@ class AuthenticationService {
           }
           else if(transactionStatus.reference.startsWith("rent")){
 
-
             await TransactionModelResult.update({
               paymentStatus:transactionStatus.status,
               transactionReference
@@ -467,9 +482,6 @@ class AuthenticationService {
       throw new SystemError(error.name,  error.parent)
     }
   }
-
-
-  
 
 
   async handleWebHookCollectionMonify(data) {
@@ -580,8 +592,8 @@ class AuthenticationService {
       }
     })
 
-    const paymentReference="rent"+"_"+this.generateReference()
-    const authToken = await authService.getAuthTokenMonify();
+    const paymentReference="rent"+"_"+userService.generateReference()
+    const authToken = await this.getAuthTokenMonify();
 
       const TransactionModelResultAmount=BuildingModel.price
 
@@ -603,7 +615,7 @@ class AuthenticationService {
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
           async:true
         };
-  
+        
         await this.initiateTransfer(authToken, transferDetails);
   }
   
@@ -1578,7 +1590,38 @@ class AuthenticationService {
   
   
   }
-    
+  
+  async cronJobToUpdateDisbursement(){
+
+  }
+  async cronJobToUpdateDueRent(){
+    try {
+      // Get current date
+      const currentDate = new Date();
+  
+      // Find tenants whose status is not 'terminated' and rentNextDueDate is not null
+      const tenants = await this.TenantModel.findAll({
+        where: {
+          status: {
+            [Op.ne]: 'terminated', // Not terminated tenants
+          },
+          isDeleted: false, // Exclude deleted tenants if applicable
+        },
+      });
+  
+      // Loop through the tenants and check if rent is due
+      for (let tenant of tenants) {
+        if (tenant.rentNextDueDate <= currentDate) {
+          // Update the status to 'rentDue' if rentNextDueDate is in the past
+          tenant.status = 'rentDue';
+          await tenant.save(); // Save the changes
+        }
+      }
+  
+    } catch (error) {
+      console.error('Error updating rent status:', error);
+    }
+  }
   
 }
 

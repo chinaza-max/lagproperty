@@ -413,17 +413,20 @@ class UserService {
   
   async handleGetTransaction(data) {
 
-    const { userId, type ,role , page, pageSize,} = await userUtil.verifyHandleGetTransaction.validateAsync(data);
+    const { userId, role , page, pageSize} = await userUtil.verifyHandleGetTransaction.validateAsync(data);
 
     try {
       const offset = (page - 1) * pageSize;
       const limit = pageSize;
       
       let transactions;
+      let totalCount;
 
       if (role === 'rent') {
 
-        
+        totalCount = await this.TransactionModel.count({
+          where: { userId }
+        });
 
         transactions = await this.TransactionModel.findAll({
           where: {
@@ -436,6 +439,16 @@ class UserService {
 
       }
       else if(role === 'list'){
+
+        totalCount = await this.TransactionModel.count({
+          where: { isDeleted: false },
+          include: [{
+            model: this.BuildingModel,
+            where: { propertyManagerId: userId },
+            attributes:['id']
+          }],
+        });
+        
         transactions = await this.TransactionModel.findAll({
           where: {
             isDeleted:false
@@ -445,12 +458,29 @@ class UserService {
             model: this.BuildingModel,
             where: {
               propertyManagerId: userId
-            }
+            },
+            attributes:['id']
           }],
           limit,
           offset
         });
       }
+
+
+
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+
+      return {
+        pagination: {
+          totalCount,
+          totalPages,
+          currentPage: page,
+          pageSize,
+        },
+        transactions,
+      };
+
     } catch (error) {
 
       throw new SystemError(error.name,  error.parent)
@@ -840,10 +870,12 @@ class UserService {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     return {
+      pagination: {
       totalCount,
       totalPages,
       currentPage: page,
-      pageSize,
+      pageSize, 
+      }, 
       buildings: buildings,
     };
 

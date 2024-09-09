@@ -41,6 +41,7 @@ export function init(connection) {
             'fistRent',
             'commission',
             'refund',
+            'rent',
           ),
         allowNull: false,
       },

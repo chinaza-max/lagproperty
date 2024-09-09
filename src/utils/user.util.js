@@ -170,16 +170,9 @@ class UserUtil {
 
   verifyHandleGetTransaction=Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid('list', 'rent').required(),
-    type: Joi.string()
-      .valid(
-        'summary',
-        'chatDetail',
-      )
-      .required()
-      .label('Type'), 
-      page: Joi.number().integer().min(1).required(), 
-      pageSize: Joi.number().integer().min(1).required(),
+    role: Joi.string().valid('list', 'rent').required(), 
+    page: Joi.number().integer().min(1).required(), 
+    pageSize: Joi.number().integer().min(1).required(),
   })
 
 
