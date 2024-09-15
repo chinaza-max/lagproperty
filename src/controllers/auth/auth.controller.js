@@ -316,8 +316,6 @@ export default class AuthenticationController {
     }
   }
 
-
-  
     
   async webHookMonifyDisbursement(
     req,
@@ -435,12 +433,12 @@ export default class AuthenticationController {
       
       const result=await authService.handleValidateBankAccount(my_bj);
 
-
       return res.status(200).json({
         status: 200,
-        message: "Password updated successufully",
+        message: "successufull",
         data:result
       });
+
     } catch (error) {
       next(error);
     }

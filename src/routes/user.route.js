@@ -1,9 +1,25 @@
 /**
  * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * security:
+ *   - BearerAuth: []
+ */
+
+
+/**
+ * @swagger
  * /user/updateProfile:
  *   post:
- *     summary: Update user profile
- *     description: Updates the user's profile with new information including personal details and an optional image. Differentiates based on user roles and includes additional fields for specific types.
+ *     summary: Update landlord or agent profile
+ *     description: Updates the user's profile with new information including personal details and an optional image. Differentiates based on user roles and includes additional fields for specific types  .
+ *     tags:
+ *       - Profile
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -2268,6 +2284,94 @@
  *                   type: string
  *                   example: "Internal Server Error."
  */
+
+
+
+
+/**
+ * @swagger
+ * /user/updateProfile2:
+ *   post:
+ *     summary: Update tenant profile remove the 2 at the end of updateProfile2
+ *     description: Updates the profile of the logged-in user, including image upload and profile details.
+ *     tags: [Profile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The profile image to upload (optional, size less than 3MB).
+ *               firstName:
+ *                 type: string
+ *                 description: User's first name.
+ *               lastName:
+ *                 type: string
+ *                 description: User's last name.
+ *               maritalStatus:
+ *                 type: string
+ *                 description: User's marital status.
+ *               gender:
+ *                 type: string
+ *                 enum: [Male, Female]
+ *                 description: User's gender.
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 description: User's date of birth.
+ *               familySize:
+ *                 type: integer
+ *                 description: User's family size.
+ *               rentalDuration:
+ *                 type: integer
+ *                 description: User's rental duration preference.
+ *               budgetMin:
+ *                 type: integer
+ *                 description: Minimum budget for rent.
+ *               budgetMax:
+ *                 type: integer
+ *                 description: Maximum budget for rent.
+ *               occupation:
+ *                 type: string
+ *                 description: User's occupation.
+ *               country:
+ *                 type: string
+ *                 description: User's country.
+ *               stateOfOrigin:
+ *                 type: string
+ *                 description: User's state of origin.
+ *               nin:
+ *                 type: string
+ *                 description: User's National Identification Number (NIN).
+ *               bankCode:
+ *                 type: string
+ *                 description: User's bank code.
+ *               bankAccount:
+ *                 type: string
+ *                 description: User's bank account number.
+ *               propertyPreference:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [all, flats, duplex, selfContains, roomAndParlour]
+ *                 description: User's property preference.
+ *               propertyLocation:
+ *                 type: string
+ *                 description: Preferred property location.
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       400:
+ *         description: Bad request or validation error
+ *       500:
+ *         description: Internal server error
+ */
+
+
 
 
 import { Router } from "express";

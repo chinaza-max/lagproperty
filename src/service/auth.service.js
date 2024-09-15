@@ -1544,7 +1544,7 @@ class AuthenticationService {
   
   
   
-    }
+  }
 
 
   async  sendTextVerificationCode(emailAddress, userId) {
@@ -1594,6 +1594,8 @@ class AuthenticationService {
   async cronJobToUpdateDisbursement(){
 
   }
+
+
   async cronJobToUpdateDueRent(){
     try {
       // Get current date

@@ -120,7 +120,6 @@ class UserService {
         }
       } catch (error) {
         throw new SystemError(error.name,  error.parent)
-
       }
 
     }

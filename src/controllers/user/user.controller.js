@@ -14,7 +14,6 @@ export default class UserController {
       const data = req.body;        
       const { file } = req;
 
-
       let my_bj = {
         ...data,
         userId:req.user.id,
