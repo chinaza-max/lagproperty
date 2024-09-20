@@ -46,9 +46,23 @@ export default class UserController {
       const data = req.body;        
       const { files } = req;
 
+      let amenities;
+      if (typeof data.amenity === 'string') {
+        try {
+          // Try to parse the stringified array
+          amenities = JSON.parse(data.amenity);
+        } catch (error) {
+          // If parsing fails, keep it as is (string or invalid JSON)
+          amenities = data.amenity;
+        }
+      } else {
+        // If it's already an array, keep it as is
+        amenities = data.amenity;
+      }
+
       let my_bj = {
         ...data,
-        amenity:JSON.parse(data.amenity),
+        amenity:amenities,
         userId:req.user.id,
       }
 
