@@ -225,8 +225,8 @@
  *                 example: 12
  *               bedroomSizeImage:
  *                 type: string
- *                 format: uri
- *                 description: URL of the bedroom size image
+ *                 format: binary
+ *                 description: Upload an image 
  *               kitchenSizeLength:
  *                 type: integer
  *                 description: Length of the kitchen
@@ -237,8 +237,8 @@
  *                 example: 8
  *               kitchenSizeImage:
  *                 type: string
- *                 format: uri
- *                 description: URL of the kitchen size image
+ *                 format: binary
+ *                 description: Upload an image 
  *               livingRoomSizeLength:
  *                 type: integer
  *                 description: Length of the living room
@@ -249,8 +249,8 @@
  *                 example: 15
  *               livingRoomSizeImage:
  *                 type: string
- *                 format: uri
- *                 description: URL of the living room size image
+ *                 format: binary
+ *                 description: Upload an image 
  *               diningAreaSizeLength:
  *                 type: integer
  *                 description: Length of the dining area
@@ -261,12 +261,12 @@
  *                 example: 10
  *               diningAreaSizeImage:
  *                 type: string
- *                 format: uri
- *                 description: URL of the dining area size image
+ *                 format: binary
+ *                 description: Upload an image 
  *               propertyTerms:
  *                 type: string
- *                 format: uri
- *                 description: URL of the property terms document
+ *                 format: binary
+ *                 description: PDF of the property terms document
  *     responses:
  *       200:
  *         description: Building listed successfully

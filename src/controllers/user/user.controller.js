@@ -62,12 +62,17 @@ export default class UserController {
 
       let my_bj = {
         ...data,
+        bedroomSizeImage: files?.bedroomSizeImage ? { size: files.bedroomSizeImage[0].size } : undefined,
+        kitchenSizeImage: files?.kitchenSizeImage ? { size: files.kitchenSizeImage[0].size } : undefined,
+        livingRoomSizeImage: files?.livingRoomSizeImage ? { size: files.livingRoomSizeImage[0].size } : undefined,
+        diningAreaSizeImage: files?.diningAreaSizeImage ? { size: files.diningAreaSizeImage[0].size } : undefined,
+        propertyTerms: files?.propertyTerms ? { size: files.propertyTerms[0].size } : undefined,
         amenity:amenities,
         userId:req.user.id,
       }
 
        await userService.handleListBuilding(my_bj,files);
-  
+        
       return res.status(200).json({
         status: 200,
         message: "Building listed successfully",

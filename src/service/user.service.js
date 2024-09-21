@@ -1131,6 +1131,11 @@ class UserService {
       userId,
       role,
       image,
+      bedroomSizeImage,
+      kitchenSizeImage,
+      livingRoomSizeImage,
+      diningAreaSizeImage,
+      propertyTerms,
       ...updateData
     } = await userUtil.verifyHandleListBuilding.validateAsync(data);
     

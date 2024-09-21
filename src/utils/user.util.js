@@ -414,7 +414,7 @@ class UserUtil {
     furnishingStatus: Joi.string()
         .valid('furnished', 'unfurnished', 'partly furnished')
         .required(),
-    rentalDuration: Joi.string().required(),
+    rentalDuration: Joi.number().integer().required(),
     price: Joi.number().integer().required(),
     electricityBill: Joi.number().integer().required(),
     wasteBill: Joi.number().integer().required(),
@@ -422,16 +422,27 @@ class UserUtil {
     propertyDescription: Joi.string().optional(),
     bedroomSizeLength: Joi.number().integer().optional(),
     bedroomSizeWidth: Joi.number().integer().optional(),
-    bedroomSizeImage: Joi.string().uri().optional(),
+    bedroomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).required(),
     kitchenSizeLength: Joi.number().integer().optional(),
     kitchenSizeWidth: Joi.number().integer().optional(),
-    kitchenSizeImage: Joi.string().uri().optional(),
+    kitchenSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).required(),
     livingRoomSizeLength: Joi.number().integer().optional(),
     livingRoomSizeWidth: Joi.number().integer().optional(),
-    livingRoomSizeImage: Joi.string().uri().optional(),
+    livingRoomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).required(),
     diningAreaSizeLength: Joi.number().integer().optional(),
     diningAreaSizeWidth: Joi.number().integer().optional(),
-    diningAreaSizeImage: Joi.string().uri().optional(),
+    diningAreaSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).required(),
+    propertyTerms: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }).required(),
 });
 
 }
