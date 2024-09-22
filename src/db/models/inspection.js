@@ -28,7 +28,7 @@ export function init(connection) {
         allowNull: true,
       },
       tenentStatus: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.BOOLEAN, 
         allowNull: true,
       },
       inspectionStatus: {

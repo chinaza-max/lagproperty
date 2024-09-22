@@ -287,52 +287,56 @@ class AuthenticationService {
 
     const { eventType, eventData } = data
 
-    const { transactionReference, paymentReference, amountPaid} = eventData;
-
+    const { refundReference } = eventData;
 
     try {
 
-      const transactionStatus = await this.getTransactionStatus(transactionReference);
+      const transactionStatus = await this.getRefundTransactionStatus(refundReference);
 
-
-      if(paymentReference.startsWith("refund_inspection")){
-            
-        const RefundLogModelResult  = await this.RefundLogModel.findOne({
-          where: { transactionReference },
-        });
-
-        const InspectionModelResult  = await this.InspectionModel.findOne({
-          where: { transactionReference },
-        });
-
-        await RefundLogModelResult.update({
-          paymentStatus:transactionStatus.paymentStatus,
-          transactionReference :transactionReference
-        });
-
-        if(transactionStatus.paymentStatus==="PAID"){
-          await InspectionModelResult.update({
-            inspectionStatus: 'refunded',
-            note:refundResponse.responseBody.refundReason,
-          });
-
-          const BuildingModelResult  = await this.BuildingModel.findOne({
-            where: { id:RefundLogModelResult.buildingId },
-          });
-
-          await BuildingModelResult.update({
-            availability:'vacant'
-          });
-
-        }
-
-      }
+      this.processRefund(transactionStatus)
 
     } catch (error) {
         console.log(error)
     }
    
 
+  }
+
+  async processRefund(transactionStatus){
+
+    const {transactionReference}=transactionStatus
+
+    if(paymentReference.startsWith("refund_inspection")){
+            
+      const RefundLogModelResult  = await this.RefundLogModel.findOne({
+        where: { transactionReference },
+      });
+
+      const InspectionModelResult  = await this.InspectionModel.findOne({
+        where: { transactionReference },
+      });
+
+      await RefundLogModelResult.update({
+        paymentStatus:transactionStatus.refundStatus,
+        transactionReference :transactionReference
+      });
+
+      if(transactionStatus.refundStatus==="COMPLETED"){
+        await InspectionModelResult.update({
+          inspectionStatus: 'refunded',
+        });
+
+        const BuildingModelResult  = await this.BuildingModel.findOne({
+          where: { id:RefundLogModelResult.buildingId },
+        });
+
+        await BuildingModelResult.update({
+          availability:'vacant'
+        });
+
+      }
+
+    }
   }
   
 
@@ -509,30 +513,56 @@ class AuthenticationService {
         const {amountPaid ,metaData, paymentReference, transactionReference}=transactionStatus
         const { userId, buildingId, transactionType}=metaData
 
-        const transaction = await this.TransactionModel.create({
-          userId,
-          buildingId,
-          amount:amountPaid,
-          transactionReference,
-          paymentReference,
-          transactionType,
-        });
+        const existingTransaction = await this.TransactionModel.findOne({
+          where: {
+            paymentReference
+          }
+        })
 
-        transaction.paymentStatus = transactionStatus.paymentStatus;
+        if(existingTransaction){
 
-        await transaction.save();
-        if(transactionStatus.paymentStatus=="PAID"){
+          await existingTransaction.update({
+            paymentStatus: transactionStatus.paymentStatus
+          });
+
+        }else{
+
+          await this.TransactionModel.create({
+            userId,
+            buildingId,
+            amount:amountPaid,
+            transactionReference,
+            paymentReference,
+            transactionType,
+            paymentStatus:transactionStatus.paymentStatus
+          })
+        }
+
+
+      if(transactionStatus.paymentStatus=="PAID"){
 
         const BuildingModelResponse = await this.BuildingModel.findByPk(buildingId);
         BuildingModelResponse.update({
           availability:"booked"
         });
 
-        await this.InspectionModel.create({
-          transactionReference,
-          buildingId,
-          prospectiveTenantId:userId,
+          const existingInspection = await this.InspectionModel.findOne({
+          where: {
+            buildingId,
+            prospectiveTenantId: userId,
+            inspectionStatus: "pending"
+          },
         });
+       
+        if(existingInspection){
+
+          await this.InspectionModel.create({
+            transactionReference,
+            buildingId,
+            prospectiveTenantId:userId
+          })
+
+        }
 
       }
       }
@@ -567,12 +597,20 @@ class AuthenticationService {
             }
           })
 
-          TenantModelResult.update({
-            status:'active',
-            rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration,TenantModelResult.rentNextDueDate)
-          })
+          if(TenantModelResult.paymentReference===transactionStatus.paymentReference){
 
-          this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
+          }
+          else{
+
+            TenantModelResult.update({
+              status:'active',
+              rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration,TenantModelResult.rentNextDueDate),
+              paymentReference:transactionStatus.paymentReference
+            })
+  
+            this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
+          }
+         
         }
 
       }
@@ -784,6 +822,30 @@ class AuthenticationService {
     try {
       const encodedTransactionReference = encodeURIComponent(transactionReference)
       const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v2/merchant/transactions/query?transactionReference=${encodedTransactionReference}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      //console.log(response.data.responseBody)
+
+      return response.data.responseBody;
+    } catch (error) {   
+      console.error('Error fetching transaction status:', error?.message);
+       
+      console.error('Error fetching transaction status:', error.response.data);
+      //throw error;
+    }
+  }
+
+  async  getRefundTransactionStatus(refundReference) {
+    const authToken = await this.getAuthTokenMonify();
+
+
+    try {
+      // const encodedTransactionReference = encodeURIComponent(transactionReference)
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v1/refunds/${refundReference}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -1065,6 +1127,7 @@ class AuthenticationService {
     }
   }
 
+  /*
   async  getRefundStatus(transactionReference, authToken) {
     try {
       const response = await axios.get(`{{base_url}}/api/v1/refunds/${transactionReference}`, {
@@ -1084,7 +1147,7 @@ class AuthenticationService {
       console.error('Error fetching refund status:', error.message);
       return null;
     }
-  }
+  }*/
   
 
   async checkRefundUpdate() {
@@ -1105,10 +1168,10 @@ class AuthenticationService {
   
         // Check and update each refund
         for (const refund of refunds) {
-          const refundStatus = await this.getRefundStatus(refund.transactionReference, authToken);
+          const refundStatus = await this.getRefundTransactionStatus(refund.refundTransactionReference);
   
           if (refundStatus) {
-            await this.updateRefundStatusCronJob(refund, refundStatus);
+            await this.processRefund(refundStatus);
           }
         }
       } 
@@ -1591,9 +1654,45 @@ class AuthenticationService {
   
   }
   
-  async cronJobToUpdateDisbursement(){
-
+  async cronJobToUpdateDisbursement() {
+    try {
+      const transactions = await this.TransactionModel.findAll({
+        where: {
+          transactionType: ['fistRent', 'commission', 'rent'],
+          paymentStatus: ['PENDING', 'unverified']
+        }
+      });
+  
+      if (transactions.length === 0) {
+        console.log("No pending or unverified transactions found.");
+        return;
+      }
+  
+      for (const transaction of transactions) {
+        try {
+          // Fetch transaction status from the disbursement API
+          const transactionStatus = await this.getTransactionStatusDisbursement(transaction.paymentReference);
+  
+          // Process the disbursement status
+          await this.handleDisbursement(transactionStatus);
+  
+          // Update the transaction status if necessary
+         /* if (transactionStatus.paymentStatus !== transaction.paymentStatus) {
+            await transaction.update({
+              paymentStatus: transactionStatus.paymentStatus
+            });
+            console.log(`Transaction ${transaction.id} updated to ${transactionStatus.paymentStatus}`);
+          }*/
+  
+        } catch (error) {
+          console.error(`Error processing transaction ${transaction.id}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error("Error running cron job for disbursement:", error);
+    }
   }
+  
 
 
   async cronJobToUpdateDueRent(){
@@ -1624,6 +1723,11 @@ class AuthenticationService {
       console.error('Error updating rent status:', error);
     }
   }
+
+  /*ADD THE BELOW TO CRON JOB */
+  //checkRefundUpdate
+  //cronJobToUpdateDueRent
+  //cronJobToUpdateDisbursement
   
 }
 

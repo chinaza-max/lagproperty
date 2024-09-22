@@ -30,7 +30,11 @@ export function init(connection) {
       rentNextDueDate: {
         type: DataTypes.DATE,
         allowNull: true,
-      },         
+      },
+      paymentReference: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },        
       isDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

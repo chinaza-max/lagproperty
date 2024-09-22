@@ -398,6 +398,34 @@ export default class UserController {
 
   
 
+  
+  async appointmentAndRent(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      await userService.handleAppointmentAndRent(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
   async reviewTenant(req, res, next) {
 
     try {

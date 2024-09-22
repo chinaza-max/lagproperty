@@ -11,10 +11,7 @@ import { Model, DataTypes } from "sequelize";
           autoIncrement: true,
         },
         refundStatus: {
-            type: DataTypes.ENUM('PAID', 'OVERPAID', 'PARTIALLY_PAID'
-                , 'PENDING', 'ABANDONED', 'CANCELLED'
-                , 'FAILED', 'REVERSED', 'EXPIRED'
-            ),
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'PENDING',
         },

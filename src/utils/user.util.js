@@ -355,6 +355,12 @@ class UserUtil {
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
+  verifyHandleAppointmentAndRent= Joi.object({
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    paymentReference: Joi.string().required(),
+  });
+
   verifyHandleReviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),

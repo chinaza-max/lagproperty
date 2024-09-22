@@ -1038,6 +1038,28 @@ class UserService {
     
   }
 
+
+  async handleAppointmentAndRent(data) {
+
+    let { 
+      paymentReference
+    } = await userUtil.verifyHandleAppointmentAndRent.validateAsync(data);
+    
+ 
+    try {
+      
+      const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
+      authService.handleDisbursement(transactionStatus)
+
+    } catch (error) {
+      console
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
+
   async handleReviewTenant(data) {
 
     let { 
@@ -1253,8 +1275,7 @@ class UserService {
         }
         };
       }
-      
-  
+
     } catch (error) {
 
       throw new SystemError(error.name,  error.parent)
