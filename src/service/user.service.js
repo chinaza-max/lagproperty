@@ -1039,6 +1039,121 @@ class UserService {
   }
 
 
+  
+
+  async handleGetAllLordData(data) {
+
+    let {
+      buildingId,
+      listId,
+      type
+    } = await userUtil.verifyHandleGetAllLordData.validateAsync(data);
+    
+    try {
+
+
+      if(type==='transaction'){
+        const TransactionResult = await this.TransactionModel.findAll({
+          where: {
+            isDeleted: false,
+            buildingId  
+          }
+        })
+        return TransactionResult;
+      }
+      else if(type==='building'){
+        const BuildingModelResult = await this.BuildingModel.findAll({
+          where: {
+            isDeleted: false,
+            propertyManagerId:listId  
+          }
+        });
+        return BuildingModelResult;
+      }
+      else{
+        const TenantModelResult = await this.TenantModel.findAll({
+          where: {
+            isDeleted: false,
+            buildingId  
+          },
+          include: [{
+            model: this.ProspectiveTenantModel, 
+            attributes: {
+              exclude: [
+                'password',
+                'nin',
+                'bankCode',
+                'bankAccount',
+                'lasrraId',
+                'image'
+              ]
+            }
+          }]
+        });
+        return TenantModelResult;
+
+      }
+     
+      
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+  async handleGetAllUser(data) {
+
+    let { 
+      type
+    } = await userUtil.verifyHandleGetAllUser.validateAsync(data);
+    
+    try {
+      if(type==="list"){
+        const propertyManagers = await this.PropertyManagerModel.findAll({
+          where: {
+            isDeleted: false
+          },
+          attributes: {
+            exclude: [
+              'password',
+              'nin',
+              'agentBankCode',
+              'agentBankAccount',
+              'landlordBankCode',
+              'landlordBankAccount'
+            ]
+          }
+        });
+        return propertyManagers;
+      }
+      else{
+        const prospectiveTenants = await this.ProspectiveTenantModel.findAll({
+          where: {
+            isDeleted: false
+          },
+          attributes: {
+            exclude: [
+              'password',
+              'nin',
+              'bankCode',
+              'bankAccount',
+              'lasrraId'
+            ]
+          }
+        });
+        return prospectiveTenants;
+      }
+
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
   async handleAppointmentAndRent(data) {
 
     let { 
@@ -1047,14 +1162,13 @@ class UserService {
     
  
     try {
-      
+
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
       authService.handleDisbursement(transactionStatus)
 
     } catch (error) {
-      console
+      console.log(error)
       throw new SystemError(error.name,  error.parent)
-
     }
     
   }

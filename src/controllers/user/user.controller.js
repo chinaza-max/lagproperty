@@ -397,7 +397,57 @@ export default class UserController {
   }
 
   
+  async getAllLordData(req, res, next) {
 
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id
+      }
+
+      const result=await userService.handleGetAllLordData(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:result
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+  
+  async getAllUser(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id
+      }
+
+      const result=await userService.handleGetAllUser(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:result
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
   
   async appointmentAndRent(req, res, next) {
 

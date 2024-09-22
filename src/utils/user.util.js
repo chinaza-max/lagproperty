@@ -355,6 +355,29 @@ class UserUtil {
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
+  verifyHandleGetAllLordData= Joi.object({
+    userId: Joi.number().integer().required(),
+    listId: Joi.number().integer().when('type', {
+      is: 'building',
+      then:Joi.required(),
+      otherwise:  Joi.forbidden(),
+    }),
+    buildingId: Joi.number().integer().when('type', {
+      is: Joi.valid('transaction', 'tenant') ,
+      then:Joi.required(),
+      otherwise:  Joi.forbidden(),
+    }),
+    
+    type: Joi.string().valid('building', 'transaction', 'tenant').required(),
+  });
+
+  verifyHandleGetAllUser= Joi.object({
+    userId: Joi.number().integer().required(),
+    type: Joi.string().valid('list', 'rent').required(),
+  });
+
+
+
   verifyHandleAppointmentAndRent= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),

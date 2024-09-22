@@ -2418,9 +2418,11 @@ class UserRoutes extends UserController {
     this.router.get("/ProspectiveTenantInformation", this.ProspectiveTenantInformation);
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
 
+    this.router.get("/getAllUser", this.getAllUser);
+    this.router.get("/getAllLordData", this.getAllLordData);
 
+    this.router.post("/reviewTenant", this.reviewTenant);
 
-    
 
     this.router.get("/whoIAm", this.whoIAm);
     
