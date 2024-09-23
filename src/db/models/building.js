@@ -43,6 +43,11 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      propertyTitle: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue:'4 Bedroom Terrace Duplex'
+      },
       numberOfFloors: {
         type: DataTypes.INTEGER,
         allowNull: true,

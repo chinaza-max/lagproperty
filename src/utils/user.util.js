@@ -429,6 +429,7 @@ class UserUtil {
         .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
         .required(),
     propertyLocation: Joi.string().required(),
+    propertyTitle: Joi.string().required(),
     city: Joi.string().required(),
     address: Joi.string().required(),
     lat: Joi.string().required(),
