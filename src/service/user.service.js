@@ -1381,7 +1381,7 @@ class UserService {
         });
       
         return {
-          data: buildings.rows,
+          response: buildings.rows,
           pagination:{
             totalItems: buildings.count,
             currentPage: page,
