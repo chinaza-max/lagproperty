@@ -440,7 +440,7 @@ class UserUtil {
     roomPreference:Joi.string().required(),
     availability: Joi.string()
         .valid('vacant', 'occupied')
-        .required(),
+        .required(), 
     furnishingStatus: Joi.string()
         .valid('furnished', 'unfurnished', 'partly furnished')
         .required(),
