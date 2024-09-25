@@ -447,7 +447,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction8:
  *   post:
  *     summary: Decline an inspection
  *     description: Decline an inspection with an optional note.
@@ -457,7 +457,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction9:
  *   post:
  *     summary: Accept a tenant
  *     description: Accept a prospective tenant after an inspection.
@@ -467,7 +467,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction10:
  *   post:
  *     summary: Release fund
  *     description: Release the escrow fund after tenant acceptance.
@@ -477,7 +477,7 @@
 
 /**
  * @swagger
- * user/inspectionAction:
+ * user/inspectionAction11:
  *   post:
  *     summary: Get escrow balance
  *     description: Fetch the escrow balance for the property manager.
