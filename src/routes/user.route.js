@@ -1086,21 +1086,6 @@
  *       - Inspection
  *     parameters:
  *       - in: query
- *         name: userId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the property manager.
- *         example: 101
- *       - in: query
- *         name: role
- *         required: true
- *         schema:
- *           type: string
- *           enum: [list, rent]
- *         description: Role of the user. Only 'list' role is allowed for this action.
- *         example: "list"
- *       - in: query
  *         name: page
  *         required: true
  *         schema:
