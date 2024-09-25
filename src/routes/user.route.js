@@ -292,14 +292,12 @@
 
 /**
  * @swagger
- * /user/inspectionAction:
+ * /inspectionAction:
  *   post:
- *     summary: Handles various inspection-related actions.
- *     description: Perform actions related to inspections based on the provided action type. Actions include creating inspections, accepting, rejecting, and managing inspections.
- *     security:
- *       - BearerAuth: []
+ *     summary: Handle inspection actions based on type
+ *     description: This endpoint handles various inspection-related actions such as creating, accepting, declining inspections, and more. Different types of actions can be performed based on the 'type' parameter.
  *     tags:
- *       - Inspections
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -311,88 +309,58 @@
  *               - role
  *               - type
  *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user performing the action
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: The role of the user, either 'list' or 'rent'
  *               type:
  *                 type: string
- *                 enum: 
- *                   - getNotCreatedInspection
- *                   - getPendingInspection
- *                   - getDeclineInspection
- *                   - getAcceptedInspection
- *                   - createInspection
- *                   - refund
- *                   - acceptInspection
- *                   - declineInspection
- *                   - acceptTenant
- *                   - rejectTenant
- *                   - releaseFund
- *                   - rejectBuilding
- *                   - escrowBalance
- *                 description: Type of inspection action to perform.
- *                 example: "createInspection"
+ *                 enum: [getNotCreatedInspection, getPendingInspection, getDeclineInspection, getAcceptedInspection, createInspection, refund, acceptInspection, declineInspection, acceptTenant, releaseFund, escrowBalance]
+ *                 description: The type of action to perform
  *               pageSize:
- *                 type: integer
- *                 description: Number of records to retrieve (required for certain actions).
- *                 example: 10
- *                 minimum: 1
- *                 nullable: true
+ *                 type: number
+ *                 description: Number of items per page (required for fetching inspection lists)
  *               page:
- *                 type: integer
- *                 description: Page number to retrieve (required for certain actions).
- *                 example: 1
- *                 minimum: 1
- *                 nullable: true
+ *                 type: number
+ *                 description: Page number for pagination (required for fetching inspection lists)
  *               inspectionMode:
  *                 type: string
  *                 enum: [inPerson, videoChat]
- *                 description: Mode of inspection (required for 'createInspection').
- *                 example: "inPerson"
- *                 nullable: true
+ *                 description: Mode of inspection (required for createInspection)
  *               fullDate:
  *                 type: string
  *                 format: date
- *                 description: Date of the inspection (required for 'createInspection').
- *                 example: "2024-09-08 14:35:20"
- *                 nullable: true
+ *                 description: Full date of the inspection (required for createInspection)
  *               inspectionStatus:
  *                 type: string
  *                 enum: [pending, accepted, decline, notCreated]
- *                 description: Inspection status (required for 'updateInspection').
- *                 nullable: true
+ *                 description: Status of the inspection (required for updateInspection)
  *               emailAddress:
  *                 type: string
  *                 format: email
- *                 description: Email address of the person related to the inspection (required for 'createInspection').
- *                 example: "example@domain.com"
- *                 nullable: true
+ *                 description: Email address of the person related to the inspection (required for createInspection)
  *               tel:
- *                 type: string
- *                 description: Phone number of the person involved in the inspection (required for 'createInspection').
- *                 example: "08012345678"
- *                 nullable: true
+ *                 type: number
+ *                 description: Contact number of the person (required for createInspection)
  *               fullName:
  *                 type: string
- *                 description: Full name of the person involved in the inspection (required for 'createInspection').
- *                 example: "John Doe"
- *                 nullable: true
+ *                 description: Full name of the person (required for createInspection)
  *               gender:
  *                 type: string
  *                 enum: [Male, Female]
- *                 description: Gender of the person involved in the inspection (required for 'createInspection').
- *                 example: "Male"
- *                 nullable: true
+ *                 description: Gender of the person (required for createInspection)
  *               note:
  *                 type: string
- *                 description: Optional note for the inspection (used for 'createInspection' or 'declineInspection').
- *                 example: "The tenant has requested a time change."
- *                 nullable: true
+ *                 description: Optional note (used in createInspection or declineInspection)
  *               inspectionId:
- *                 type: integer
- *                 description: ID of the inspection (required for certain actions like 'acceptInspection', 'declineInspection', 'createInspection').
- *                 example: 456
- *                 nullable: true
+ *                 type: number
+ *                 description: ID of the inspection (required for specific actions like acceptInspection, declineInspection, etc.)
  *     responses:
  *       200:
- *         description: Action performed successfully.
+ *         description: Successful response
  *         content:
  *           application/json:
  *             schema:
@@ -400,30 +368,121 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Action processed successfully.
- *                 data:
- *                   type: object
- *                   description: Additional data about the action.
+ *                   description: Action result message
  *       400:
- *         description: Invalid request parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Bad Request. Invalid fields or missing data.
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Internal Server Error.
+ *         description: Bad Request, invalid data
+ *       404:
+ *         description: Not Found, inspection or related resource not found
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Get not created inspections
+ *     description: Retrieve inspections that have not been created yet.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Get pending inspections
+ *     description: Retrieve all pending inspections.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Get declined inspections
+ *     description: Retrieve all declined inspections.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Get accepted inspections
+ *     description: Retrieve all accepted inspections.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Create a new inspection
+ *     description: Create a new inspection with details like mode, date, and user information.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Issue a refund
+ *     description: Handle refund process for an inspection.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Accept an inspection
+ *     description: Accept an inspection as a property manager.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Decline an inspection
+ *     description: Decline an inspection with an optional note.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Accept a tenant
+ *     description: Accept a prospective tenant after an inspection.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Release fund
+ *     description: Release the escrow fund after tenant acceptance.
+ *     tags:
+ *       - Inspection Actions
+ */
+
+/**
+ * @swagger
+ * /inspectionAction:
+ *   post:
+ *     summary: Get escrow balance
+ *     description: Fetch the escrow balance for the property manager.
+ *     tags:
+ *       - Inspection Actions
  */
 
 
