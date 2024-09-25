@@ -309,55 +309,16 @@
  *               - role
  *               - type
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user performing the action
- *               role:
+ *                type:
  *                 type: string
- *                 enum: [list, rent]
- *                 description: The role of the user, either 'list' or 'rent'
- *               type:
- *                 type: string
- *                 enum: [getNotCreatedInspection, getPendingInspection, getDeclineInspection, getAcceptedInspection, createInspection, refund, acceptInspection, declineInspection, acceptTenant, releaseFund, escrowBalance]
- *                 description: The type of action to perform
+ *                 enum: [getNotCreatedInspection]
+ *                 description: Action type
  *               pageSize:
  *                 type: number
- *                 description: Number of items per page (required for fetching inspection lists)
+ *                 description: Number of items per page
  *               page:
  *                 type: number
- *                 description: Page number for pagination (required for fetching inspection lists)
- *               inspectionMode:
- *                 type: string
- *                 enum: [inPerson, videoChat]
- *                 description: Mode of inspection (required for createInspection)
- *               fullDate:
- *                 type: string
- *                 format: date
- *                 description: Full date of the inspection (required for createInspection)
- *               inspectionStatus:
- *                 type: string
- *                 enum: [pending, accepted, decline, notCreated]
- *                 description: Status of the inspection (required for updateInspection)
- *               emailAddress:
- *                 type: string
- *                 format: email
- *                 description: Email address of the person related to the inspection (required for createInspection)
- *               tel:
- *                 type: number
- *                 description: Contact number of the person (required for createInspection)
- *               fullName:
- *                 type: string
- *                 description: Full name of the person (required for createInspection)
- *               gender:
- *                 type: string
- *                 enum: [Male, Female]
- *                 description: Gender of the person (required for createInspection)
- *               note:
- *                 type: string
- *                 description: Optional note (used in createInspection or declineInspection)
- *               inspectionId:
- *                 type: number
- *                 description: ID of the inspection (required for specific actions like acceptInspection, declineInspection, etc.)
+ *                 description: Page number for pagination
  *     responses:
  *       200:
  *         description: Successful response
@@ -379,21 +340,40 @@
  * @swagger
  * user/inspectionAction2:
  *   post:
- *     summary: Get not created inspections
- *     description: Retrieve inspections that have not been created yet.
- *     tags:
- *       - Inspection Actions
- */
-
-/**
- * @swagger
- * user/inspectionAction2:
- *   post:
  *     summary: Get pending inspections
  *     description: Retrieve all pending inspections.
- *     tags:
- *       - Inspection Actions
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - pageSize
+ *               - page
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [getPendingInspection]
+ *                 description: Action type
+ *               pageSize:
+ *                 type: number
+ *                 description: Number of items per page
+ *               page:
+ *                 type: number
+ *                 description: Page number for pagination
  */
+
 
 /**
  * @swagger
@@ -401,9 +381,40 @@
  *   post:
  *     summary: Get declined inspections
  *     description: Retrieve all declined inspections.
- *     tags:
- *       - Inspection Actions
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - pageSize
+ *               - page
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [getDeclineInspection]
+ *                 description: Action type
+ *               pageSize:
+ *                 type: number
+ *                 description: Number of items per page
+ *               page:
+ *                 type: number
+ *                 description: Page number for pagination
  */
+
+
+
 
 /**
  * @swagger
@@ -411,80 +422,322 @@
  *   post:
  *     summary: Get accepted inspections
  *     description: Retrieve all accepted inspections.
- *     tags:
- *       - Inspection Actions
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - pageSize
+ *               - page
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [getAcceptedInspection]
+ *                 description: Action type
+ *               pageSize:
+ *                 type: number
+ *                 description: Number of items per page
+ *               page:
+ *                 type: number
+ *                 description: Page number for pagination
  */
+
+
+
+
 
 /**
  * @swagger
  * user/inspectionAction5:
  *   post:
  *     summary: Create a new inspection
- *     description: Create a new inspection with details like mode, date, and user information.
- *     tags:
- *       - Inspection Actions
+ *     description: Create a new inspection with user details and inspection mode.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - inspectionMode
+ *               - fullDate
+ *               - emailAddress
+ *               - tel
+ *               - fullName
+ *               - gender
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [createInspection]
+ *                 description: Action type
+ *               inspectionMode:
+ *                 type: string
+ *                 enum: [inPerson, videoChat]
+ *                 description: Mode of inspection
+ *               fullDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Full date of the inspection
+ *               emailAddress:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address for contact
+ *               tel:
+ *                 type: number
+ *                 description: Contact phone number
+ *               fullName:
+ *                 type: string
+ *                 description: Full name of the contact person
+ *               gender:
+ *                 type: string
+ *                 enum: [Male, Female]
+ *                 description: Gender of the contact person
  */
+
+
+
 
 /**
  * @swagger
- * user/inspectionAction6:
+ *  user/inspectionAction6:
  *   post:
  *     summary: Issue a refund
- *     description: Handle refund process for an inspection.
- *     tags:
- *       - Inspection Actions
+ *     description: Process a refund for an inspection.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [refund]
+ *                 description: Action type
  */
+
+
+
 
 /**
  * @swagger
  * user/inspectionAction7:
  *   post:
  *     summary: Accept an inspection
- *     description: Accept an inspection as a property manager.
- *     tags:
- *       - Inspection Actions
+ *     description: Accept an inspection as the property manager.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - inspectionId
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [acceptInspection]
+ *                 description: Action type
+ *               inspectionId:
+ *                 type: number
+ *                 description: The ID of the inspection to accept
  */
+
+
+
+
 
 /**
  * @swagger
  * user/inspectionAction8:
  *   post:
  *     summary: Decline an inspection
- *     description: Decline an inspection with an optional note.
- *     tags:
- *       - Inspection Actions
+ *     description: Decline an inspection and optionally include a note.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - inspectionId
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [declineInspection]
+ *                 description: Action type
+ *               inspectionId:
+ *                 type: number
+ *                 description: The ID of the inspection to decline
+ *               note:
+ *                 type: string
+ *                 description: Optional note explaining the reason for decline
  */
+
+
+
+
+
 
 /**
  * @swagger
- * user/inspectionAction9:
+ *  user/inspectionAction9:
  *   post:
  *     summary: Accept a tenant
- *     description: Accept a prospective tenant after an inspection.
- *     tags:
- *       - Inspection Actions
+ *     description: Accept a tenant after an inspection has been completed.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - inspectionId
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [acceptTenant]
+ *                 description: Action type
+ *               inspectionId:
+ *                 type: number
+ *                 description: The ID of the inspection
  */
 
-/**
+
+
+  /**
  * @swagger
  * user/inspectionAction10:
  *   post:
- *     summary: Release fund
- *     description: Release the escrow fund after tenant acceptance.
- *     tags:
- *       - Inspection Actions
+ *     summary: Release funds to the tenant
+ *     description: Initiate the release of funds to the tenant after inspection approval.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *               - inspectionId
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [releaseFund]
+ *                 description: Action type
+ *               inspectionId:
+ *                 type: number
+ *                 description: The ID of the inspection record to release funds for
  */
 
-/**
+
+
+
+
+  /**
  * @swagger
  * user/inspectionAction11:
  *   post:
  *     summary: Get escrow balance
- *     description: Fetch the escrow balance for the property manager.
- *     tags:
- *       - Inspection Actions
+ *     description: Retrieve the current balance of the escrow account.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - role
+ *               - type
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: The ID of the user
+ *               role:
+ *                 type: string
+ *                 enum: [list, rent]
+ *                 description: Role of the user
+ *               type:
+ *                 type: string
+ *                 enum: [getEscrowBalance]
+ *                 description: Action type
  */
 
+
+  
 
 /**
  * @swagger
