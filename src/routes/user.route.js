@@ -342,6 +342,8 @@
  *   post:
  *     summary: Get pending inspections
  *     description: Retrieve all pending inspections.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -380,6 +382,8 @@
  *   post:
  *     summary: Get declined inspections
  *     description: Retrieve all declined inspections.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -418,6 +422,8 @@
  *   post:
  *     summary: Get accepted inspections
  *     description: Retrieve all accepted inspections.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -456,6 +462,8 @@
  *   post:
  *     summary: Create a new inspection
  *     description: Create a new inspection with user details and inspection mode.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -514,6 +522,8 @@
  *   post:
  *     summary: Issue a refund
  *     description: Process a refund for an inspection.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -544,6 +554,8 @@
  *   post:
  *     summary: Accept an inspection
  *     description: Accept an inspection as the property manager.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -578,6 +590,8 @@
  *   post:
  *     summary: Decline an inspection
  *     description: Decline an inspection and optionally include a note.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -615,6 +629,8 @@
  *   post:
  *     summary: Accept a tenant
  *     description: Accept a tenant after an inspection has been completed.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -651,6 +667,8 @@
  *   post:
  *     summary: Release funds to the tenant
  *     description: Initiate the release of funds to the tenant after inspection approval.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
@@ -689,6 +707,8 @@
  *   post:
  *     summary: Get escrow balance
  *     description: Retrieve the current balance of the escrow account.
+ *     tags:
+ *       - Inspection Actions
  *     requestBody:
  *       required: true
  *       content:
