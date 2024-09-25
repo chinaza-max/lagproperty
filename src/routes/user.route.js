@@ -2163,130 +2163,6 @@
 
 
 
-/**
- * @swagger
- * /user/ProspectiveTenantInformation:
- *   get:
- *     summary: Retrieve prospective tenant information with reviews.
- *     description: Fetches details of a prospective tenant based on an inspection ID and includes reviews with pagination.
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - Prospective Tenants
- *     parameters:
- *       - in: query
- *         name: inspectionId
- *         schema:
- *           type: integer
- *         required: true
- *         description: The ID of the inspection to fetch prospective tenant information.
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *         required: true
- *         description: The page number to retrieve.
- *       - in: query
- *         name: pageSize
- *         schema:
- *           type: integer
- *           minimum: 1
- *         required: true
- *         description: The number of reviews to retrieve per page.
- *     responses:
- *       200:
- *         description: Successfully retrieved prospective tenant information and reviews with pagination.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "successful"
- *                 data:
- *                   type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                           description: The ID of the prospective tenant.
- *                         name:
- *                           type: string
- *                           description: The name of the prospective tenant.
- *                         PropertyManagerReview:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                                 description: The ID of the review.
- *                               review:
- *                                 type: string
- *                                 description: The review text.
- *                               rating:
- *                                 type: integer
- *                                 description: The rating given in the review.
- *                               createdAt:
- *                                 type: string
- *                                 format: date-time
- *                                 description: The timestamp when the review was created.
- *                     pagination:
- *                       type: object
- *                       properties:
- *                         totalItems:
- *                           type: integer
- *                           description: The total number of reviews.
- *                         currentPage:
- *                           type: integer
- *                           description: The current page number.
- *                         pageSize:
- *                           type: integer
- *                           description: The number of reviews per page.
- *                         totalPages:
- *                           type: integer
- *                           description: The total number of pages.
- *       400:
- *         description: Invalid query parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Bad Request. Invalid or missing query parameters."
- *       404:
- *         description: Inspection or tenant data not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Inspection not found or Tenant data not found."
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Internal Server Error."
- */
-
-
-
 
 /**
  * @swagger
@@ -2373,6 +2249,94 @@
 
 
 
+/**
+ * @swagger
+ * /user/tenant:
+ *   get:
+ *     summary: To get all tenant irrestive of the building.
+ *     description: Fetches all tenant under a particular agent or landlord.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Land / Agent API
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         required: true
+ *         description: The page number to retrieve.
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         required: true
+ *         description: The number of reviews to retrieve per page.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved tenants.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 response:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Tenant ID
+ *                       status:
+ *                         type: string
+ *                         description: Tenant status (e.g., active, rentDue)
+ *                       building:
+ *                         type: object
+ *                         properties:
+ *                           price:
+ *                             type: integer
+ *                             description: Price of the building
+ *                       prospectiveTenant:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: Prospective Tenant ID
+ *                           maritalStatus:
+ *                             type: string
+ *                             description: Marital status of the prospective tenant
+ *                           stateOfOrigin:
+ *                             type: string
+ *                             description: State of origin of the prospective tenant
+ *                           image:
+ *                             type: string
+ *                             description: Image URL of the prospective tenant
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Total number of tenants
+ *                     currentPage:
+ *                       type: integer
+ *                       description: Current page number
+ *                     pageSize:
+ *                       type: integer
+ *                       description: Number of tenants per page
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Total number of pages
+ *       400:
+ *         description: Bad Request. The input validation failed.
+ *       500:
+ *         description: Internal Server Error. An error occurred while processing the request.
+ */
+
+
+
 
 import { Router } from "express";
 import UserController from"../controllers/user/user.controller.js";
@@ -2417,11 +2381,12 @@ class UserRoutes extends UserController {
     this.router.get("/tenant", this.tenant);
     this.router.get("/ProspectiveTenantInformation", this.ProspectiveTenantInformation);
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
+    this.router.post("/reviewTenant", this.reviewTenant);
+
 
     this.router.get("/getAllUser", this.getAllUser);
     this.router.get("/getAllLordData", this.getAllLordData);
 
-    this.router.post("/reviewTenant", this.reviewTenant);
 
 
     this.router.get("/whoIAm", this.whoIAm);

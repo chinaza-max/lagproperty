@@ -222,12 +222,12 @@ class UserService {
       const totalPages = Math.ceil(tenantData.count / pageSize);
   
       return {
-        data: tenantData.rows,
+        response: tenantData.rows,
         pagination:{
-        totalItems: tenantData.count,
-        currentPage: parseInt(page, 10),
-        pageSize: limit,
-        totalPages
+          totalItems: tenantData.count,
+          currentPage: parseInt(page, 10),
+          pageSize: limit,
+          totalPages
         }
       };
     
@@ -958,23 +958,24 @@ class UserService {
         include: [
           {
             model: this.BuildingModel,
-            as: 'BuildingReview',
             where: { propertyManagerId:userId },
           },
           {
             model: this.ProspectiveTenantModel,
-            as: 'rentalhistory',
+            attributes: ['id', 'image'],
           }
         ],
         where: {
-          [Op.or]: [
+          /*[Op.or]: [
             { status: 'rentDue' },
             { status: 'terminated' }
-          ],
+          ],*/
+          status: 'rentDue',
           isDeleted: false,
           rentNextDueDate: {
             [Op.lte]: new Date() // Ensure due date is in the past or today
           }
+
         },
         limit,
         offset,
@@ -1431,7 +1432,6 @@ class UserService {
           
           if (!tenant) {
             throw new NotFoundError("Tenant not found ")
-
           }
       
           const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
