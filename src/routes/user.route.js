@@ -309,7 +309,7 @@
  *               - role
  *               - type
  *             properties:
- *                type:
+ *               type:
  *                 type: string
  *                 enum: [getNotCreatedInspection]
  *                 description: Action type
@@ -374,7 +374,6 @@
  *                 description: Page number for pagination
  */
 
-
 /**
  * @swagger
  * user/inspectionAction3:
@@ -413,9 +412,6 @@
  *                 description: Page number for pagination
  */
 
-
-
-
 /**
  * @swagger
  * user/inspectionAction4:
@@ -453,10 +449,6 @@
  *                 type: number
  *                 description: Page number for pagination
  */
-
-
-
-
 
 /**
  * @swagger
@@ -516,12 +508,9 @@
  *                 description: Gender of the contact person
  */
 
-
-
-
 /**
  * @swagger
- *  user/inspectionAction6:
+ * user/inspectionAction6:
  *   post:
  *     summary: Issue a refund
  *     description: Process a refund for an inspection.
@@ -548,9 +537,6 @@
  *                 enum: [refund]
  *                 description: Action type
  */
-
-
-
 
 /**
  * @swagger
@@ -585,10 +571,6 @@
  *                 type: number
  *                 description: The ID of the inspection to accept
  */
-
-
-
-
 
 /**
  * @swagger
@@ -627,14 +609,9 @@
  *                 description: Optional note explaining the reason for decline
  */
 
-
-
-
-
-
 /**
  * @swagger
- *  user/inspectionAction9:
+ * user/inspectionAction9:
  *   post:
  *     summary: Accept a tenant
  *     description: Accept a tenant after an inspection has been completed.
@@ -663,12 +640,12 @@
  *                 description: Action type
  *               inspectionId:
  *                 type: number
- *                 description: The ID of the inspection
+ *                 description: The ID of the inspection to accept the tenant
  */
 
 
 
-  /**
+ /**
  * @swagger
  * user/inspectionAction10:
  *   post:
@@ -706,7 +683,7 @@
 
 
 
-  /**
+ /**
  * @swagger
  * user/inspectionAction11:
  *   post:
@@ -737,7 +714,7 @@
  */
 
 
-  
+
 
 /**
  * @swagger
