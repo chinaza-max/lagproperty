@@ -292,7 +292,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction1:
  *   post:
  *     summary: Handle inspection actions based on type
  *     description: This endpoint handles various inspection-related actions such as creating, accepting, declining inspections, and more. Different types of actions can be performed based on the 'type' parameter.
@@ -377,7 +377,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction2:
  *   post:
  *     summary: Get not created inspections
  *     description: Retrieve inspections that have not been created yet.
@@ -387,7 +387,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction2:
  *   post:
  *     summary: Get pending inspections
  *     description: Retrieve all pending inspections.
@@ -397,7 +397,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction3:
  *   post:
  *     summary: Get declined inspections
  *     description: Retrieve all declined inspections.
@@ -407,7 +407,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction4:
  *   post:
  *     summary: Get accepted inspections
  *     description: Retrieve all accepted inspections.
@@ -417,7 +417,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction5:
  *   post:
  *     summary: Create a new inspection
  *     description: Create a new inspection with details like mode, date, and user information.
@@ -427,7 +427,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction6:
  *   post:
  *     summary: Issue a refund
  *     description: Handle refund process for an inspection.
@@ -437,7 +437,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction7:
  *   post:
  *     summary: Accept an inspection
  *     description: Accept an inspection as a property manager.
@@ -477,7 +477,7 @@
 
 /**
  * @swagger
- * /inspectionAction:
+ * user/inspectionAction:
  *   post:
  *     summary: Get escrow balance
  *     description: Fetch the escrow balance for the property manager.
