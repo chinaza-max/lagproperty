@@ -2655,6 +2655,14 @@ class UserRoutes extends UserController {
       { name: 'propertyTerms', maxCount: 1 },
     ]), this.listBuilding);
 
+    this.router.post("/updatelistedBuilding",uploadHandler.image.fields([
+      { name: 'bedroomSizeImage', maxCount: 1 }, 
+      { name: 'kitchenSizeImage', maxCount: 1 },  
+      { name: 'livingRoomSizeImage', maxCount: 1 }, 
+      { name: 'diningAreaSizeImage', maxCount: 1 },
+      { name: 'propertyTerms', maxCount: 1 },
+    ]), this.updatelistedBuilding);
+
 
     this.router.post("/inspectionAction", this.inspectionAction);
     this.router.post("/sendInvoce", this.sendInvoce);

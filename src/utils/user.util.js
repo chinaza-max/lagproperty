@@ -423,7 +423,9 @@ class UserUtil {
   });
   
 
-  verifyHandleListBuilding= Joi.object({
+  verifyHandleUpdatelistedBuilding= Joi.object({
+    role: Joi.string().valid('list').required(),
+    buildingId: Joi.number().required(),
     userId: Joi.number().required(),
     propertyPreference: Joi.string()
         .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
@@ -473,7 +475,58 @@ class UserUtil {
     propertyTerms: Joi.object({
       size: Joi.number().positive().less(3000000).optional(),
     }).required(),
-});
+  });
+
+  verifyHandleListBuilding= Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list').required(),
+    propertyPreference: Joi.string()
+        .valid('flats', 'duplex', 'selfContains', 'roomAndParlour'),
+    propertyLocation: Joi.string(),
+    propertyTitle: Joi.string(),
+    city: Joi.string(),
+    address: Joi.string(),
+    lat: Joi.string(),
+    lng: Joi.string(),
+    numberOfFloors: Joi.number().integer(),
+    numberOfRooms: Joi.number().integer().optional(),
+    amenity: Joi.array().items(Joi.string()),
+    roomPreference:Joi.string(),
+    availability: Joi.string()
+        .valid('vacant', 'occupied'), 
+    furnishingStatus: Joi.string()
+        .valid('furnished', 'unfurnished', 'partly furnished')
+       ,
+    rentalDuration: Joi.number().integer(),
+    price: Joi.number().integer(),
+    electricityBill: Joi.number().integer(),
+    wasteBill: Joi.number().integer(),
+    commissionBill: Joi.number().integer(),
+    propertyDescription: Joi.string().optional(),
+    bedroomSizeLength: Joi.number().integer().optional(),
+    bedroomSizeWidth: Joi.number().integer().optional(),
+    bedroomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }),
+    kitchenSizeLength: Joi.number().integer().optional(),
+    kitchenSizeWidth: Joi.number().integer().optional(),
+    kitchenSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }),
+    livingRoomSizeLength: Joi.number().integer().optional(),
+    livingRoomSizeWidth: Joi.number().integer().optional(),
+    livingRoomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }),
+    diningAreaSizeLength: Joi.number().integer().optional(),
+    diningAreaSizeWidth: Joi.number().integer().optional(),
+    diningAreaSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }),
+    propertyTerms: Joi.object({
+      size: Joi.number().positive().less(3000000).optional(),
+    }),
+  });
 
 }
 

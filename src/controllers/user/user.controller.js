@@ -39,6 +39,53 @@ export default class UserController {
   }
 
 
+  
+  async updatelistedBuilding(req, res, next) {
+
+    try {
+      const data = req.body;        
+      const { files } = req;
+
+      let amenities;
+      if (typeof data.amenity === 'string') {
+        try {
+          // Try to parse the stringified array
+          amenities = JSON.parse(data.amenity);
+        } catch (error) {
+          // If parsing fails, keep it as is (string or invalid JSON)
+          amenities = data.amenity;
+        }
+      } else {
+        // If it's already an array, keep it as is
+        amenities = data.amenity;
+      }
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        bedroomSizeImage: files?.bedroomSizeImage ? { size: files.bedroomSizeImage[0].size } : undefined,
+        kitchenSizeImage: files?.kitchenSizeImage ? { size: files.kitchenSizeImage[0].size } : undefined,
+        livingRoomSizeImage: files?.livingRoomSizeImage ? { size: files.livingRoomSizeImage[0].size } : undefined,
+        diningAreaSizeImage: files?.diningAreaSizeImage ? { size: files.diningAreaSizeImage[0].size } : undefined,
+        propertyTerms: files?.propertyTerms ? { size: files.propertyTerms[0].size } : undefined,
+        amenity:amenities,
+        userId:req.user.id,
+      }
+
+       await userService.handleUpdatelistedBuilding(my_bj,files);
+        
+      return res.status(200).json({
+        status: 200,
+        message: "updated successfully",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
 
   async listBuilding(req, res, next) {
 
@@ -62,6 +109,7 @@ export default class UserController {
 
       let my_bj = {
         ...data,
+        role:req.user.role,
         bedroomSizeImage: files?.bedroomSizeImage ? { size: files.bedroomSizeImage[0].size } : undefined,
         kitchenSizeImage: files?.kitchenSizeImage ? { size: files.kitchenSizeImage[0].size } : undefined,
         livingRoomSizeImage: files?.livingRoomSizeImage ? { size: files.livingRoomSizeImage[0].size } : undefined,

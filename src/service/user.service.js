@@ -1262,6 +1262,79 @@ class UserService {
 
   }
 
+
+
+
+  async   handleUpdatelistedBuilding(buildingId, data, files) {
+    let { 
+      userId,
+      role,
+      image,
+      bedroomSizeImage,
+      kitchenSizeImage,
+      livingRoomSizeImage,
+      diningAreaSizeImage,
+      propertyTerms,
+      buildingId,
+      ...updateData
+    } = await userUtil.verifyHandleUpdatelistedBuilding.validateAsync(data);
+    
+    let imageUrls = {};
+  
+    try {
+      // Function to handle image updates
+      const updateImage = (field, files) => {
+        if (files[field] && files[field].length > 0) {
+          const file = files[field][0];
+          return serverConfig.NODE_ENV === "production"
+            ? serverConfig.DOMAIN + file.path.replace("/home", "")
+            : serverConfig.DOMAIN + file.path.replace("public", "");
+        }
+        return undefined; // Return undefined if no new image is provided
+      };
+  
+      // Update image fields only if new files are provided
+      imageUrls.bedroomSizeImage = updateImage('bedroomSizeImage', files);
+      imageUrls.kitchenSizeImage = updateImage('kitchenSizeImage', files);
+      imageUrls.livingRoomSizeImage = updateImage('livingRoomSizeImage', files);
+      imageUrls.diningAreaSizeImage = updateImage('diningAreaSizeImage', files);
+      imageUrls.propertyTerms = updateImage('propertyTerms', files);
+  
+      // Remove undefined values from imageUrls and updateData
+      imageUrls = Object.fromEntries(Object.entries(imageUrls).filter(([_, v]) => v != null));
+      updateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v != null));
+  
+      // Combine imageUrls and updateData, excluding null or undefined values
+      const finalUpdateData = {
+        ...imageUrls,
+        ...updateData
+      };
+  
+      // Find the existing building by ID
+      const building = await this.BuildingModel.findByPk(buildingId);
+  
+      if (!building) {
+        throw new Error('Building not found');
+      }
+  
+      // Check if the user has permission to update this building
+      if (building.propertyManagerId !== userId) {
+        throw new Error('User does not have permission to update this building');
+      }
+  
+      // Update the building with the new data
+      await building.update(finalUpdateData);
+  
+      return building;
+  
+    } catch (error) {
+      console.log(error);
+      throw new SystemError(error.name, error.message);
+    }
+  }
+
+
+
   async handleListBuilding(data,files) {
 
     let { 
