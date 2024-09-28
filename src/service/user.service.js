@@ -1265,7 +1265,7 @@ class UserService {
 
 
 
-  async   handleUpdatelistedBuilding(buildingId, data, files) {
+  async   handleUpdatelistedBuilding(data, files) {
     let { 
       userId,
       role,
