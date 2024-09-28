@@ -1629,7 +1629,7 @@
 
 /**
  * @swagger
- * /getBuildingDetails:
+ * /user/getBuildingDetails:
  *   get:
  *     summary: Get detailed information about a specific building.
  *     description: Fetches the details of a building including property manager information and tenant reviews.
