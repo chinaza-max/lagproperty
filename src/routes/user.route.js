@@ -2606,7 +2606,7 @@
  *   post:
  *     summary: Update an existing building review
  *     tags:
- *       - Building Reviews
+ *       -  Tenant API
  *     description: Allows tenants to update an existing review for a building. Only users with the "rent" role are permitted to update reviews. The request must include the review ID, user’s ID, role, and optionally the review content or rating. If neither `review` nor `rating` is provided, no updates will occur.
  *     security:
  *       - bearerAuth: []  # Uses bearer token authentication
@@ -2689,7 +2689,7 @@
  *   post:
  *     summary: Delete an existing building review
  *     tags:
- *       - Building Reviews
+ *       -  Tenant API
  *     description: Allows tenants to mark a building review as deleted. Only users with the "rent" role can delete reviews. The request must include the review ID, user’s ID, role, and the action type set to "deleteReview."
  *     security:
  *       - bearerAuth: []  # Uses bearer token authentication
