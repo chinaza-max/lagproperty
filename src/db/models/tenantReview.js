@@ -13,7 +13,7 @@ export function init(connection) {
         primaryKey: true,
         autoIncrement: true
       },
-      buidingId: {
+      buildingId: {
         type: DataTypes.INTEGER ,
         allowNull: false
       },
@@ -26,7 +26,7 @@ export function init(connection) {
         allowNull: false
       },
       rating: {
-        type: DataTypes.INTEGER ,
+        type: DataTypes.FLOAT ,
         allowNull: true
       },
       isDeleted: {

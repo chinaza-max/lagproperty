@@ -2103,116 +2103,6 @@
 
 
 
-/**
- * @swagger
- * /getInspectionDetails:
- *   get:
- *     summary: Retrieve details of a specific inspection.
- *     description: Fetches detailed information of an inspection based on the inspection ID provided.
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - Inspections
- *     parameters:
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *           enum: [list, rent]
- *         required: true
- *         description: The role of the user in the inspection context (either 'list' or 'rent').
- *       - in: query
- *         name: inspectionId
- *         schema:
- *           type: integer
- *         required: true
- *         description: The ID of the inspection to retrieve details for.
- *     responses:
- *       200:
- *         description: Inspection details retrieved successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "successful"
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       description: The ID of the inspection.
- *                     inspectionDate:
- *                       type: string
- *                       format: date-time
- *                       description: Date and time of the inspection.
- *                     inspectionStatus:
- *                       type: string
- *                       description: Current status of the inspection.
- *                     BuildingInspection:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                           description: Building ID.
- *                         name:
- *                           type: string
- *                           description: Name of the building.
- *                         address:
- *                           type: string
- *                           description: Address of the building.
- *                     MyInspection:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                           description: Tenant ID.
- *                         fullName:
- *                           type: string
- *                           description: Full name of the prospective tenant.
- *                         email:
- *                           type: string
- *                           format: email
- *                           description: Email address of the prospective tenant.
- *                         phoneNumber:
- *                           type: string
- *                           description: Phone number of the prospective tenant.
- *       400:
- *         description: Invalid query parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Bad Request. Invalid or missing query parameters."
- *       404:
- *         description: Inspection not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Inspection not found."
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Internal Server Error."
- */
 
 
 
@@ -2631,6 +2521,243 @@
 
 
 
+/**
+ * @swagger
+ * user/reviewBuilding:
+ *   post:
+ *     summary: Submit a review for a building
+ *     tags:
+ *       - Tenant API
+ *     description: Allows tenants to submit a review and rating for a building. Only users with the "rent" role are permitted to submit reviews. The request must include the user’s ID, role, review, building ID, and an optional rating.
+ *     security:
+ *       - bearerAuth: []  # Uses bearer token authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               buildingId:
+ *                 type: integer
+ *                 description: The ID of the building being reviewed
+ *                 example: 1
+ *               review:
+ *                 type: string
+ *                 description: The review content
+ *                 example: "Great building with excellent amenities."
+ *               rating:
+ *                 type: integer
+ *                 description: Optional rating out of 5
+ *                 example: 4
+ *     responses:
+ *       200:
+ *         description: Review submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                   example: "successful"
+ *       400:
+ *         description: Bad request - landlord or agent trying to review, or invalid/missing data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "landlord or agent don't have this access"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Internal server error"
+ */
+
+
+
+/**
+ * @swagger
+ * user/reviewBuildingAction:
+ *   post:
+ *     summary: Update an existing building review
+ *     tags:
+ *       - Building Reviews
+ *     description: Allows tenants to update an existing review for a building. Only users with the "rent" role are permitted to update reviews. The request must include the review ID, user’s ID, role, and optionally the review content or rating. If neither `review` nor `rating` is provided, no updates will occur.
+ *     security:
+ *       - bearerAuth: []  # Uses bearer token authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reviewId:
+ *                 type: integer
+ *                 description: The ID of the review being updated
+ *                 example: 456
+ *               review:
+ *                 type: string
+ *                 description: The updated review content
+ *                 example: "Updated review with more insights."
+ *               rating:
+ *                 type: integer
+ *                 description: The updated rating out of 5
+ *                 example: 5
+ *               type:
+ *                 type: string
+ *                 description: Type of action to perform (must be 'updateReview')
+ *                 example: "updateReview"
+ *     responses:
+ *       200:
+ *         description: Review updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                   example: "successful"
+ *       400:
+ *         description: Bad request - landlord or agent trying to update, or invalid/missing data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "landlord or agent don't have this access"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Internal server error"
+ */
+
+
+
+/**
+ * @swagger
+ * user/reviewBuildingAction:
+ *   post:
+ *     summary: Delete an existing building review
+ *     tags:
+ *       - Building Reviews
+ *     description: Allows tenants to mark a building review as deleted. Only users with the "rent" role can delete reviews. The request must include the review ID, user’s ID, role, and the action type set to "deleteReview."
+ *     security:
+ *       - bearerAuth: []  # Uses bearer token authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reviewId:
+ *                 type: integer
+ *                 description: The ID of the review to be deleted
+ *                 example: 456
+ *               type:
+ *                 type: string
+ *                 description: Type of action to perform (must be 'deleteReview')
+ *                 example: "deleteReview"
+ *     responses:
+ *       200:
+ *         description: Review marked as deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                   example: "successful"
+ *       400:
+ *         description: Bad request - landlord or agent trying to delete, or invalid/missing data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "landlord or agent don't have this access"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   description: HTTP status code
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Internal server error"
+ */
+
+
+
 
 import { Router } from "express";
 import UserController from"../controllers/user/user.controller.js";
@@ -2670,6 +2797,10 @@ class UserRoutes extends UserController {
     this.router.get("/getMyProperty", this.getMyProperty);
     this.router.post("/quitNoticeAction", this.quitNoticeAction);
     this.router.post("/reviewTenant", this.reviewTenant);
+    
+    this.router.post("/reviewBuilding", this.reviewBuilding);
+    this.router.post("/reviewBuildingAction", this.reviewBuildingAction);
+
     this.router.get("/getALLreviewTenant", this.getALLreviewTenant);
     this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
     this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
@@ -2681,7 +2812,7 @@ class UserRoutes extends UserController {
     this.router.get("/getInspectionDetails", this.getInspectionDetails);
     this.router.get("/rentAction", this.rentAction);
     this.router.get("/tenant", this.tenant);
-    this.router.get("/ProspectiveTenantInformation", this.ProspectiveTenantInformation);
+    this.router.get("/prospectiveTenantInformation", this.ProspectiveTenantInformation);
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
     this.router.post("/reviewTenant", this.reviewTenant);
 

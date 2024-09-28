@@ -384,6 +384,26 @@ class UserUtil {
     paymentReference: Joi.string().required(),
   });
 
+
+
+  verifyHandleReviewBuildingAction= Joi.object({
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list','rent').required(),
+    reviewId: Joi.number().integer().required(),
+    review: Joi.string().optional(),
+    rating: Joi.number().optional(),
+    type: Joi.string().valid('updateReview', 'deleteReview').required(),
+  });
+
+
+  verifyHandleReviewBuilding= Joi.object({
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list','rent').required(),
+    buildingId: Joi.number().integer().required(),
+    review: Joi.string().required(),
+    rating: Joi.number().optional(),
+  });
+
   verifyHandleReviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),

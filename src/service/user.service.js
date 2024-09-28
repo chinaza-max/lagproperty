@@ -517,7 +517,10 @@ class UserService {
         {
           model:this.TenantReviewModel,
           as: 'BuildingReview',
-          attributes: ['id', 'review', 'rating', 'createdAt']
+          attributes: ['id', 'review', 'rating', 'createdAt'],
+          where:{
+            isDeleted:false
+          }
         }
       ]
       });
@@ -1175,6 +1178,88 @@ class UserService {
   }
 
 
+  
+  async   handleReviewBuildingAction(data) {
+
+    let { 
+      userId,
+      role,
+      review,
+      buidingId,
+      rating,
+      reviewId,
+      type
+    } = await userUtil.verifyHandleReviewBuildingAction.validateAsync(data);
+    
+    if(role=='list') throw new BadRequestError("landlord or agent dont have this access")
+
+    try {
+
+      if(type==="updateReview"){
+        const updateData = {};
+
+        if (review) {
+          updateData.review = review;
+        }
+
+        if (rating !== undefined && rating !== null) {
+          updateData.rating = rating;
+        }
+
+        await this.TenantReviewModel.update(updateData, {
+          where: { id: reviewId }
+        });
+
+      }
+      else if(type==="deleteReview"){
+
+        await this.TenantReviewModel.update({
+          isDeleted:true
+        }, {
+          where: { id: reviewId }
+        })
+
+      }
+      
+    } catch (error) {
+      
+      throw new SystemError(error.name,  error.parent)
+    }
+    
+  }
+
+  async   handleReviewBuilding(data) {
+
+    let { 
+      userId,
+      role,
+      review,
+      buildingId,
+      rating,
+    } = await userUtil.verifyHandleReviewBuilding.validateAsync(data);
+    
+    if(role=='list') throw new BadRequestError("landlord or agent dont have this access")
+
+    
+    try {
+
+    
+      await this.TenantReviewModel.create({
+        review:review,
+        buildingId: buildingId,
+        tenentId: userId,
+        rating:rating ? 0:rating
+      });
+
+    } catch (error) {
+      console
+      throw new SystemError(error.name,  error.parent)
+    }
+    
+  }
+
+
+
   async handleReviewTenant(data) {
 
     let { 
@@ -1187,7 +1272,7 @@ class UserService {
     if(role=='rent') throw new BadRequestError("Tenant dont have this access")
 
     try {
-      await PropertyManagerReview.create({
+      await this.PropertyManagerReviewModel.create({
         propertyManagerId:userId,
         prospectiveTenantId:prospectiveTenantId,
         review: review,
@@ -1196,7 +1281,6 @@ class UserService {
     } catch (error) {
       console
       throw new SystemError(error.name,  error.parent)
-
     }
     
   }
