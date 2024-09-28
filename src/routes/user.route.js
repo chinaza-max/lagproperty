@@ -2602,7 +2602,7 @@
 
 /**
  * @swagger
- * user/reviewBuildingAction:
+ * user/reviewBuildingAction1:
  *   post:
  *     summary: Update an existing building review
  *     tags:
@@ -2685,7 +2685,7 @@
 
 /**
  * @swagger
- * user/reviewBuildingAction:
+ * user/reviewBuildingAction2:
  *   post:
  *     summary: Delete an existing building review
  *     tags:
