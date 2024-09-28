@@ -490,7 +490,7 @@ class UserService {
 
   async handleGetBuildingDetails(data) {
 
-    const { userId, buildingId} = await userUtil.verifyHandleGetBuildingDetails.validateAsync(data);
+    const {  buildingId } = await userUtil.verifyHandleGetBuildingDetails.validateAsync(data);
 
 
     try {
@@ -518,6 +518,7 @@ class UserService {
           model:this.TenantReviewModel,
           as: 'BuildingReview',
           attributes: ['id', 'review', 'rating', 'createdAt'],
+          required:false,
           where:{
             isDeleted:false
           }
@@ -525,6 +526,11 @@ class UserService {
       ]
       });
   
+      console.log(buildingDetails)
+      console.log(buildingId)
+      console.log(buildingDetails)
+      console.log(buildingId)
+
       if (!buildingDetails) {
         throw new NotFoundError('BuildingNotFound', 'Building not found');
       }

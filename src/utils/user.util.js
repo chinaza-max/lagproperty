@@ -325,7 +325,7 @@ class UserUtil {
 
   verifyHandleGetBuildingDetails= Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid('list', 'rent').required(),
+    role: Joi.string().valid('rent').required(),
     buildingId: Joi.number().required(),
   });
 
