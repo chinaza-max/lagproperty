@@ -521,7 +521,7 @@ class UserService {
           required:false,
           where:{
             isDeleted:false
-          }
+          } 
         }
       ]
       });
@@ -1049,7 +1049,77 @@ class UserService {
   }
 
 
+
   
+
+  async handleGetCount() {
+
+    try {
+
+          
+      const propertyManagerCount = await this.PropertyManagerModel.count();
+      const prospectiveTenantCount = await this.ProspectiveTenantModel.count();
+      const tenantCount = await this.TenantModel.count();
+
+      return {
+        prospectiveTenantCount,
+        tenantCount,
+        propertyManagerCount
+      };
+
+      
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
+
+  async handleGetTotalEscrowBalance() {
+
+    try {
+
+      const inspections = await this.InspectionModel.findAll({
+        where: {
+          inspectionStatus: ['pending', 'accepted', 'declined', 'notCreated'],
+          isDeleted: false,
+        },
+        attributes: ['id'] 
+      });
+
+      // If no inspections are found, return 0
+      if (inspections.length === 0) {
+        return {totalEscrowBalance: 0}
+      }
+
+      const inspectionIds = inspections.map(inspection => inspection.id);
+
+      const transactions = await this.TransactionModel.findAll({
+        where: {
+          inspectionId: inspectionIds,
+          isDeleted: false,
+        },
+        attributes: ['amount'], 
+      });
+
+    
+      const totalEscrowBalance = transactions.reduce((total, transaction) => {
+        return total + transaction.amount;
+      }, 0);
+
+      return {totalEscrowBalance};
+
+      
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+
 
   async handleGetAllLordData(data) {
 
@@ -1265,6 +1335,46 @@ class UserService {
   }
 
 
+  
+  async handleDisableAccount(data) {
+
+    let { 
+      userId,
+      role,
+      type,
+      userId2,
+    } = await userUtil.verifyHandleDisableAccount.validateAsync(data);
+    
+    if(role=='rent'||role=='list') throw new BadRequestError("No access")
+
+    let user;
+
+    try {
+
+      if(type==="rent"){
+        user = await this.ProspectiveTenantModel.findByPk(userId2);
+
+      }
+      else if(type==="list"){
+        user = await this.PropertyManagerModel.findByPk(userId2);
+
+      }
+
+
+      if (!user) {
+        throw new BadRequestError("User not found");
+      }
+
+      const newStatus = !user.disableAccount;
+      await user.update({ disableAccount: newStatus });
+
+      
+    } catch (error) {
+      
+      throw new SystemError(error.name,  error.parent)
+    }
+    
+  }
 
   async handleReviewTenant(data) {
 

@@ -404,6 +404,15 @@ class UserUtil {
     rating: Joi.number().optional(),
   });
 
+
+
+  verifyHandleDisableAccount= Joi.object({
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list', 'rent').optional(),
+    type: Joi.string().valid('list', 'rent').required(),
+    userId2: Joi.number().integer().required(),
+  });
+
   verifyHandleReviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),
@@ -449,74 +458,21 @@ class UserUtil {
     userId: Joi.number().required(),
     propertyPreference: Joi.string()
         .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
-        .required(),
-    propertyLocation: Joi.string().required(),
-    propertyTitle: Joi.string().required(),
-    city: Joi.string().required(),
-    address: Joi.string().required(),
-    lat: Joi.string().required(),
-    lng: Joi.string().required(),
-    numberOfFloors: Joi.number().integer().optional(),
-    numberOfRooms: Joi.number().integer().optional(),
-    amenity: Joi.array().items(Joi.string()).required(),
-    roomPreference:Joi.string().required(),
-    availability: Joi.string()
-        .valid('vacant', 'occupied')
-        .required(), 
-    furnishingStatus: Joi.string()
-        .valid('furnished', 'unfurnished', 'partly furnished')
-        .required(),
-    rentalDuration: Joi.number().integer().required(),
-    price: Joi.number().integer().required(),
-    electricityBill: Joi.number().integer().required(),
-    wasteBill: Joi.number().integer().required(),
-    commissionBill: Joi.number().integer().required(),
-    propertyDescription: Joi.string().optional(),
-    bedroomSizeLength: Joi.number().integer().optional(),
-    bedroomSizeWidth: Joi.number().integer().optional(),
-    bedroomSizeImage: Joi.object({
-      size: Joi.number().positive().less(3000000).optional(),
-    }).required(),
-    kitchenSizeLength: Joi.number().integer().optional(),
-    kitchenSizeWidth: Joi.number().integer().optional(),
-    kitchenSizeImage: Joi.object({
-      size: Joi.number().positive().less(3000000).optional(),
-    }).required(),
-    livingRoomSizeLength: Joi.number().integer().optional(),
-    livingRoomSizeWidth: Joi.number().integer().optional(),
-    livingRoomSizeImage: Joi.object({
-      size: Joi.number().positive().less(3000000).optional(),
-    }).required(),
-    diningAreaSizeLength: Joi.number().integer().optional(),
-    diningAreaSizeWidth: Joi.number().integer().optional(),
-    diningAreaSizeImage: Joi.object({
-      size: Joi.number().positive().less(3000000).optional(),
-    }).required(),
-    propertyTerms: Joi.object({
-      size: Joi.number().positive().less(3000000).optional(),
-    }).required(),
-  });
-
-  verifyHandleListBuilding= Joi.object({
-    userId: Joi.number().required(),
-    role: Joi.string().valid('list').required(),
-    propertyPreference: Joi.string()
-        .valid('flats', 'duplex', 'selfContains', 'roomAndParlour'),
+        .optional(),
     propertyLocation: Joi.string(),
     propertyTitle: Joi.string(),
     city: Joi.string(),
     address: Joi.string(),
     lat: Joi.string(),
     lng: Joi.string(),
-    numberOfFloors: Joi.number().integer(),
+    numberOfFloors: Joi.number().integer().optional(),
     numberOfRooms: Joi.number().integer().optional(),
     amenity: Joi.array().items(Joi.string()),
     roomPreference:Joi.string(),
     availability: Joi.string()
         .valid('vacant', 'occupied'), 
     furnishingStatus: Joi.string()
-        .valid('furnished', 'unfurnished', 'partly furnished')
-       ,
+        .valid('furnished', 'unfurnished', 'partly furnished'),
     rentalDuration: Joi.number().integer(),
     price: Joi.number().integer(),
     electricityBill: Joi.number().integer(),
@@ -545,6 +501,57 @@ class UserUtil {
     }),
     propertyTerms: Joi.object({
       size: Joi.number().positive().less(3000000).optional(),
+    }),
+  });
+
+  verifyHandleListBuilding= Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list').required(),
+    propertyPreference: Joi.string()
+        .valid('flats', 'duplex', 'selfContains', 'roomAndParlour').required(),
+    propertyLocation: Joi.string().required(),
+    propertyTitle: Joi.string().required(),
+    city: Joi.string().required(),
+    address: Joi.string().required(),
+    lat: Joi.string().required(),
+    lng: Joi.string().required(),
+    numberOfFloors: Joi.number().integer().required(),
+    numberOfRooms: Joi.number().integer().required(),
+    amenity: Joi.array().items(Joi.string()).required(),
+    roomPreference:Joi.string().required(),
+    availability: Joi.string()
+        .valid('vacant', 'occupied').required(),
+    furnishingStatus: Joi.string()
+        .valid('furnished', 'unfurnished', 'partly furnished')
+        .required(),
+    rentalDuration: Joi.number().integer().required(),
+    price: Joi.number().integer().required(),
+    electricityBill: Joi.number().integer().required(),
+    wasteBill: Joi.number().integer().required(),
+    commissionBill: Joi.number().integer().required(),
+    propertyDescription: Joi.string().optional().required(),
+    bedroomSizeLength: Joi.number().integer().required(),
+    bedroomSizeWidth: Joi.number().integer().required(),
+    bedroomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).required(),
+    }),
+    kitchenSizeLength: Joi.number().integer().required(),
+    kitchenSizeWidth: Joi.number().integer().required(),
+    kitchenSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).required(),
+    }),
+    livingRoomSizeLength: Joi.number().integer().required(),
+    livingRoomSizeWidth: Joi.number().integer().required(),
+    livingRoomSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).required(),
+    }),
+    diningAreaSizeLength: Joi.number().integer().required(),
+    diningAreaSizeWidth: Joi.number().integer().required(),
+    diningAreaSizeImage: Joi.object({
+      size: Joi.number().positive().less(3000000).required(),
+    }),
+    propertyTerms: Joi.object({
+      size: Joi.number().positive().less(3000000).required(),
     }),
   });
 

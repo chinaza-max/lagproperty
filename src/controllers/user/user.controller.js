@@ -444,6 +444,62 @@ export default class UserController {
     
   }
 
+
+
+  
+  async getCount(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id
+      }
+
+      const result=await userService.handleGetCount(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:result
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
+  async getTotalEscrowBalance(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        userId:req.user.id
+      }
+
+      const result=await userService.handleGetTotalEscrowBalance(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:result
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
   
   async getAllLordData(req, res, next) {
 
@@ -576,6 +632,36 @@ export default class UserController {
     }
     
   }
+
+
+  
+
+  async disableAccount(req, res, next) {
+
+    try {
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+       await userService.handleDisableAccount(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
 
 
   async reviewTenant(req, res, next) {

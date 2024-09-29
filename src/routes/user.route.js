@@ -2757,6 +2757,178 @@
  */
 
 
+/**
+ * @swagger
+ * /user/updatelistedBuilding:
+ *   post:
+ *     summary: Update a listed building with new details and images
+ *     tags:
+ *       - Land / Agent API
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bedroomSizeImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image of the bedroom size.
+ *               kitchenSizeImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image of the kitchen size.
+ *               livingRoomSizeImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image of the living room size.
+ *               diningAreaSizeImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image of the dining area size.
+ *               propertyTerms:
+ *                 type: string
+ *                 format: binary
+ *                 description: Document of property terms.
+ *               amenity:
+ *                 type: string
+ *                 description: JSON string of an array of amenities for the building.
+ *               propertyPreference:
+ *                 type: string
+ *                 enum: [flats, duplex, selfContains, roomAndParlour]
+ *                 description: Type of property preference.
+ *               propertyLocation:
+ *                 type: string
+ *                 description: Location of the property.
+ *               propertyTitle:
+ *                 type: string
+ *                 description: Title of the property.
+ *               city:
+ *                 type: string
+ *                 description: City where the property is located.
+ *               address:
+ *                 type: string
+ *                 description: Address of the property.
+ *               lat:
+ *                 type: string
+ *                 description: Latitude of the property location.
+ *               lng:
+ *                 type: string
+ *                 description: Longitude of the property location.
+ *               numberOfFloors:
+ *                 type: integer
+ *                 description: Number of floors in the building.
+ *               numberOfRooms:
+ *                 type: integer
+ *                 description: Number of rooms in the building.
+ *               roomPreference:
+ *                 type: string
+ *                 description: Room preferences for the building.
+ *               availability:
+ *                 type: string
+ *                 enum: [vacant, occupied]
+ *                 description: Availability status of the building.
+ *               furnishingStatus:
+ *                 type: string
+ *                 enum: [furnished, unfurnished, partly furnished]
+ *                 description: Furnishing status of the property.
+ *               rentalDuration:
+ *                 type: integer
+ *                 description: Rental duration in months.
+ *               price:
+ *                 type: integer
+ *                 description: Rental price of the property.
+ *               electricityBill:
+ *                 type: integer
+ *                 description: Monthly electricity bill.
+ *               wasteBill:
+ *                 type: integer
+ *                 description: Waste management bill.
+ *               commissionBill:
+ *                 type: integer
+ *                 description: Commission fee for property management.
+ *               propertyDescription:
+ *                 type: string
+ *                 description: Detailed description of the property.
+ *               bedroomSizeLength:
+ *                 type: integer
+ *                 description: Length of the bedroom in the property.
+ *               bedroomSizeWidth:
+ *                 type: integer
+ *                 description: Width of the bedroom in the property.
+ *               kitchenSizeLength:
+ *                 type: integer
+ *                 description: Length of the kitchen in the property.
+ *               kitchenSizeWidth:
+ *                 type: integer
+ *                 description: Width of the kitchen in the property.
+ *               livingRoomSizeLength:
+ *                 type: integer
+ *                 description: Length of the living room in the property.
+ *               livingRoomSizeWidth:
+ *                 type: integer
+ *                 description: Width of the living room in the property.
+ *               diningAreaSizeLength:
+ *                 type: integer
+ *                 description: Length of the dining area in the property.
+ *               diningAreaSizeWidth:
+ *                 type: integer
+ *                 description: Width of the dining area in the property.
+ *               buildingId:
+ *                 type: integer
+ *                 description: The unique ID of the building to update.
+ *           encoding:
+ *             bedroomSizeImage:
+ *               contentType: image/png, image/jpeg
+ *             kitchenSizeImage:
+ *               contentType: image/png, image/jpeg
+ *             livingRoomSizeImage:
+ *               contentType: image/png, image/jpeg
+ *             diningAreaSizeImage:
+ *               contentType: image/png, image/jpeg
+ *             propertyTerms:
+ *               contentType: application/pdf
+ *     responses:
+ *       200:
+ *         description: Building details updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Updated successfully"
+ *       400:
+ *         description: Invalid request data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid request data"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
 
 
 import { Router } from "express";
@@ -2817,8 +2989,12 @@ class UserRoutes extends UserController {
     this.router.post("/reviewTenant", this.reviewTenant);
 
 
+    //API FOR ADMIN
+    this.router.post("/disableAccount", this.disableAccount);
     this.router.get("/getAllUser", this.getAllUser);
     this.router.get("/getAllLordData", this.getAllLordData);
+    this.router.get("/getTotalEscrowBalance", this.getTotalEscrowBalance);
+    this.router.get("/getCount", this.getCount);
 
 
 
