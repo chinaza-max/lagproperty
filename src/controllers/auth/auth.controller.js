@@ -378,14 +378,20 @@ export default class AuthenticationController {
 
 
   
-  async initiatePayment(
+  async intializePayment(
     req,
     res,
     next
   ) {
     try {
 
-      const response=await authService.handleInitiatePayment(req.body);
+      let my_bj = {
+        ...data,
+        userId:req.user.id
+      }
+
+
+      const response=await authService.handleIntializePayment(my_bj);
 
 
       return res.status(200).json({

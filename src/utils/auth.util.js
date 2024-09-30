@@ -44,6 +44,10 @@ class authUtil {
       }).required(),
     });
 
+
+    verifyHandleIntializePayment= Joi.object({
+      transactionReference: Joi.string().required(),
+    });
     
     verifyHandleLoginAdmin= Joi.object({
       password: Joi.string().required(),

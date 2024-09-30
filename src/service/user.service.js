@@ -1049,7 +1049,22 @@ class UserService {
   }
 
 
+  
+  async handleGetIncome() {
 
+    try {
+
+          
+    
+
+      
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
   
 
   async handleGetCount() {
@@ -1060,11 +1075,13 @@ class UserService {
       const propertyManagerCount = await this.PropertyManagerModel.count();
       const prospectiveTenantCount = await this.ProspectiveTenantModel.count();
       const tenantCount = await this.TenantModel.count();
+      const BuildingCount = await this.BuildingModel.count();
 
       return {
         prospectiveTenantCount,
         tenantCount,
-        propertyManagerCount
+        propertyManagerCount,
+        BuildingCount
       };
 
       

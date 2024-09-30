@@ -657,35 +657,17 @@ class AuthenticationService {
         await this.initiateTransfer(authToken, transferDetails);
   }
   
-  async handleInitiatePayment(data) {
+
+  async handleIntializePayment(data) {
 
       try {
 
-       // const transactionReference='MFDS6920240901013034010653H1X7Y7'
-       // const transactionStatus = await this.getTransactionStatus(transactionReference);
+        const { transactionReference } = await authUtil.verifyHandleIntializePayment.validateAsync(data);
 
-        const transactionStatus = await this.getTransactionStatus2('referen00ce---1290035');
+        const transactionStatus = await this.getTransactionStatus(transactionReference);
 
-        console.log(transactionStatus)
-        return transactionStatus
-        
-        return
-          const token=await this.getAuthTokenMonify()
-
-          const transferDetails={         
-            "amount": 200,
-            "reference":"referen00ce---1290035",
-            "narration":"911 Transaction" ,
-            "destinationBankCode": "057", 
-            "destinationAccountNumber": "2085886393",
-            "currency": "NGN",
-            "sourceAccountNumber":"5948568393"
-          }
-
-          //
-          const res=await  this.initiateTransfer(token,transferDetails)
-
-          console.log(res)
+        this.handlePaymentCollection(transactionStatus)
+   
       } catch (error) {
           console.log(error)
       }
@@ -1038,7 +1020,7 @@ class AuthenticationService {
         // Check and update each transaction
         for (const transaction of transactions) {
 
-          const transactionStatus = await this.getTransactionStatus(transaction.transactionReference, authToken);
+          const transactionStatus = await this.getTransactionStatus(transaction.transactionReference);
   
           if (transactionStatus) {
             await this.updateTransactionStatusCronJobWebHook(transaction, transactionStatus.paymentStatus);

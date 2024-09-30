@@ -2969,10 +2969,8 @@ class UserRoutes extends UserController {
     this.router.get("/getMyProperty", this.getMyProperty);
     this.router.post("/quitNoticeAction", this.quitNoticeAction);
     this.router.post("/reviewTenant", this.reviewTenant);
-    
     this.router.post("/reviewBuilding", this.reviewBuilding);
     this.router.post("/reviewBuildingAction", this.reviewBuildingAction);
-
     this.router.get("/getALLreviewTenant", this.getALLreviewTenant);
     this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
     this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
@@ -2995,6 +2993,7 @@ class UserRoutes extends UserController {
     this.router.get("/getAllLordData", this.getAllLordData);
     this.router.get("/getTotalEscrowBalance", this.getTotalEscrowBalance);
     this.router.get("/getCount", this.getCount);
+    this.router.get("/getIncome", this.getIncome);
 
 
 

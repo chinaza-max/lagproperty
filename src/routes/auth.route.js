@@ -361,6 +361,76 @@
  */
 
 
+/**
+ * @swagger
+ * /auth/intializePayment:
+ *   post:
+ *     summary: Initializes a payment process for the user.
+ *     tags:
+ *       - Payments
+ *     description: Endpoint to initialize a payment process. It validates the payment details and processes the transaction.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               transactionReference:
+ *                 type: string
+ *                 description: Unique reference for the payment transaction.
+ *                 example: "abc123456789"
+ *     responses:
+ *       200:
+ *         description: Payment initialized successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successful"
+ *                 data:
+ *                   type: object
+ *                   description: Contains the details of the initialized payment.
+ *                   example: {
+ *                     transactionId: "tx_123456",
+ *                     amount: 1000,
+ *                     currency: "USD"
+ *                   }
+ *       400:
+ *         description: Bad request, validation error for missing or invalid parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid transaction reference"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred while processing the payment"
+ */
+
+
 
 
 import { Router } from"express";
@@ -384,8 +454,7 @@ class AuthRoutes extends AuthController {
     this.router.post("/resetPassword", this.resetPassword);
     this.router.post("/validateBankAccount", this.validateBankAccount);
     this.router.get("/pingme", this.pingme);
-
-    this.router.post("/initiatePayment", this.initiatePayment);
+    this.router.post("/intializePayment", this.intializePayment);
     
 
     this.router.post("/webHookMonify",/* this.validateMonnifyIP, this.validateTransactionHash,*/ this.webHookCollectionMonify);
