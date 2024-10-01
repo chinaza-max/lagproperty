@@ -559,7 +559,7 @@ class AuthenticationService {
           },
         });
        
-        if(existingInspection){
+        if(!existingInspection){
 
           await this.InspectionModel.create({
             transactionReference,
