@@ -367,7 +367,7 @@
  *   post:
  *     summary: Initializes a payment process for the user.
  *     tags:
- *       - Payments
+ *       - Tenant API
  *     description: Endpoint to initialize a payment process. It validates the payment details and processes the transaction.
  *     requestBody:
  *       required: true

@@ -585,6 +585,7 @@ class UserService {
       'diningAreaSizeWidth',
       'diningAreaSizeImage',
       'propertyTerms',
+      'propertyTitle'
     ];
     
     try {
