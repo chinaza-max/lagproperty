@@ -1942,7 +1942,7 @@ class UserService {
               offset,
             });
             return {
-              data: notCreatedInspections.rows,
+              response: notCreatedInspections.rows,
               pagination:{
                 totalItems: notCreatedInspections.count,
                 currentPage: page,
@@ -1962,7 +1962,7 @@ class UserService {
             offset,
           });
           return {
-            data: notCreatedInspections.rows,
+            response: notCreatedInspections.rows,
             pagination:{
             totalItems: notCreatedInspections.count,
             currentPage: page,
@@ -2024,7 +2024,7 @@ class UserService {
           ],
           });
           return {
-            data: pendingInspections.rows,
+            response: pendingInspections.rows,
             pagination:{
               totalItems: pendingInspections.count,
               currentPage: page,
@@ -2082,7 +2082,7 @@ class UserService {
           ],
           });
           return {
-            data: pendingInspections.rows,
+            response: pendingInspections.rows,
             pagination:{
               totalItems: pendingInspections.count,
               currentPage: page,
@@ -2149,7 +2149,7 @@ class UserService {
           ]
           });
           return {
-            data: declinedInspections.rows,
+            response: declinedInspections.rows,
             pagination:{
               totalItems: declinedInspections.count,
               currentPage: page,
@@ -2209,7 +2209,7 @@ class UserService {
           ]
           });
           return {
-            data: declinedInspections.rows,
+            response: declinedInspections.rows,
             pagination:{
               totalItems: declinedInspections.count,
               currentPage: page,
@@ -2273,7 +2273,7 @@ class UserService {
           ]
           });
           return {
-            data: acceptedInspections.rows,
+            response: acceptedInspections.rows,
             pagination:{
               totalItems: acceptedInspections.count,
               currentPage: page,
@@ -2332,7 +2332,7 @@ class UserService {
           ]
           });
           return {
-            data: acceptedInspections.rows,
+            response: acceptedInspections.rows,
             pagination:{
               totalItems: acceptedInspections.count,
               currentPage: page,
