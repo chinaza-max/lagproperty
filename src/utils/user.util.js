@@ -293,7 +293,6 @@ class UserUtil {
       otherwise: Joi.forbidden(),
     }),
     inspectionId: Joi.number().when('type', {
-
       is: Joi.valid(
         'acceptInspection',
         'declineInspection',

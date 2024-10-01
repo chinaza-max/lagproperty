@@ -499,7 +499,7 @@ class AuthenticationService {
       console.log(transactionReference)
       const transactionStatus = await this.getTransactionStatus(transactionReference);
 
-      console.log(transactionStatus)
+      //console.log(transactionStatus)
 
       this.handlePaymentCollection(transactionStatus)
 
@@ -516,7 +516,7 @@ class AuthenticationService {
       if(transactionStatus.paymentReference.startsWith("appointmentAndRent")){
         const {amountPaid ,metaData, paymentReference, transactionReference}=transactionStatus
         const { userId, buildingId, transactionType}=metaData
-        console.log(metaData)
+        //console.log(metaData)
 
         const existingTransaction = await this.TransactionModel.findOne({
           where: {

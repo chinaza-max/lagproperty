@@ -471,7 +471,7 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
+ *               - inspectionId
  *               - role
  *               - type
  *               - inspectionMode
@@ -481,9 +481,9 @@
  *               - fullName
  *               - gender
  *             properties:
- *               userId:
+ *               inspectionId:
  *                 type: number
- *                 description: The ID of the user
+ *                 description: The inspectionId
  *               role:
  *                 type: string
  *                 enum: [list, rent]
