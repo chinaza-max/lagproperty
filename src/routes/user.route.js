@@ -294,7 +294,7 @@
  * @swagger
  * user/inspectionAction1:
  *   post:
- *     summary: Handle inspection actions based on type
+ *     summary: Get NotCreatedInspection 
  *     description: This endpoint handles various inspection-related actions such as creating, accepting, declining inspections, and more. Different types of actions can be performed based on the 'type' parameter.
  *     tags:
  *       - Inspection Actions

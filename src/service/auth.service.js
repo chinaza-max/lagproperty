@@ -8,7 +8,8 @@ import { Tenant,
      Building , 
      Inspection , 
      ProspectiveTenant , 
-     EmailandTelValidation
+     EmailandTelValidation , 
+      Admin
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
 import authUtil from "../utils/auth.util.js";
@@ -36,7 +37,7 @@ class AuthenticationService {
   InspectionModel=Inspection;
   RefundLogModel=RefundLog
   ProspectiveTenantModel=ProspectiveTenant
-
+  AdminModel= Admin
 
 
 
@@ -59,14 +60,15 @@ class AuthenticationService {
   }
 
 
-  async handleUserCreation(data,file) {
+  async handleUserCreation(data) {
       let { 
         firstName,
         lastName,
         emailAddress,
         password,
         type,
-        image
+        image,
+        privilege
       } = await authUtil.verifyUserCreationData.validateAsync(data);
   
     let hashedPassword;
@@ -81,7 +83,6 @@ class AuthenticationService {
     }
 
    
-
     if(type==="list"){
       let existingUser = await this.isUserEmailExisting(emailAddress,this.PropertyManagerModel);
 
@@ -104,7 +105,7 @@ class AuthenticationService {
         throw new SystemError(error.name,error.parent)
       }
     }
-    else{
+    else if(type==="list"){
 
 
       let existingUser = await this.isUserEmailExisting(emailAddress, this.ProspectiveTenantModel );
@@ -129,6 +130,29 @@ class AuthenticationService {
       }
 
     }
+    else{
+
+      let existingUser = await this.isUserEmailExisting(emailAddress, this.AdminModel );
+      if (existingUser != null)throw new ConflictError(existingUser);
+      
+      try {
+        const user = await this.AdminModel.create({
+          firstName,
+          lastName,
+          emailAddress,
+          password:hashedPassword,
+          image,
+          privilege
+      });
+      await this.sendEmailVerificationCode(user.emailAddress,user.id,type)
+      
+      return user;
+  
+      } catch (error) {
+        console.log(error)
+        throw new SystemError(error.name,error.parent)
+      }
+    }
 
   }
 
@@ -147,8 +171,13 @@ class AuthenticationService {
         where: { id: userId },
       });
     }
-    else{
+    else if(validateFor=='list'){
       relatedUser = await this.PropertyManagerModel.findOne({
+        where: { id: userId },
+      });
+    }
+    else{
+      relatedUser = await this.AdminModel.findOne({
         where: { id: userId },
       });
     }
@@ -1274,8 +1303,18 @@ class AuthenticationService {
         }
       });  
 
-    }else{
+    }
+    else if(type=="rent") {
       user =  await this.ProspectiveTenantModel.findOne({
+        where: {
+          emailAddress, 
+          isEmailValid:true,
+          isDeleted:false
+        }
+      });  
+    }
+    else{
+      user =  await this.AdminModel.findOne({
         where: {
           emailAddress, 
           isEmailValid:true,
@@ -1423,8 +1462,13 @@ class AuthenticationService {
         where: { id: relatedEmailoRTelValidationCode.userId },
       });
     }
-    else{
+    else if(validateFor=='rent'){
       relatedUser = await this.ProspectiveTenantModel.findOne({
+        where: { id: relatedEmailoRTelValidationCode.userId },
+      });
+    }
+    else{
+      relatedUser = await this.AdminModel.findOne({
         where: { id: relatedEmailoRTelValidationCode.userId },
       });
     }
@@ -1480,7 +1524,7 @@ class AuthenticationService {
 
       if (existingUser) {
 
-          return 'User with this email already exists.';
+        return 'User with this email already exists.';
             
       } 
       return null

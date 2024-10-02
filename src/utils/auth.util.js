@@ -11,7 +11,13 @@ class authUtil {
     type: Joi.string().valid(
       'rent',
       'list',
-    ).required()
+      'admin',
+    ).required(),
+    privilege: Joi.string().when('type', {
+      is: Joi.valid('admin'),
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
   });
 
 
@@ -19,7 +25,8 @@ class authUtil {
     userId: Joi.number().required(),
     validateFor: Joi.string().valid(
       'rent',
-      'list'
+      'list',
+      'admin'
     ).required(),
     verificationCode: Joi.number().required(),
     type: Joi.string().valid(

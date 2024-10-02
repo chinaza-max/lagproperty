@@ -299,7 +299,6 @@ class UserUtil {
         'createInspection',
         'acceptTenant',
         'releaseFund'),
-
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
@@ -366,7 +365,6 @@ class UserUtil {
       then:Joi.required(),
       otherwise:  Joi.forbidden(),
     }),
-    
     type: Joi.string().valid('building', 'transaction', 'tenant').required(),
   });
 

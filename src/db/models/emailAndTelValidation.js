@@ -27,7 +27,8 @@ import {
       validateFor: {
         type: DataTypes.ENUM(
           'list',
-          'rent'
+          'rent',
+          'admin'
         ),
         allowNull: false,
       },

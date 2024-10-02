@@ -39,6 +39,10 @@ export function init(connection) {
         type: DataTypes.STRING,
         defaultValue: 'admin',
       },
+      privilege: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       disableAccount: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
