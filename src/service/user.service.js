@@ -1653,33 +1653,63 @@ class UserService {
         let whereCondition = {
           propertyManagerId:userId, 
           isDeleted:false
-        };
+        }
 
         if (type === 'vacant') {
           whereCondition.availability={
               [Op.or]: ['vacant', 'booked'], 
           }
           
-        } else if (type === 'occupied') {
+        } 
+        else if (type === 'occupied') {
           whereCondition.availability= 'occupied'
-          
         }
-    
+        else if (type === 'booked') {
+          whereCondition.availability= 'booked'
+        }
+        else if(type === 'cancelled'){
 
-        const buildings = await this.BuildingModel.findAndCountAll({
-          where: whereCondition, 
-          limit,
-          offset
-        });
-      
-        return {
-          response: buildings.rows,
-          pagination:{
-            totalItems: buildings.count,
-            currentPage: page,
-            totalPages: Math.ceil(buildings.count / pageSize)
+          const refundedInspections = await this.InspectionModel.findAll({
+            where: { inspectionStatus: 'refunded' },
+            include: [
+              {
+                model: this.BuildingModel,
+                attributes: ['id'],
+                include:[
+                  {
+                    model: this.PropertyManagerModel,
+                    where: { id: userId },
+                    attributes: [], 
+                  }
+                ]
+              },
+            ],
+          });
+
+          const buildingIds = refundedInspections.map(
+            (inspection) => inspection.Building.id
+          );
+
+          whereCondition.id=buildingIds
+
         }
-        };
+
+          const buildings = await this.BuildingModel.findAndCountAll({
+            where: whereCondition, 
+            limit,
+            offset
+          });
+        
+          return {
+            response: buildings.rows,
+            pagination:{
+              totalItems: buildings.count,
+              currentPage: page,
+              totalPages: Math.ceil(buildings.count / pageSize)
+            }
+          };
+
+        
       }
 
     } catch (error) {

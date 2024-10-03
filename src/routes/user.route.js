@@ -897,9 +897,9 @@
  *         name: type
  *         schema:
  *           type: string
- *           enum: [all, vacant, occupied]
+ *           enum: [all, vacant, occupied, cancelled ,booked]
  *         required: true
- *         description: The type of property to retrieve (all, vacant, or occupied).
+ *         description: The type of property to retrieve inside the  (all, vacant, occupied, cancelled or booked).
  *         example: "all"
  *       - in: query
  *         name: pageSize

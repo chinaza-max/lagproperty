@@ -107,7 +107,9 @@ class UserUtil {
       .valid(
         'all',
         'vacant',
-        'occupied'
+        'cancelled',
+        'occupied',
+        'booked'
       )
       .required()
       .label('Type'),
