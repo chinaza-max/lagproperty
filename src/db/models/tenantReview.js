@@ -17,9 +17,11 @@ export function init(connection) {
         type: DataTypes.INTEGER ,
         allowNull: false
       },
-      tenentId: {
+      prospectiveTenantId: {
         type: DataTypes.INTEGER ,
-        allowNull: false
+        allowNull: false,
+        defaultValue:4
+
       },
       review: {
         type: DataTypes.TEXT,

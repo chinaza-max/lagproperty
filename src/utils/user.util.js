@@ -15,6 +15,7 @@ class UserUtil {
     telCode: Joi.string().required().label('Telephone Code'),
     lasrraId: Joi.string().required().label('LASRRA ID'),
     nin: Joi.number().required().label('NIN'),
+    about: Joi.string().required().label('Information about your self and building'),
     country: Joi.string().required().label('Country'),
     state: Joi.string().required().label('State'),
     lga: Joi.string().required().label('LGA'),
@@ -115,6 +116,11 @@ class UserUtil {
       .label('Type'),
       pageSize: Joi.number().integer().required(),
       page: Joi.number().integer().required(),
+    propertyManagerId: Joi.string().email().when('type', {
+        is: 'rent',
+        then: Joi.required(),
+        otherwise: Joi.forbidden(),
+    }),
   })
 
 

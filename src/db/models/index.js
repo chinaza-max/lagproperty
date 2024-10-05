@@ -53,6 +53,17 @@ function associate() {
   })
 
 
+
+  ProspectiveTenant.hasMany(TenantReview, {
+    foreignKey: 'prospectiveTenantId',
+    as: "MyBuildingReview",
+  });
+
+  TenantReview.belongsTo(ProspectiveTenant, {
+    foreignKey: 'prospectiveTenantId',
+  })
+
+
   Building.hasMany(Transaction, {
     foreignKey: 'buildingId',
     as: "BuildingTransaction",

@@ -519,6 +519,11 @@ class UserService {
           as: 'BuildingReview',
           attributes: ['id', 'review', 'rating', 'createdAt'],
           required:false,
+          include:[ {
+            model:this.ProspectiveTenantModel,
+            attributes:['emailAddress', 
+              'firstName', 'lastName', 'gender', 'image']
+          }],
           where:{
             isDeleted:false
           } 
@@ -1028,6 +1033,19 @@ class UserService {
           prospectiveTenantId: TenantResult.prospectiveTenantId,
           isDeleted: false,
         },
+        include: [{
+            model: this.ProspectiveTenantModel, 
+            attributes: {
+              exclude: [
+                'password',
+                'nin',
+                'bankCode',
+                'bankAccount',
+                'lasrraId',
+                'image'
+              ]
+            }
+        }],
         limit,
         offset,
       });
@@ -1337,11 +1355,10 @@ class UserService {
     
     try {
 
-    
       await this.TenantReviewModel.create({
         review:review,
         buildingId: buildingId,
-        tenentId: userId,
+        prospectiveTenantId: userId,
         rating:rating ? 0:rating
       });
 
@@ -1640,12 +1657,13 @@ class UserService {
     role,
     type,
     page,
+    propertyManagerId,
     pageSize
     } = await userUtil.verifyHandleGetMyProperty.validateAsync(data);
     
     try {
 
-      if(role=='list'){
+      if(role==='list'){
           
         const offset = (page - 1) * pageSize;
         const limit = pageSize;
@@ -1708,8 +1726,100 @@ class UserService {
               totalPages: Math.ceil(buildings.count / pageSize)
             }
           };
+      }
+      else if(role==='rent'){
 
+        const offset = (page - 1) * pageSize;
+        const limit = pageSize;
+
+        let whereCondition = {
+          isDeleted:false
+        }
+
+        if(type === 'cancelled'){
+
+          const refundedInspections = await this.InspectionModel.findAll({
+            where: { 
+              inspectionStatus: ['pending', 'accepted', 'declined', 'notCreated'],
+            },
+            include: [
+              {
+                model: this.BuildingModel,
+                attributes: ['id'],
+                include:[
+                  {
+                    model: this.PropertyManagerModel,
+                    where: { id: userId },
+                    attributes: [], 
+                  }
+                ]
+              },
+            ],
+          });
+
+          const buildingIds = refundedInspections.map(
+            (inspection) => inspection.Building.id
+          );
+
+          whereCondition.id=buildingIds
+
+        }
+        else if(type === 'listing'){
+            
+          whereCondition.propertyManagerId=propertyManagerId
+
+          const buildings = await this.BuildingModel.findAndCountAll({
+            where: whereCondition, 
+            limit,
+            offset
+          });
         
+          return {
+            response: buildings.rows,
+            pagination:{
+              totalItems: buildings.count,
+              currentPage: page,
+              totalPages: Math.ceil(buildings.count / pageSize)
+            }
+          };
+        }
+        else if(type === 'booked'){
+
+          const Inspections = await this.InspectionModel.findAll({
+            where: { 
+              inspectionStatus: ['pending', 'accepted', 'declined', 'notCreated'],
+              id: userId
+            },
+            include: [
+              {
+                model: this.BuildingModel,
+                attributes: ['id']
+              },
+            ],
+          });
+
+          const buildingIds = Inspections.map(
+            (inspection) => inspection.Building.id
+          );
+
+          whereCondition.id=buildingIds
+          
+          const buildings = await this.BuildingModel.findAndCountAll({
+            where: whereCondition, 
+            limit,
+            offset
+          });
+        
+          return {
+            response: buildings.rows,
+            pagination:{
+              totalItems: buildings.count,
+              currentPage: page,
+              totalPages: Math.ceil(buildings.count / pageSize)
+            }
+          };
+        }
+
       }
 
     } catch (error) {
@@ -2405,11 +2515,11 @@ class UserService {
         const RefundLogModelResult2 = await this.RefundLogModel.findOne({
           where: { 
             transactionReference: inspectionId.transactionReference,
-            isDeleted: false }
+            isDeleted: false 
+          }
         });
 
         if(RefundLogModelResult2.refundStatus==='COMPLETED') return "refund already made"
-
 
         const transactionResult = await this.TransactionModel.findOne({
           where: { transactionReference: inspection.transactionReference, 
@@ -2537,6 +2647,8 @@ class UserService {
       }
       else if(type==='acceptTenant'){
         
+        if(role=='rent') throw new BadRequestError("landlord or agent dont have this access")
+
         const inspection = await this.InspectionModel.findOne({
           where: { 
             id: inspectionId, 
@@ -2571,6 +2683,9 @@ class UserService {
 
       }
       else if(type==='releaseFund'){
+
+        if(role=='list') throw new BadRequestError("landlord or agent dont have this access")
+
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         })
@@ -2584,7 +2699,7 @@ class UserService {
       
         await inspection.update({
           tenentStatus:true
-        });
+        })
       
 
         if(inspection.propertyManagerStatus===true){
@@ -2606,18 +2721,22 @@ class UserService {
       }
       else if(type==='escrowBalance'){
         
-        const buildings = await this.BuildingModel.findAll({
-          where: { propertyManagerId: userId },
-          attributes: ['id'],
-        });
-    
-        if (buildings.length === 0) {
-          return {totalBalance : 0};
-        }
-    
-        const buildingIds = buildings.map(building => building.id);
-    
-        // Fetch all inspections for the user's buildings with the specified criteria
+
+        if(role==='list'){
+
+
+          const buildings = await this.BuildingModel.findAll({
+            where: { propertyManagerId: userId },
+            attributes: ['id'],
+          });
+
+          if (buildings.length === 0) {
+            return {totalBalance : 0};
+          }
+          
+          const buildingIds = buildings.map(building => building.id);
+
+            // Fetch all inspections for the user's buildings with the specified criteria
         const inspections = await this.InspectionModel.findAll({
           where: {
             buildingId: buildingIds,
@@ -2648,6 +2767,40 @@ class UserService {
         const totalBalance = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
     
         return {totalBalance : totalBalance};
+
+
+        } 
+        else  if(role==='rent'){
+  
+        const inspections = await this.InspectionModel.findAll({
+          where: {
+            prospectiveTenantId:userId,
+            inspectionStatus: {
+              [Op.or]: ['accepted', 'pending', 'notCreated']
+            }
+          },
+          attributes: ['transactionReference']
+        });
+    
+        if (inspections.length === 0) {
+          return { totalBalance : 0 }
+        }
+    
+        const transactionReferences = inspections.map(inspection => inspection.transactionReference);
+    
+        // Fetch all transactions for the transaction references found
+        const transactions = await this.TransactionModel.findAll({
+          where: {
+            transactionReference: transactionReferences
+          },
+          attributes: ['amount']
+        });
+    
+          // Calculate the total balance
+          const totalBalance = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+          return {totalBalance : totalBalance};
+
+        } 
 
       }
   

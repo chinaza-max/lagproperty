@@ -440,6 +440,10 @@ class AuthenticationService {
 
                 if(BuildingModelResult){
 
+                  BuildingModelResult.update({
+                    availability:"occupied"
+                  })
+
                   const TenantModelResult=await this.TenantModel.findOne({
                         where:{
                           status: {

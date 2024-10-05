@@ -48,6 +48,10 @@
           type: DataTypes.INTEGER,
           allowNull: true,
         },
+        about: {
+          type: DataTypes.TEXT,
+          allowNull: true
+        },
         nin: {
           type: DataTypes.INTEGER,
           allowNull: true,

@@ -305,8 +305,6 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *             properties:
  *               type:
@@ -351,19 +349,10 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - pageSize
  *               - page
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [getPendingInspection]
@@ -391,19 +380,10 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - pageSize
  *               - page
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [getDeclineInspection]
@@ -431,19 +411,10 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - pageSize
  *               - page
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [getAcceptedInspection]
@@ -472,7 +443,6 @@
  *             type: object
  *             required:
  *               - inspectionId
- *               - role
  *               - type
  *               - inspectionMode
  *               - fullDate
@@ -484,10 +454,6 @@
  *               inspectionId:
  *                 type: number
  *                 description: The inspectionId
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [createInspection]
@@ -531,17 +497,8 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [refund]
@@ -563,18 +520,9 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - inspectionId
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [acceptInspection]
@@ -599,18 +547,9 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - inspectionId
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [declineInspection]
@@ -638,18 +577,9 @@
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - role
  *               - type
  *               - inspectionId
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [acceptTenant]
@@ -681,13 +611,6 @@
  *               - type
  *               - inspectionId
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [releaseFund]
@@ -720,13 +643,6 @@
  *               - role
  *               - type
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user
- *               role:
- *                 type: string
- *                 enum: [list, rent]
- *                 description: Role of the user
  *               type:
  *                 type: string
  *                 enum: [getEscrowBalance]
@@ -891,13 +807,13 @@
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Property
+ *       - Tenant or Landlord
  *     parameters:
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
- *           enum: [all, vacant, occupied, cancelled ,booked]
+ *           enum: [all, vacant, occupied, cancelled, booked]
  *         required: true
  *         description: The type of property to retrieve inside the  (all, vacant, occupied, cancelled or booked).
  *         example: "all"
