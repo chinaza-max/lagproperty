@@ -19,9 +19,7 @@ export function init(connection) {
       },
       prospectiveTenantId: {
         type: DataTypes.INTEGER ,
-        allowNull: false,
-        defaultValue:4
-
+        allowNull: false
       },
       review: {
         type: DataTypes.TEXT,
