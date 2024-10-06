@@ -15,34 +15,9 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      isEmailValid: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-      },
-      firstName: {
+      accountNumber: {
         type: DataTypes.STRING,
-        allowNull: false,
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      }, 
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      }, 
-      image: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      role: {
-        type: DataTypes.STRING,
-        defaultValue: 'Setting',
-      },
-      disableAccount: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue:false
+        defaultValue: '5948568393',
       },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,

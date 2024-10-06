@@ -811,6 +811,36 @@ class AuthenticationService {
     return response.data;
   }
 
+
+
+  async  getAcctBalance(accountNumber) {
+
+    try {
+      // Fetch the auth token first
+      const accessToken = await this.getAuthTokenMonify();
+  
+      // Use the token to make the request
+      const response = await axios.get(`${serverConfig.MONNIFY_BASE_URL}/api/v1/disbursements/wallet/balance`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        params: {
+          accountNumber: accountNumber,
+        }
+      });
+      
+      return response.data.responseBody;
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
+      throw error;
+    }
+  }
+
+
+
+  
+
   async  getAuthTokenMonify() {             
 
     try {
@@ -848,7 +878,9 @@ class AuthenticationService {
         },
       });
 
-      //console.log(response.data.responseBody)
+      console.log("response.data.responseBody")
+      console.log(response.data.responseBody)
+      console.log(response.data.responseBody)
 
       return response.data.responseBody;
     } catch (error) {   

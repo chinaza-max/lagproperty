@@ -3007,12 +3007,8 @@ class UserRoutes extends UserController {
     this.router.get("/getIncome", this.getIncome);
     this.router.get("/getAllTrasaction", this.getAllTrasaction);
 
-
-
-
     this.router.get("/whoIAm", this.whoIAm);
     
-
   } 
 
 }

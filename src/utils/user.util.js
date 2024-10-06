@@ -116,11 +116,11 @@ class UserUtil {
       .label('Type'),
       pageSize: Joi.number().integer().required(),
       page: Joi.number().integer().required(),
-    propertyManagerId: Joi.string().email().when('type', {
-        is: 'rent',
-        then: Joi.required(),
-        otherwise: Joi.forbidden(),
-    }),
+      propertyManagerId:Joi.string().when('type', {
+          is: 'rent',
+          then: Joi.required(),
+          otherwise: Joi.forbidden(),
+      })
   })
 
 
@@ -130,6 +130,11 @@ class UserUtil {
     role: Joi.string().valid('list', 'rent').required(),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required()
+  })
+
+
+  verifyHandleGetAllTrasaction=Joi.object({
+    limit: Joi.number().optional(),
   })
 
   verifyHandleTenant=Joi.object({

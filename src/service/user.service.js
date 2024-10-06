@@ -344,7 +344,7 @@ class UserService {
       }
       
     } catch (error) {
-
+      console.l
       throw new SystemError(error.name,  error.parent)
 
     }
@@ -1101,11 +1101,26 @@ class UserService {
 
 
   
-  async handleGetAllTrasaction() {
+  async handleGetAllTrasaction(data) {
 
     try {
 
-          
+      const queryOptions = {
+        where: {
+          isDeleted: false, 
+        },
+        order: [['createdAt', 'DESC']],
+      };
+  
+      if (data) {
+
+        const { limit } = await userUtil.verifyHandleGetAllTrasaction.validateAsync(data);
+
+        queryOptions.limit = limit;
+      }
+      const transactions = await this.TransactionModel.findAll(queryOptions);
+  
+      return transactions;
     
 
       
@@ -1121,12 +1136,35 @@ class UserService {
 
     try {
 
-          
-    
+      const inspections = await this.InspectionModel.findAll({
+        where: {
+          inspectionStatus: ['pending', 'accepted', 'declined', 'notCreated'],
+          isDeleted: false,
+        },
+        attributes: ['transactionReference'] 
+      });
 
-      
+      const transactionReferences = inspections.map(ins => ins.transactionReference);
+
+      const transactions = await this.TransactionModel.findAll({
+        where: {
+          transactionType: 'appointmentAndRent',
+          transactionReference: transactionReferences, // filter by the fetched references
+          isDeleted: false,
+        },
+        attributes: ['amount'],
+      });
+
+      const totalEscrowBalance=transactions.reduce((acc, transaction) => acc + transaction.amount, 0);
+      const totalBalance=await authService.getAcctBalance(5948568393)
+
+      const currentBalance=(totalBalance.availableBalance - totalEscrowBalance) + (totalEscrowBalance * 0.05)
+      return {
+        currentBalance:currentBalance
+      }
     } catch (error) {
-      console.log(error)
+
+      console.error( error.response.data);
       throw new SystemError(error.name,  error.parent)
 
     }
