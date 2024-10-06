@@ -252,7 +252,7 @@ class UserService {
       let tenantData;
       let totalPages;
 
-      if (type === "list") {
+      if (role === "list") {
 
         if (type === "recentRent") {
           // Fetch tenants with rent recently received
@@ -305,9 +305,11 @@ class UserService {
         totalPages = Math.ceil(tenantData.count / pageSize);
     
       }
-      else if(type === "rent"){
+      else if(role === "rent"){
     
         if (type === "tenantInvoicesDue") {
+
+
           // Fetch tenants with rent due
           tenantData = await this.TenantModel.findAndCountAll({
             where: {
@@ -327,15 +329,20 @@ class UserService {
             offset,
             limit
           });
+
+
+          console.log("tenantData")
+          console.log(tenantData)
+          console.log("tenantData")
+
         } 
     
         totalPages = Math.ceil(tenantData.count / pageSize);
     
       }
-
       return {
         response: tenantData.rows,
-        pagination:{
+        pagination:{        
           totalItems: tenantData.count,
           currentPage: parseInt(page, 10),
           pageSize: limit,
@@ -344,7 +351,7 @@ class UserService {
       }
       
     } catch (error) {
-      console.l
+      console.log(error)
       throw new SystemError(error.name,  error.parent)
 
     }
