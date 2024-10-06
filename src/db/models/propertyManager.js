@@ -12,7 +12,7 @@
           autoIncrement: true,
         },
         emailAddress: {
-          type: DataTypes.STRING,
+          type: DataTypes.STRING, 
           allowNull: false,
         },
         isEmailValid: {

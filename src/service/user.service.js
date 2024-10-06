@@ -32,6 +32,7 @@ import {
 
 } from "../errors/index.js";
 import { type } from "os";
+import { response } from "express";
 
 class UserService {
 
@@ -249,68 +250,99 @@ class UserService {
     try {
       
       let tenantData;
+      let totalPages;
 
-      if (type === "recentRent") {
-        // Fetch tenants with rent recently received
-        tenantData = await this.TenantModel.findAndCountAll({
-          where: {
-            status: 'active', 
-            rentNextDueDate: {
-              [Op.ne]: null, 
-            }
-          },  
-          include: [{
-            model: this.BuildingModel, 
-            attributes: ['id'], 
-            where:{
-              propertyManagerId:userId
-            }
-          }],
-          order: [
-            ['rentNextDueDate', 'DESC'] // Order by most recent rent date
-          ],
-          offset,
-          limit
-        });
-  
-      } 
-      else if (type === "tenantInvoicesDue") {
-        // Fetch tenants with rent due
-        tenantData = await this.TenantModel.findAndCountAll({
-          where: {
-            status: 'rentDue',
-            rentNextDueDate: {
-              [Op.lte]: new Date(), 
-            }
-          },
-          include: [{
-            model: this.BuildingModel, 
-            attributes: ['id'], 
-            where:{
-              propertyManagerId:userId
-            }
-          }],  
-          order: [
-            ['rentNextDueDate', 'ASC'] 
-          ],
-          offset,
-          limit
-        });
-      } 
-  
-      const totalPages = Math.ceil(tenantData.count / pageSize);
-  
+      if (type === "list") {
+
+        if (type === "recentRent") {
+          // Fetch tenants with rent recently received
+          tenantData = await this.TenantModel.findAndCountAll({
+            where: {
+              status: 'active', 
+              rentNextDueDate: {
+                [Op.ne]: null, 
+              }
+            },  
+            include: [{
+              model: this.BuildingModel, 
+              attributes: ['id'], 
+              where:{
+                propertyManagerId:userId
+              }
+            }],
+            order: [
+              ['rentNextDueDate', 'DESC'] // Order by most recent rent date
+            ],
+            offset,
+            limit
+          });
+    
+        } 
+        else if (type === "tenantInvoicesDue") {
+          // Fetch tenants with rent due
+          tenantData = await this.TenantModel.findAndCountAll({
+            where: {
+              status: 'rentDue',
+              rentNextDueDate: {
+                [Op.lte]: new Date(), 
+              }
+            },
+            include: [{
+              model: this.BuildingModel, 
+              attributes: ['id'], 
+              where:{
+                propertyManagerId:userId
+              }
+            }],  
+            order: [
+              ['rentNextDueDate', 'ASC'] 
+            ],
+            offset,
+            limit
+          });
+        } 
+    
+        totalPages = Math.ceil(tenantData.count / pageSize);
+    
+      }
+      else if(type === "rent"){
+    
+        if (type === "tenantInvoicesDue") {
+          // Fetch tenants with rent due
+          tenantData = await this.TenantModel.findAndCountAll({
+            where: {
+              status:'rentDue',
+              prospectiveTenantId:userId,
+              rentNextDueDate: {
+                [Op.lte]: new Date(), 
+              }  
+            },
+            include: [{
+              model: this.BuildingModel, 
+              attributes: ['id']
+            }],  
+            order: [
+              ['rentNextDueDate', 'ASC'] 
+            ],
+            offset,
+            limit
+          });
+        } 
+    
+        totalPages = Math.ceil(tenantData.count / pageSize);
+    
+      }
+
       return {
-        data: tenantData.rows,
+        response: tenantData.rows,
         pagination:{
-        totalItems: tenantData.count,
-        currentPage: parseInt(page, 10),
-        pageSize: limit,
-        totalPages
+          totalItems: tenantData.count,
+          currentPage: parseInt(page, 10),
+          pageSize: limit,
+          totalPages
         }
       }
       
-    
     } catch (error) {
 
       throw new SystemError(error.name,  error.parent)
@@ -1069,6 +1101,22 @@ class UserService {
 
 
   
+  async handleGetAllTrasaction() {
+
+    try {
+
+          
+    
+
+      
+    } catch (error) {
+      console.log(error)
+      throw new SystemError(error.name,  error.parent)
+
+    }
+    
+  }
+  
   async handleGetIncome() {
 
     try {
@@ -1682,6 +1730,9 @@ class UserService {
         else if (type === 'occupied') {
           whereCondition.availability= 'occupied'
         }
+        else if (type === 'listing') {
+          whereCondition.propertyManagerId=userId
+        }
         else if (type === 'booked') {
           whereCondition.availability= 'booked'
         }
@@ -1716,7 +1767,7 @@ class UserService {
             where: whereCondition, 
             limit,
             offset
-          });
+          })
         
           return {
             response: buildings.rows,

@@ -106,10 +106,10 @@ class UserUtil {
     role: Joi.string().valid('list', 'rent').required(),
     type: Joi.string()
       .valid(
-        'all',
         'vacant',
         'cancelled',
         'occupied',
+        'listing',
         'booked'
       )
       .required()

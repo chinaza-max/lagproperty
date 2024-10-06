@@ -797,10 +797,9 @@
  */
 
 
-
 /**
  * @swagger
- * /user/getMyProperty:
+ * /user/getMyProperty1:
  *   get:
  *     summary: Retrieve user property information.
  *     description: This endpoint retrieves the list of properties for the current user. The user can specify the type of properties (all, vacant, or occupied) and pagination parameters.
@@ -813,10 +812,10 @@
  *         name: type
  *         schema:
  *           type: string
- *           enum: [all, vacant, occupied, cancelled, booked]
+ *           enum: [listing, vacant, occupied, cancelled, booked]
  *         required: true
- *         description: The type of property to retrieve inside the  (all, vacant, occupied, cancelled or booked).
- *         example: "all"
+ *         description: The type of property to retrieve (listing, vacant, occupied, cancelled, or booked).
+ *         example: "listing"
  *       - in: query
  *         name: pageSize
  *         schema:
@@ -830,6 +829,102 @@
  *           type: integer
  *         required: true
  *         description: The page number to retrieve.
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Successful response with the list of properties.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successful"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       propertyId:
+ *                         type: integer
+ *                         example: 123
+ *                       address:
+ *                         type: string
+ *                         example: "123 Main Street"
+ *                       status:
+ *                         type: string
+ *                         enum: [vacant, occupied]
+ *                         example: "vacant"
+ *                       rentAmount:
+ *                         type: number
+ *                         example: 1200
+ *       400:
+ *         description: Invalid request or missing parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid request parameters"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal Server Error"
+ */
+  
+
+                           
+/**
+ * @swagger
+ * /user/getMyProperty2:
+ *   get:
+ *     summary: Retrieve user property information.
+ *     description: This endpoint retrieves the list of properties for the current user. The user can specify the type of properties (all, vacant, occupied, cancelled, or booked) and pagination parameters.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Tenant or Landlord
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [listing, vacant, occupied, cancelled, booked]
+ *         required: true
+ *         description: The type of property to retrieve (listing, vacant, occupied, cancelled, or booked).
+ *         example: "listing"
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The number of properties to retrieve per page.
+ *         example: 10
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The page number to retrieve.
+ *         example: 1
+ *       - in: query
+ *         name: propertyManagerId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The property manager ID to retrieve.
  *         example: 1
  *     responses:
  *       200:
@@ -2910,6 +3005,8 @@ class UserRoutes extends UserController {
     this.router.get("/getTotalEscrowBalance", this.getTotalEscrowBalance);
     this.router.get("/getCount", this.getCount);
     this.router.get("/getIncome", this.getIncome);
+    this.router.get("/getAllTrasaction", this.getAllTrasaction);
+
 
 
 
