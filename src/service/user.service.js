@@ -1754,6 +1754,13 @@ class UserService {
     pageSize
     } = await userUtil.verifyHandleGetMyProperty.validateAsync(data);
     
+
+
+    console.log("propertyManagerId")
+    console.log(propertyManagerId)
+    console.log(propertyManagerId)
+    console.log("propertyManagerId")                  
+
     try {
 
       if(role==='list'){
@@ -1862,6 +1869,10 @@ class UserService {
         }
         else if(type === 'listing'){
             
+          console.log("dddddddddddddd")
+          console.log("dddddddddddddd")
+          console.log(propertyManagerId)
+
           whereCondition.propertyManagerId=propertyManagerId
 
           const buildings = await this.BuildingModel.findAndCountAll({
@@ -1919,7 +1930,7 @@ class UserService {
       }
 
     } catch (error) {
-
+      console.log(error)
       throw new SystemError(error.name,  error.parent)
 
     }

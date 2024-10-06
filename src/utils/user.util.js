@@ -113,10 +113,10 @@ class UserUtil {
         'booked'
       )
       .required()
-      .label('Type'),
+      .label('type'),
       pageSize: Joi.number().integer().required(),
       page: Joi.number().integer().required(),
-      propertyManagerId:Joi.string().when('type', {
+      propertyManagerId:Joi.number().when('role', {
           is: 'rent',
           then: Joi.required(),
           otherwise: Joi.forbidden(),
