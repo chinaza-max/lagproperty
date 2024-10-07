@@ -1745,6 +1745,7 @@ class UserService {
   
   async handleGetMyProperty(data) {
 
+    console.log(data)
     let { 
     userId,
     role,

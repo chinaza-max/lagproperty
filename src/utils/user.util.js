@@ -100,29 +100,31 @@ class UserUtil {
     })
   });
 
-
   verifyHandleGetMyProperty = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     type: Joi.string()
-      .valid('vacant', 'cancelled', 'occupied', 'listing', 'booked')
+      .valid(
+        'vacant',
+        'cancelled',
+        'occupied',
+        'listing',
+        'booked'
+      )
       .required()
       .label('type'),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
-    propertyManagerId: Joi.alternatives().conditional(
-      Joi.object({
-        role: Joi.valid('rent'),
-        type: Joi.valid('listing')
-      }).unknown(),
-      {
-        then: Joi.number().required(),
+    propertyManagerId: Joi.number().when('role', {
+      is: 'rent',
+      then: Joi.when('type', {
+        is: 'listing',
+        then: Joi.required(),
         otherwise: Joi.forbidden()
-      }
-    )
-  });
-  
-
+      }),
+      otherwise: Joi.forbidden()
+    })
+  })
 
   verifyHandleProspectiveTenantInformation=Joi.object({
     userId: Joi.number().required(),
