@@ -1745,7 +1745,6 @@ class UserService {
   
   async handleGetMyProperty(data) {
 
-    console.log(data)
     let { 
     userId,
     role,
@@ -1753,15 +1752,9 @@ class UserService {
     page,
     propertyManagerId,
     pageSize
-    } = await userUtil.verifyHandleGetMyProperty.validateAsync(data);
+    } = await userUtil.verifyHandleGetMyProperty.validateAsync(data);                 
+
     
-
-
-    console.log("propertyManagerId")
-    console.log(propertyManagerId)
-    console.log(propertyManagerId)
-    console.log("propertyManagerId")                  
-
     try {
 
       if(role==='list'){
@@ -1843,21 +1836,19 @@ class UserService {
         if(type === 'cancelled'){
 
           const refundedInspections = await this.InspectionModel.findAll({
-            where: { 
-              inspectionStatus: ['pending', 'accepted', 'declined', 'notCreated'],
-            },
+            where: { inspectionStatus: 'refunded' },
             include: [
               {
                 model: this.BuildingModel,
-                attributes: ['id'],
-                include:[
-                  {
-                    model: this.PropertyManagerModel,
-                    where: { id: userId },
-                    attributes: [], 
-                  }
-                ]
+                attributes: ['id']
               },
+              {
+                model: this.ProspectiveTenantModel,
+                where:{
+                  id:userId
+                },
+                attributes: []
+              }
             ],
           });
 
@@ -1866,16 +1857,29 @@ class UserService {
           );
 
           whereCondition.id=buildingIds
-
+          /*
+          const buildings = await this.BuildingModel.findAndCountAll({
+            where: whereCondition, 
+            limit,
+            offset
+          })
+        
+          return {
+            response: buildings.rows,
+            pagination:{
+              totalItems: buildings.count,
+              currentPage: page,
+              totalPages: Math.ceil(buildings.count / pageSize)
+            }
+          };
+          */
         }
         else if(type === 'listing'){
-            
-          console.log("dddddddddddddd")
-          console.log("dddddddddddddd")
-          console.log(propertyManagerId)
+     
 
           whereCondition.propertyManagerId=propertyManagerId
 
+          /*
           const buildings = await this.BuildingModel.findAndCountAll({
             where: whereCondition, 
             limit,
@@ -1889,7 +1893,7 @@ class UserService {
               currentPage: page,
               totalPages: Math.ceil(buildings.count / pageSize)
             }
-          };
+          };*/
         }
         else if(type === 'booked'){
 
@@ -1912,6 +1916,8 @@ class UserService {
 
           whereCondition.id=buildingIds
           
+
+          /*
           const buildings = await this.BuildingModel.findAndCountAll({
             where: whereCondition, 
             limit,
@@ -1926,7 +1932,24 @@ class UserService {
               totalPages: Math.ceil(buildings.count / pageSize)
             }
           };
+
+          */
         }
+
+        const buildings = await this.BuildingModel.findAndCountAll({
+          where: whereCondition, 
+          limit,
+          offset
+        })
+      
+        return {
+          response: buildings.rows,
+          pagination:{
+            totalItems: buildings.count,
+            currentPage: page,
+            totalPages: Math.ceil(buildings.count / pageSize)
+          }
+        };
 
       }
 
