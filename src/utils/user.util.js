@@ -101,7 +101,7 @@ class UserUtil {
   });
 
 
-  const verifyHandleGetMyProperty = Joi.object({
+  verifyHandleGetMyProperty = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     type: Joi.string()
