@@ -558,12 +558,13 @@ class AuthenticationService {
         })
 
         if(existingTransaction){
-
+         /*
           await existingTransaction.update({
             paymentStatus: transactionStatus.paymentStatus
-          });
+          })*/
 
-        }else{
+        } 
+        else{
 
           await this.TransactionModel.create({
             userId,
@@ -698,17 +699,29 @@ class AuthenticationService {
 
   async handleIntializePayment(data) {
 
-      try {
+      try {   
 
         const { transactionReference } = await authUtil.verifyHandleIntializePayment.validateAsync(data);
 
         const transactionStatus = await this.getTransactionStatus(transactionReference);
 
-        this.handlePaymentCollection(transactionStatus)
+
+        if(transactionStatus.paymentStatus=="PAID"){
+          this.handlePaymentCollection(transactionStatus)
+        }else{
+          throw new NotFoundError("Transaction not successfull")
+        }
    
       } catch (error) {
-          console.log(error)
-      }
+
+        if(error.response.data.responseMessage==="There's no transaction matching supplied reference. Please confirm supplied reference and try again."){
+          throw new NotFoundError(error.response.data.responseMessage)
+        }   
+        else{
+          throw new NotFoundError(error.response)
+        }
+
+      } 
 
   }
 
@@ -878,16 +891,13 @@ class AuthenticationService {
         },
       });
 
-      console.log("response.data.responseBody")
-      console.log(response.data.responseBody)
-      console.log(response.data.responseBody)
 
       return response.data.responseBody;
     } catch (error) {   
-      console.error('Error fetching transaction status:', error?.message);
+      console.error('Error fetching transaction status1:', error?.message);
        
-      console.error('Error fetching transaction status:', error.response.data);
-      //throw error;
+      console.error('Error fetching transaction status2:', error.response.data);
+      throw error;
     }
   }
 
