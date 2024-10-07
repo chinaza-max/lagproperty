@@ -101,27 +101,27 @@ class UserUtil {
   });
 
 
-  verifyHandleGetMyProperty=Joi.object({
+  const verifyHandleGetMyProperty = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
     type: Joi.string()
-      .valid(
-        'vacant',
-        'cancelled',
-        'occupied',
-        'listing',
-        'booked'
-      )
+      .valid('vacant', 'cancelled', 'occupied', 'listing', 'booked')
       .required()
       .label('type'),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
-    propertyManagerId:Joi.number().when('role', {
-        is: 'rent',
-        then: Joi.required(),
-        otherwise: Joi.forbidden(),
-    })
-  })
+    propertyManagerId: Joi.alternatives().conditional(
+      Joi.object({
+        role: Joi.valid('rent'),
+        type: Joi.valid('listing')
+      }).unknown(),
+      {
+        then: Joi.number().required(),
+        otherwise: Joi.forbidden()
+      }
+    )
+  });
+  
 
 
   verifyHandleProspectiveTenantInformation=Joi.object({
