@@ -428,7 +428,7 @@ class UserUtil {
   verifyHandleReviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),
-    tenantId: Joi.number().integer().required(),
+    prospectiveTenantId: Joi.number().integer().required(),
     /*review: Joi.string().required(),*/
   });
 
