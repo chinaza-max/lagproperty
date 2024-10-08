@@ -1161,7 +1161,7 @@
  *       - Tenant Review
  *     parameters:
  *       - in: query
- *         name: tenantId
+ *         name: prospectiveTenantId
  *         schema:
  *           type: integer
  *         required: true
