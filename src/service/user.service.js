@@ -1090,7 +1090,7 @@ class UserService {
       });
 
       return {
-        data: rows,
+        response: rows,
         pagination: {
           totalItems: count,
           currentPage: page,
