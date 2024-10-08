@@ -2759,16 +2759,15 @@ class UserService {
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
         }
-        
 
         if(note){
           await inspection.update({
-            inspectionStatus:'decline',
+            inspectionStatus:'declined',
             note
           });
         }else{
           await inspection.update({
-            inspectionStatus:'decline'
+            inspectionStatus:'declined'
           });
         }
        
