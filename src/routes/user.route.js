@@ -1169,7 +1169,7 @@
  *         example: 456
  *       - in: query
  *         name: page
- *         schema:
+ *         schema: 
  *           type: integer
  *           default: 1
  *         required: true
