@@ -429,7 +429,7 @@ class UserUtil {
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),
     prospectiveTenantId: Joi.number().integer().required(),
-    review: Joi.string().required(),
+    /*review: Joi.string().required(),*/
   });
 
   verifyHandleQuitNoticeAction= Joi.object({
