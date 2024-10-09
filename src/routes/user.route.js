@@ -596,7 +596,7 @@
  * user/inspectionAction10:
  *   post:
  *     summary: Release funds to the tenant
- *     description: Initiate the release of funds to the tenant after inspection approval.
+ *     description: Initiate the release of funds to the agent and landlord after inspection approval.
  *     tags:
  *       - Inspection Actions
  *     requestBody:

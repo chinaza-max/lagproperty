@@ -394,9 +394,6 @@ class AuthenticationService {
 
     const  {reference, transactionReference}=transactionStatus
     const paymentReference=reference
-
-    try {
-
       
       try {
         const TransactionModelResult= await this.TransactionModel.findOne({
@@ -513,11 +510,10 @@ class AuthenticationService {
         
       } catch (error) {
         console.error('An error occurred while updating the transaction:', error.message);
+        throw new SystemError(error.name,  error.parent)
+
       }
 
-    } catch (error) {
-      throw new SystemError(error.name,  error.parent)
-    }
   }
 
 
