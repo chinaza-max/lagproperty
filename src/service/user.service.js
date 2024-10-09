@@ -1054,7 +1054,7 @@ class UserService {
 
   async handleGetALLreviewTenant(data) {
 
-    const { prospectiveTenantId, page, pageSize } = await userUtil.verifyHandleReviewTenant.validateAsync(data);
+    const { prospectiveTenantId, page, pageSize } = await userUtil.verifyHandleGetALLreviewTenant.validateAsync(data);
 
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
@@ -1066,25 +1066,38 @@ class UserService {
       if(!TenantResult){
           throw new NotFoundError("Tenant not found ")
       }*/
+     //PropertyManagerReview
 
-      const { count, rows } = await PropertyManagerReview.findAndCountAll({
+      const { count, rows } = await this.PropertyManagerReviewModel.findAndCountAll({
         where: {
           prospectiveTenantId:prospectiveTenantId,
           isDeleted: false,
         },
-        include: [{
-            model: this.ProspectiveTenantModel, 
-            attributes: {
-              exclude: [
-                'password',
-                'nin',
-                'bankCode',
-                'bankAccount',
-                'lasrraId',
-                'image'
-              ]
-            }
-        }],
+        include: 
+            [
+              {
+                model: this.ProspectiveTenantModel, 
+                attributes: {
+                  exclude: [
+                    'password',
+                    'nin',
+                    'bankCode',
+                    'bankAccount',
+                    'lasrraId',
+                    'image'
+                  ]
+                },  
+              }, 
+              {
+                model: this.PropertyManagerModel, 
+                attributes: ['id', 
+                            'image' ,
+                            'emailAddress',
+                            'firstName',
+                            'lastName'
+                            ],
+              }
+            ],
         limit,
         offset,
       });
