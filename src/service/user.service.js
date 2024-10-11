@@ -2819,7 +2819,19 @@ class UserService {
             inspectionStatus:'declined'
           });
         }
-       
+        
+        const building = await this.BuildingModel.findOne({
+          where: { id: inspection.buildingId, isDeleted: false }
+        });
+  
+
+        await this.NotificationModel.create({
+          notificationFor: "rent",
+          userId:inspection.prospectiveTenantId,
+          type: "inspection",
+          message: `Your inspection request for ${building.propertyTitle} on the selected date cannot be accommodated. Please choose a new date.`,
+          buildingId:inspection.buildingId
+        });
   
         return inspection;
   
