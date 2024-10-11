@@ -15,13 +15,6 @@ import { Model, DataTypes } from "sequelize";
             allowNull: false,
             defaultValue: 'PENDING',
         },
-        role: {
-          type: DataTypes.ENUM(
-            'list',
-            'rent'
-          ),
-          allowNull: false,
-        },
         oldTransactionReference: {//THIS REFERENCE IS FOR THE TRANSACTION MADE THAT IS ABOUT TO BE REFUNDED
             type: DataTypes.STRING,
             allowNull: false

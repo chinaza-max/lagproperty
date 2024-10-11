@@ -3,6 +3,7 @@ import cors from 'cors';
 import routes from'./src/routes/index.route.js';
 import DB from "./src/db/index.js";
 import serverConfig from "./src/config/server.js";
+import authService from "./src/service/auth.service.js";
 import systemMiddleware from "./src/middlewares/system.middleware.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -61,6 +62,14 @@ class Server {
        /* checktransactionUpdateWebHook
         checktransactionUpdateSingleTransfer
       })*/
+
+      // Schedule the cron job to run every 30 minutes
+      cron.schedule('*/30 * * * *', () => {
+        authService.processDisbursements();
+        authService.checkRefund();
+
+      });
+
 
 
     }

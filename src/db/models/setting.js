@@ -19,6 +19,14 @@ export function init(connection) {
         type: DataTypes.STRING,
         defaultValue: '5948568393',
       },
+      failedDisburseRetry: {
+        type: DataTypes.STRING,//in seconds
+        defaultValue: '1800',
+      },
+      failedRefundRetry: {
+        type: DataTypes.STRING,//in seconds
+        defaultValue: '1800',
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

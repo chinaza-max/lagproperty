@@ -10,6 +10,7 @@ import {
   QuitNotice,
   PropertyManagerReview,
   TenantReview,
+  Notification,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -48,6 +49,7 @@ class UserService {
   QuitNoticeModel=QuitNotice
   PropertyManagerReviewModel=PropertyManagerReview
   TenantReviewModel=TenantReview
+  NotificationModel=Notification
 
 
   
@@ -2647,16 +2649,38 @@ class UserService {
           gender,
           inspectionStatus: 'pending',
         });
+
+    
   
         return inspection;
   
       }
       else if (type === 'refund') {
 
+
         const inspection = await this.InspectionModel.findOne({
           where: { id: inspectionId, isDeleted: false }
         });
 
+
+        if(role=='list'){
+
+          await inspection.update({
+            tenentStatus: false,
+            note
+          });
+
+        }
+        else{
+
+          await inspection.update({
+            propertyManagerStatus: false,
+            note
+          });
+
+        }
+
+        /*
         const RefundLogModelResult2 = await this.RefundLogModel.findOne({
           where: { 
             transactionReference: inspectionId.transactionReference,
@@ -2664,11 +2688,13 @@ class UserService {
           }
         });
 
-        if(RefundLogModelResult2.refundStatus==='COMPLETED') return "refund already made"
+        if(RefundLogModelResult2?.refundStatus==='COMPLETED') return "refund already made"
 
         const transactionResult = await this.TransactionModel.findOne({
-          where: { transactionReference: inspection.transactionReference, 
-            isDeleted: false }
+          where: { 
+            transactionReference: inspection.transactionReference, 
+            isDeleted: false 
+          }
         });
 
         const ProspectiveTenantResult = await this.ProspectiveTenantModel.findOne({
@@ -2713,7 +2739,7 @@ class UserService {
               }
             });
             await RefundLogModelResult.update({
-              refundStatus: 'PAID'
+              refundStatus: refundResponse.responseBody.refundStatus
             });
 
             await inspection.update({
@@ -2729,7 +2755,7 @@ class UserService {
               refundStatus:refundResponse.responseBody.refundStatus
             })
           }
-       
+          */
       }      
       else if (type === 'acceptInspection') {
 
@@ -2757,6 +2783,15 @@ class UserService {
             inspectionStatus:'accepted',
           });
     
+
+          await this.NotificationModel.create({
+            notificationFor: "rent",
+            userId:inspection.prospectiveTenantId,
+            type: "inspection",
+            message: `Good news! Your inspection for ${building.propertyTitle} at ${building.address}, ${building.city} has been accepted. We are excited to help you proceed with the next steps, and you will receive further details soon.Thank you for trusting us with your property needs!`,
+            buildingId:building.id
+          });
+          
           return inspection;
            
         }
@@ -2789,7 +2824,7 @@ class UserService {
         return inspection;
   
       }
-      else if(type==='acceptTenant'){
+      else if(type  === 'acceptTenant'){
         
         if(role=='rent') throw new BadRequestError("landlord or agent dont have this access")
 
@@ -2826,7 +2861,7 @@ class UserService {
         }
 
       }
-      else if(type==='releaseFund'){
+      else if(type  === 'releaseFund'){
 
         if(role=='list') throw new BadRequestError("landlord or agent dont have this access")
 
@@ -2836,15 +2871,15 @@ class UserService {
   
         if (!inspection) {
           throw new NotFoundError('Inspection not found');
-        }
+        }  
         
-        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return 'transaction has been initiated check transaction status'
+        if(inspection.tenentStatus===true&&inspection.propertyManagerStatus===true) return /*'transaction has been initiated check transaction status'*/
         
-      
         await inspection.update({
           tenentStatus:true
         })
       
+        /*
 
         if(inspection.propertyManagerStatus===true){
 
@@ -2861,9 +2896,9 @@ class UserService {
             this.processDisbursement(PropertyManagerModelResult ,inspection ,TransactionModelResult2)
           
         }
-
+        */
       }
-      else if(type==='escrowBalance'){
+      else if(type  === 'escrowBalance'){
         
 
         if(role==='list'){
@@ -2958,11 +2993,13 @@ class UserService {
 
   }
 
+  /*
   async processDisbursement(PropertyManagerModelResult, inspection, TransactionModelResult){
     
     const TransactionModelResultAmount=TransactionModelResult.amount
     try {
       if(PropertyManagerModelResult=='landLord'){
+
         const authToken = await authService.getAuthTokenMonify();
   
         const paymentReference="firstRent"+"_"+this.generateReference()
@@ -2971,9 +3008,9 @@ class UserService {
           userId: inspection.prospectiveTenantId,
           inspectionId:inspection.id,
           buildingId:inspection.buildingId,
-          amount:TransactionModelResult.amount,
+          amount:TransactionModelResultAmount,
           paymentReference,
-          transactionType:'fistRent'
+          transactionType:'firstRent'
         });
   
         const transferDetails = {
@@ -3002,7 +3039,7 @@ class UserService {
           buildingId:inspection.buildingId,
           amount:TransactionModelResultAmount,
           paymentReference,
-          transactionType:'fistRent'
+          transactionType:'firstRent'
         });
 
         const transferDetails = {
@@ -3018,9 +3055,7 @@ class UserService {
         };
   
         await this.initiateTransfer(authToken, transferDetails);
-      
-  
-          
+    
         
         //BELOW IS FOR AGENT TRANSFER
   
@@ -3052,9 +3087,12 @@ class UserService {
       }
     } catch (error) {
         console.log(error)
-        throw(error)
+        console.error('Error fetching transaction status2:', error.response.data);
+        throw new SystemError(error.name,  error.response.data)
+
     }
   }
+  */
 
   async updateTransferTransaction(db, transferData){
 
@@ -3112,17 +3150,23 @@ class UserService {
   }
 
   async  initiateTransfer(token, transferDetails) {
-    const response = await axios.post(
-      `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
-      transferDetails,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+      try {
+        const response = await axios.post(
+          `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+          transferDetails,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+    
+        return response.data;
+      } catch (error) {
+        console.log(error)
+        throw new SystemError(error.name,  error.response.data)
 
-    return response.data;
+      }
   }
 
   async handleChat(data, file) {
@@ -3296,9 +3340,9 @@ class UserService {
         agentShare,
         appShare
     };
-}
+  }
 
-
+/*
   async  initiateRefund(refundMetaData, authToken) {
     const refundPayload = {
       transactionReference: refundMetaData.transactionReference,
@@ -3325,7 +3369,7 @@ class UserService {
     }
   }
   
-
+*/
   async  sendEmailVerificationCode(emailAddress, userId ,password) {
 
     try {

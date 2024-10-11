@@ -38,7 +38,7 @@ export function init(connection) {
       transactionType: {
         type: DataTypes.ENUM(
             'appointmentAndRent',
-            'fistRent',
+            'firstRent',
             'commission',
             'refund',
             'rent',

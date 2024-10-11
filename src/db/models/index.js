@@ -12,6 +12,8 @@ import PropertyManagerReview, { init as initPropertyManagerReview } from "./prop
 import Transaction , { init as initTransaction } from "./transaction.js";
 import RefundLog , { init as initRefundLog } from "./RefundLog.js";
 import QuitNotice , { init as initQuitNotice } from "./quitNotice.js";
+import Setting , { init as initSetting } from "./setting.js";
+import Notification , { init as initNotification } from "./notification.js";
 
 
 
@@ -166,7 +168,9 @@ export {
   Transaction,
   RefundLog,
   QuitNotice,
-  Tenant
+  Tenant,
+  Setting,
+  Notification
 }
 
 export function init(connection) {
@@ -184,6 +188,8 @@ export function init(connection) {
   initTenant(connection)
   initRefundLog(connection)
   initQuitNotice(connection)
+  initSetting(connection)
+  initNotification(connection)
 
   associate();
   authenticateConnection(connection)

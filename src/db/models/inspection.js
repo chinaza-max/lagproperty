@@ -85,7 +85,10 @@ export function init(connection) {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      
+      refundReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

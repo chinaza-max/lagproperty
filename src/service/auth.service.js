@@ -9,7 +9,8 @@ import { Tenant,
      Inspection , 
      ProspectiveTenant , 
      EmailandTelValidation , 
-      Admin
+      Admin ,
+      Setting
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
 import authUtil from "../utils/auth.util.js";
@@ -38,6 +39,8 @@ class AuthenticationService {
   RefundLogModel=RefundLog
   ProspectiveTenantModel=ProspectiveTenant
   AdminModel= Admin
+  SettingModel= Setting
+
 
 
 
@@ -540,6 +543,7 @@ class AuthenticationService {
   }
 
   async handlePaymentCollection(transactionStatus){
+
     try {
 
       if(transactionStatus.paymentReference.startsWith("appointmentAndRent")){
@@ -554,10 +558,10 @@ class AuthenticationService {
         })
 
         if(existingTransaction){
-         /*
+         
           await existingTransaction.update({
             paymentStatus: transactionStatus.paymentStatus
-          })*/
+          })
 
         } 
         else{
@@ -702,11 +706,11 @@ class AuthenticationService {
         const transactionStatus = await this.getTransactionStatus(transactionReference);
 
 
-        if(transactionStatus.paymentStatus=="PAID"){
+       // if(transactionStatus.paymentStatus=="PAID"){
           this.handlePaymentCollection(transactionStatus)
-        }else{
+       /* }else{
           throw new NotFoundError("Transaction not successfull")
-        }
+        }*/
    
       } catch (error) {
 
@@ -748,7 +752,7 @@ class AuthenticationService {
         throw new Error('Validation failed');
       }
     } catch (error) {
-      throw new ServerError("Failed to update password");
+      throw new SystemError("Failed to update password");
     }
   }
 
@@ -1731,7 +1735,7 @@ class AuthenticationService {
     try {
       const transactions = await this.TransactionModel.findAll({
         where: {
-          transactionType: ['fistRent', 'commission', 'rent'],
+          transactionType: ['firstRent', 'commission', 'rent'],
           paymentStatus: ['PENDING', 'unverified']
         }
       });
@@ -1765,6 +1769,231 @@ class AuthenticationService {
       console.error("Error running cron job for disbursement:", error);
     }
   }
+
+
+  // Cron job function to process inspections
+async  processDisbursements() {
+
+  console.log("chinaza")
+  console.log("chinaza")
+  console.log("chinaza")
+
+  try {  
+
+
+
+    const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
+    const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
+
+      // Fetch inspections that meet the criteria: agentPaidStatus and landlordPaidStatus are true, and inspectionStatus is "accepted"
+      const inspections = await this.InspectionModel.findAll({
+          where: {
+            agentPaidStatus: true,
+            landlordPaidStatus: true,
+            inspectionStatus: 'accepted',
+            isDeleted: false
+          }
+      });
+
+      // Loop through each inspection to process its disbursement
+      for (const inspection of inspections) {
+          // Find the relevant building
+          const building = await this.BuildingModel.findOne({
+              where: { id: inspection.buildingId, isDeleted: false }
+          });
+
+          // Ensure the building exists
+          if (!building) continue;
+
+          // Fetch property manager related to the building
+          const propertyManager = await this.PropertyManagerModel.findByPk(building.propertyManagerId);
+
+          // Check if there is an existing successful transaction for this inspection
+          const existingTransaction = await this.TransactionModel.findOne({
+              where: {
+                  inspectionId: inspection.id,
+                  paymentStatus: 'PAID', // Ensure no duplicate success
+                  isDeleted: false
+              }
+          });
+
+          const failedTransaction = await this.TransactionModel.findOne({
+            where: {
+                inspectionId: inspection.id,
+                paymentStatus: 'FAILED', // Only process if pending or failed
+                isDeleted: false,
+                createdAt: {
+                  [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
+                }
+            }
+          });
+
+          // If there is no successful transaction, proceed to create a disbursement
+          if (!existingTransaction||failedTransaction) {
+              await this.processDisbursement(propertyManager, inspection);
+          }
+
+      }
+  } catch (error) {
+      console.error('Error in disbursement cron job:', error);
+  }
+}
+
+// Disbursement processing function
+async  processDisbursement(propertyManager, inspection) {
+
+  try {
+      // Get amount from the related transaction for this inspection
+      const transaction = await this.TransactionModel.findOne({
+          where: { inspectionId: inspection.id, isDeleted: false }
+      });
+
+      if (!transaction) return; // Skip if no related transaction
+
+      const amount = transaction.amount;
+
+      const authToken = await this.getAuthTokenMonify();
+
+      // Check if the property manager is a landlord or agent and proceed accordingly
+      if (propertyManager.type === 'landLord') {
+          const paymentReference = "firstRent_" + this.generateReference();
+
+          // Create the transaction record in the database
+          await TransactionModel.create({
+              userId: inspection.prospectiveTenantId,
+              inspectionId: inspection.id,
+              buildingId: inspection.buildingId,
+              amount: amount,
+              paymentReference,
+              transactionType: 'firstRent',
+              paymentStatus: 'PENDING' // Initially set to PENDING
+          });
+
+          // Calculate the landlord share
+          const transferDetails = {
+              amount: this.calculateDistribution(amount, 'landlord', false, 'initial deposit').landlordShare,
+              reference: paymentReference,
+              narration: 'Rent Payment ',
+              destinationBankCode: propertyManager.landlordBankCode,
+              destinationAccountNumber: propertyManager.landlordBankAccount,
+              currency: 'NGN',
+              sourceAccountNumber: serverConfig.MONNIFY_ACC,
+              async: true
+          };
+
+          // Initiate the transfer
+          await this.initiateTransfer(authToken, transferDetails);
+
+      } else if (propertyManager.type === 'agent') {
+          // Handle agent and landlord distribution
+          const landlordReference = "firstRent_" + this.generateReference();
+          const agentReference = "commission_" + this.generateReference();
+
+          // Create two transactions: one for the landlord and one for the agent
+          await this.TransactionModel.create({
+              userId: inspection.prospectiveTenantId,
+              inspectionId: inspection.id,
+              buildingId: inspection.buildingId,
+              amount: amount,
+              paymentReference: landlordReference,
+              transactionType: 'firstRent',
+              paymentStatus: 'PENDING' // Initially set to PENDING
+          });
+
+          await this.TransactionModel.create({
+              userId: inspection.prospectiveTenantId,
+              inspectionId: inspection.id,
+              buildingId: inspection.buildingId,
+              amount: amount,
+              paymentReference: agentReference,
+              transactionType: 'commission',
+              paymentStatus: 'PENDING'
+          });
+
+          // Transfer to landlord
+          const landlordDetails = {
+              amount: this.calculateDistribution(amount, 'landlord', true, 'initial deposit').landlordShare,
+              reference: landlordReference,
+              narration: 'Rent Payment ',
+              destinationBankCode: propertyManager.landlordBankCode,
+              destinationAccountNumber: propertyManager.landlordBankAccount,
+              currency: 'NGN',
+              async: true
+          };
+
+          // Transfer to agent
+          const agentDetails = {
+              amount: this.calculateDistribution(amount, 'landlord', true, 'initial deposit').agentShare,
+              reference: agentReference,
+              narration: 'Commission Payment',
+              destinationBankCode: propertyManager.agentBankCode,
+              destinationAccountNumber: propertyManager.agentBankAccount,
+              currency: 'NGN',
+              async: true
+          };
+
+          await this.initiateTransfer(authToken, landlordDetails);
+          await this.initiateTransfer(authToken, agentDetails);
+      }
+  } catch (error) {
+      console.error('Error processing disbursement:', error);
+  }
+}
+
+// Initiate transfer function (unchanged)
+async  initiateTransfer(token, transferDetails) {
+  try {
+      const response = await axios.post(
+          `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+          transferDetails,
+          {
+              headers: {
+                  Authorization: `Bearer ${token}`
+              }
+          }
+      );
+      return response.data;
+  } catch (error) {
+      console.error('Error during transfer:', error);
+      throw error;
+  }
+}
+
+// Calculate distribution function (unchanged)
+ calculateDistribution(amount, type, hasAgent, paymentType) {
+  let landlordShare = 0;
+  let agentShare = 0;
+  let appShare = 0;
+
+  if (paymentType === 'initial deposit') {
+      if (hasAgent) {
+          agentShare = amount * 0.10;
+          appShare = amount * 0.05;
+          landlordShare = amount - agentShare - appShare;
+      } else {
+          appShare = amount * 0.05;
+          landlordShare = amount - appShare;
+      }
+  } else if (paymentType === 'rent') {
+      appShare = amount * 0.05;
+      landlordShare = amount - appShare;
+  }
+
+  return {
+      landlordShare,
+      agentShare,
+      appShare
+  };
+  }
+
+
+
+  generateReference() {
+    const timestamp = Date.now(); // Current timestamp in milliseconds
+    const randomString = Math.random().toString(36).substring(2, 8).toUpperCase(); // Random alphanumeric string
+  
+    return `REF-${timestamp}-${randomString}`;
+  }
   
 
 
@@ -1796,6 +2025,135 @@ class AuthenticationService {
       console.error('Error updating rent status:', error);
     }
   }
+
+  async checkRefund(){
+
+    try {
+
+      const settings = await this.SettingModel.findOne(); // Fetch settings from the database
+      const retryDelay = settings.failedRefundRetry || '1800'; // Default to 1800 seconds (30 minutes)
+  
+      // Fetch all inspections that are not refunded and have either tenant or property manager status as false
+      const inspectionsToRefund = await this.InspectionModel.findAll({
+        where: {
+          inspectionStatus: { [Op.not]: 'refunded' },
+          [Op.or]: [
+            { propertyManagerStatus: false },
+            { tenentStatus: false }
+          ],
+          isDeleted: false
+        }
+      });
+  
+      for (const inspection of inspectionsToRefund) {
+        // Check if a refund has already been initiated for this inspection
+        const refundExists = await this.RefundLogModel.findOne({
+          where: {
+            oldTransactionReference: inspection.transactionReference,
+            isDeleted: false
+          }
+        });
+  
+        // Check if a refund was already attempted
+      if (refundExists) {
+        const refundStatus = refundExists.refundStatus;
+
+        // If the refund has failed and the delay time has passed, retry the refund
+        if (refundStatus === 'FAILED' && Date.now() - new Date(refundExists.updatedAt) >= retryDelay * 1000) {
+          await this.handleRefund(inspection);
+        }
+      } else {
+        // If no refund log exists, initiate the refund
+        await this.handleRefund(inspection);
+      }
+  
+      }
+  
+    } catch (error) {
+      console.error('Error in refund cron job:', error);
+    }
+  }
+
+
+
+  async  handleRefund(inspection) {
+
+    try {
+      const transactionResult = await this.TransactionModel.findOne({
+        where: {
+          transactionReference: inspection.transactionReference,
+          isDeleted: false
+        }
+      });
+  
+      const prospectiveTenantResult = await this.ProspectiveTenantModel.findOne({
+        where: {
+          id: inspection.prospectiveTenantId,
+          isDeleted: false
+        }
+      });
+  
+      const transactionReference = this.generateReference();
+  
+      // Create a new refund log if it doesn't exist
+        await this.RefundLogModel.create({
+          oldTransactionReference: inspection.transactionReference,
+          refundTransactionReference: "refund_inspection" + "_" + transactionReference,
+          inspectionId: inspection.id,
+          buildingId: inspection.buildingId,
+          refundReason:inspection.refundReason,
+          prospectiveTenantId: inspection.prospectiveTenantId,
+        });
+      
+  
+      const authToken = await this.getAuthTokenMonify();
+  
+      const refundMetaData = {
+        transactionReference: inspection.transactionReference,
+        refundReference: "refund_inspection" + "_" + transactionReference,
+        refundAmount: transactionResult.amount,
+        refundReason: inspection.refundReason,
+        customerNote: inspection.refundReason,
+        destinationAccountNumber: prospectiveTenantResult.bankAccount,
+        destinationAccountBankCode: prospectiveTenantResult.bankCode
+      };
+  
+      await this.initiateRefund(refundMetaData, authToken);
+  
+    
+    } catch (error) {
+      console.error('Error handling refund:', error);
+    }
+  }
+
+  async  initiateRefund(refundMetaData, authToken) {
+    const refundPayload = {
+      transactionReference: refundMetaData.transactionReference,
+      refundReference:refundMetaData.refundReference , //: `REFUND-${Date.now()}`, 
+      refundAmount: refundMetaData.refundAmount, 
+      refundReason: refundMetaData.refundReason, 
+      customerNote:refundMetaData.customerNote,
+      destinationAccountNumber: refundMetaData.destinationAccountNumber, // Assuming this field exists
+      destinationAccountBankCode: refundMetaData.destinationAccountBankCode // Assuming this field exists
+    };
+  
+    try {
+      const refundResponse = await axios.post(`${serverConfig.MONNIFY_BASE_URL}/api/v1/refunds/initiate-refund`, refundPayload, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`, // Replace with actual token generation logic
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      return refundResponse.data;
+    } catch (error) {
+      // Log or rethrow the error for further handling
+      throw new Error('Refund request failed: ' + error.message);
+    }
+  }
+  
+
+
 
   /*ADD THE BELOW TO CRON JOB */
   //checkRefundUpdate
