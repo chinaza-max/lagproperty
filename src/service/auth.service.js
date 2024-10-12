@@ -1808,7 +1808,7 @@ async  processDisbursements() {
           }
       });
 
-      console.log(inspections)
+      //console.log(inspections)
 
       // Loop through each inspection to process its disbursement
       for (const inspection of inspections) {
@@ -1833,34 +1833,60 @@ async  processDisbursements() {
                   paymentStatus: {
                     [Op.in]: [TRANSACTION_STATUS.PAID, TRANSACTION_STATUS.OVERPAID, TRANSACTION_STATUS.PARTIALLY_PAID]
                   },
+                  transactionType: {
+                    [Op.or]: ['firstRent', 'commission']
+                  },
                   isDeleted: false
               }
           });
 
-
-
-          const failedTransaction = await this.TransactionModel.findOne({
-            where: {
-                inspectionId: inspection.id,
-                paymentStatus: 'FAILED', // Only process if pending or failed
-                isDeleted: false,
-                createdAt: {
-                  [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
-                }
-            },
-            order: [['createdAt', 'DESC']]
-          });
-
           console.log("fouth")
           console.log("fouth")
+
           if(!existingTransaction){
-            
+
+           
+            const failedTransaction = await this.TransactionModel.findOne({
+              where: {
+                  inspectionId: inspection.id,
+                  paymentStatus: 'FAILED', // Only process if pending or failed
+                  isDeleted: false,
+                  createdAt: {
+                    [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
+                  },
+                  transactionType: {
+                    [Op.or]: ['firstRent', 'commission']
+                  }
+              },
+              order: [['createdAt', 'DESC']]
+            });
+  
             if(failedTransaction){
+
               console.log("fifth")
               console.log("fifth")
               await this.processDisbursement(propertyManager, inspection);
             }
-            
+            else{
+              console.log("six")
+              console.log("six")
+              const doesTransaction = await this.TransactionModel.findOne({
+                where: {
+                    inspectionId: inspection.id,
+                    isDeleted: false,
+                    transactionType: {
+                      [Op.or]: ['firstRent', 'commission']
+                    }
+                },
+                order: [['createdAt', 'DESC']]
+              });
+
+              if(!doesTransaction){
+                await this.processDisbursement(propertyManager, inspection);
+              }
+    
+            }
+
           }
         
 
@@ -1886,7 +1912,7 @@ async  processDisbursement(propertyManager, inspection) {
       const authToken = await this.getAuthTokenMonify();
 
       // Check if the property manager is a landlord or agent and proceed accordingly
-      if (propertyManager.type === 'landLord') {
+      if (propertyManager.type === 'landLord' && inspection.landlordPaidStatus === true) {
           const paymentReference = "firstRent_" + this.generateReference();
 
           // Create the transaction record in the database
@@ -1915,7 +1941,8 @@ async  processDisbursement(propertyManager, inspection) {
           // Initiate the transfer
           await this.initiateTransfer(authToken, transferDetails);
 
-      } else if (propertyManager.type === 'agent') {
+      } 
+      else if (propertyManager.type === 'agent' && inspection.agentPaidStatus === true) {
           // Handle agent and landlord distribution
           const landlordReference = "firstRent_" + this.generateReference();
           const agentReference = "commission_" + this.generateReference();
@@ -1966,6 +1993,7 @@ async  processDisbursement(propertyManager, inspection) {
           await this.initiateTransfer(authToken, landlordDetails);
           await this.initiateTransfer(authToken, agentDetails);
       }
+
   } catch (error) {
       console.error('Error processing disbursement:', error);
   }
