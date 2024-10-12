@@ -821,19 +821,26 @@ class AuthenticationService {
     }
   }
 
+ 
   async  initiateTransfer(token, transferDetails) {
-    const response = await axios.post(
-      `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
-      transferDetails,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    try {
+      const response = await axios.post(
+        `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+        transferDetails,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      }
-    );
+      );
+  
+      return response.data;
+    } catch (error) {
+      console.log(error?.response?.data?.responseMessage)
+      throw new SystemError(error.name,  error.response.data)
 
-    return response.data;
-  }
+    }
+}
 
 
 
