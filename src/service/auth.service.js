@@ -1940,7 +1940,7 @@ async  processDisbursement(propertyManager, inspection) {
           const paymentReference = "firstRent_" + this.generateReference();
 
           // Create the transaction record in the database
-          await TransactionModel.create({
+          await this.TransactionModel.create({
               userId: inspection.prospectiveTenantId,
               inspectionId: inspection.id,
               buildingId: inspection.buildingId,
