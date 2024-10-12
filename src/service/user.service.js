@@ -572,10 +572,7 @@ class UserService {
       ]
       });
   
-      console.log(buildingDetails)
-      console.log(buildingId)
-      console.log(buildingDetails)
-      console.log(buildingId)
+     
 
       if (!buildingDetails) {
         throw new NotFoundError('BuildingNotFound', 'Building not found');

@@ -697,7 +697,7 @@ class AuthenticationService {
           amount: userService.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'rent').landlordShare,
           reference: paymentReference,
           narration: 'Rent Payment ',
-          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+          destinationBankCode:    PropertyManagerModelResult.landlordBankCode,
           destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
           currency: 'NGN',
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
@@ -1796,7 +1796,7 @@ async  processDisbursements() {
 
     const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
     const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
-    const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 1800;
+    const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 120;
     console.log("first 111")
     console.log("first 111")
 
@@ -1875,7 +1875,9 @@ async  processDisbursements() {
                 const failedTransaction = await this.TransactionModel.findOne({
                   where: {
                       inspectionId: inspection.id,
-                      paymentStatus: 'FAILED', // Only process if pending or failed
+                      paymentStatus:  {
+                        [Op.or]: ['FAILED', 'FAILED', 'EXPIRED']
+                      }, 
                       isDeleted: false,
                       createdAt: {
                         [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
@@ -1993,13 +1995,17 @@ async  processDisbursement(propertyManager, inspection) {
               amount: this.calculateDistribution(amount, 'landlord', false, 'initial deposit').landlordShare,
               reference: paymentReference,
               narration: 'Rent Payment ',
-              destinationBankCode: propertyManager.landlordBankCode,
-              destinationAccountNumber: propertyManager.landlordBankAccount,
+              destinationBankCode:"057" ||propertyManager.landlordBankCode,
+              destinationAccountNumber:"2085886393" || propertyManager.landlordBankAccount,
               currency: 'NGN',
               sourceAccountNumber: serverConfig.MONNIFY_ACC,
               async: true
           };
 
+          console.log(propertyManager.landlordBankCode)
+          console.log(propertyManager.landlordBankAccount)
+
+            console.log(transferDetails)
           // Initiate the transfer
           await this.initiateTransfer(authToken, transferDetails);
 
