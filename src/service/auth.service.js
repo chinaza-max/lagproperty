@@ -1774,12 +1774,9 @@ class AuthenticationService {
   // Cron job function to process inspections
 async  processDisbursements() {
 
-  console.log("chinaza")
-  console.log("chinaza")
-  console.log("chinaza")
-  console.log("chinaza")
-  console.log("chinaza")
-  console.log("chinaza")
+  console.log("first")
+  console.log("first")
+
 
 
   try {  
@@ -1809,6 +1806,9 @@ async  processDisbursements() {
           // Ensure the building exists
           if (!building) continue;
 
+          console.log("second")
+          console.log("second")
+
           // Fetch property manager related to the building
           const propertyManager = await this.PropertyManagerModel.findByPk(building.propertyManagerId);
 
@@ -1821,6 +1821,10 @@ async  processDisbursements() {
               }
           });
 
+          console.log("third")
+          console.log("third")
+
+
           const failedTransaction = await this.TransactionModel.findOne({
             where: {
                 inspectionId: inspection.id,
@@ -1832,9 +1836,14 @@ async  processDisbursements() {
             }
           });
 
+          console.log("fouth")
+          console.log("fouth")
+
           // If there is no successful transaction, proceed to create a disbursement
           if (!existingTransaction||failedTransaction) {
-              await this.processDisbursement(propertyManager, inspection);
+            console.log("fifth")
+            console.log("fifth")
+            await this.processDisbursement(propertyManager, inspection);
           }
 
       }
