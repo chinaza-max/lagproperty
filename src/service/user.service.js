@@ -3306,7 +3306,7 @@ class UserService {
           const key = `${message.senderId}-${message.receiverId}`;
           
           const sender = await this.fetchUserDetails( message.role === 'list' ?  this.PropertyManagerModel:this.ProspectiveTenantModel, message.senderId);
-          const receiver = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.senderId);
+          const receiver = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.receiverId);
 
           if (!chatMap.has(key)) {
             //chatMap.set(key, message);
