@@ -3238,7 +3238,7 @@ class UserService {
       const oppositeRole = (role) => (role === 'list' ? 'rent' : 'list');
     
       if (type === 'chatDetail') {
-        chatMessages = await this.ChatModel.findAll({
+        const messages = await this.ChatModel.findAll({
           where: {
             isDeleted: false,
             [Op.or]: [
@@ -3255,6 +3255,26 @@ class UserService {
           ],
           order: [['createdAt', 'ASC']]
         });
+
+        for (const message of messages) {
+          const sender = await this.fetchUserDetails(
+            message.role === 'list' ? this.PropertyManagerModel : this.ProspectiveTenantModel,
+            message.senderId
+          );
+          
+          const receiver = await this.fetchUserDetails(
+            message.role === 'rent' ? this.ProspectiveTenantModel : this.PropertyManagerModel,
+            message.receiverId
+          );
+          
+          // Add sender and receiver details to each message
+          message.dataValues.sender = sender;
+          message.dataValues.receiver = receiver;
+        }
+
+
+        chatMessages = messages;
+
       } 
       else if (type === 'summary') {
 
@@ -3281,9 +3301,13 @@ class UserService {
           ],
         });
 
-        allchat.forEach((message) => {
+
+        allchat.forEach(async(message) => {
           const key = `${message.senderId}-${message.receiverId}`;
           
+          const sender = await this.fetchUserDetails( message.role === 'list' ?  this.PropertyManagerModel:this.ProspectiveTenantModel, message.senderId);
+          const receiver = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.senderId);
+
           if (!chatMap.has(key)) {
             chatMap.set(key, message);
           } else {
@@ -3293,7 +3317,8 @@ class UserService {
             const messageTimestamp = new Date(message.createdAt).getTime();
             const existingMessageTimestamp = new Date(existingMessage.createdAt).getTime();
             if (messageTimestamp > existingMessageTimestamp) {
-              chatMap.set(key, message);
+              chatMap.set(key, { ...message.dataValues, sender, receiver });
+
             }
           }
         });
@@ -3314,6 +3339,14 @@ class UserService {
   }
 
 
+  async fetchUserDetails(model, userId) {
+    
+    return await model.findByPk(userId, {
+      attributes: ['id', 'firstName', 'lastName', 'image'], // Adjust fields as needed
+    });
+
+  };
+  
 
 
 
