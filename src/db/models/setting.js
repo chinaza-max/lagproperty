@@ -27,6 +27,10 @@ export function init(connection) {
         type: DataTypes.INTEGER,//in seconds
         defaultValue: 1800,
       },
+      pendingDisburseRetry: {
+        type: DataTypes.INTEGER,//in seconds
+        defaultValue: 1800,
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

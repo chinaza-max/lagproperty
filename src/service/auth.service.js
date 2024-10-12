@@ -1796,7 +1796,7 @@ async  processDisbursements() {
 
     const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
     const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
-
+    const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 120;
     console.log("first 111")
     console.log("first 111")
 
@@ -1828,7 +1828,7 @@ async  processDisbursements() {
           // Fetch property manager related to the building
           const propertyManager = await this.PropertyManagerModel.findByPk(building.propertyManagerId);
 
-          const doesTransaction = await this.TransactionModel.findOne({
+          const doesTransactionExist = await this.TransactionModel.findOne({
             where: {
                 inspectionId: inspection.id,
                 isDeleted: false,
@@ -1839,7 +1839,7 @@ async  processDisbursements() {
             order: [['createdAt', 'DESC']]
           });
 
-          if(!doesTransaction){
+          if(!doesTransactionExist){
 
             console.log("third")
             console.log("third")
@@ -1892,6 +1892,32 @@ async  processDisbursements() {
                   console.log("fifth")
                   console.log("fifth")
                   await this.processDisbursement(propertyManager, inspection);
+                }
+                else{
+
+                  const pendingTransaction = await this.TransactionModel.findOne({
+                    where: {
+                        inspectionId: inspection.id,
+                        paymentStatus: 'PENDING', // Only process if pending or failed
+                        isDeleted: false,
+                        createdAt: {
+                          [Op.lte]: new Date(new Date() - pendingDisburseRetry * 1000)  // More than 30 minutes old
+                        },
+                        transactionType: {
+                          [Op.or]: ['firstRent', 'commission']
+                        }
+                    },
+                    order: [['createdAt', 'DESC']]
+                  });
+
+                  if(pendingTransaction){
+    
+                    console.log("six")
+                    console.log("six")
+                    await this.processDisbursement(propertyManager, inspection);
+                  }
+                  
+
                 }
               
               }
