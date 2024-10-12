@@ -26,7 +26,18 @@ import {
 } from "../errors/index.js";
 import { Op } from "sequelize";
 
-
+const TRANSACTION_STATUS = {
+  UNVERIFIED: 'UNVERIFIED',
+  PAID: 'PAID',
+  OVERPAID: 'OVERPAID',
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  PENDING: 'PENDING',
+  ABANDONED: 'ABANDONED',
+  CANCELLED: 'CANCELLED',
+  FAILED: 'FAILED',
+  REVERSED: 'REVERSED',
+  EXPIRED: 'EXPIRED'
+};
 
 class AuthenticationService {
   TenantModel = Tenant;
@@ -1819,13 +1830,13 @@ async  processDisbursements() {
           const existingTransaction = await this.TransactionModel.findOne({
               where: {
                   inspectionId: inspection.id,
-                  paymentStatus: 'PAID', // Ensure no duplicate success
+                  paymentStatus: {
+                    [Op.in]: [TRANSACTION_STATUS.PAID, TRANSACTION_STATUS.OVERPAID, TRANSACTION_STATUS.PARTIALLY_PAID]
+                  },
                   isDeleted: false
               }
           });
 
-          console.log("third")
-          console.log("third")
 
 
           const failedTransaction = await this.TransactionModel.findOne({
@@ -1836,18 +1847,22 @@ async  processDisbursements() {
                 createdAt: {
                   [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
                 }
-            }
+            },
+            order: [['createdAt', 'DESC']]
           });
-return
-          console.log("fouth")
-          console.log("fouth")
 
-          // If there is no successful transaction, proceed to create a disbursement
-          if (!existingTransaction||failedTransaction) {
-            console.log("fifth")
-            console.log("fifth")
-            await this.processDisbursement(propertyManager, inspection);
+          console.log("fouth")
+          console.log("fouth")
+          if(!existingTransaction){
+            
+            if(failedTransaction){
+              console.log("fifth")
+              console.log("fifth")
+              await this.processDisbursement(propertyManager, inspection);
+            }
+            
           }
+        
 
       }
   } catch (error) {
