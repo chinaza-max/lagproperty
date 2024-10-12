@@ -1903,9 +1903,19 @@ async  processDisbursements() {
 async  processDisbursement(propertyManager, inspection) {
 
   try {
+
+    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+
       // Get amount from the related transaction for this inspection
       const transaction = await this.TransactionModel.findOne({
-          where: { inspectionId: inspection.id, isDeleted: false }
+          where: { 
+            inspectionId: inspection.id,
+            isDeleted: false ,
+            paymentStatus:'PAID',
+            transactionType:'appointmentAndRent'
+          }
       });
 
       if (!transaction) return; // Skip if no related transaction
@@ -1914,8 +1924,6 @@ async  processDisbursement(propertyManager, inspection) {
 
       const authToken = await this.getAuthTokenMonify();
 
-
-      console.log("create  create create create")
       console.log("create  create create create")
       console.log("create  create create create")
 
