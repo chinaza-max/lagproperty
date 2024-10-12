@@ -2035,8 +2035,8 @@ async  initiateTransfer(token, transferDetails) {
     try {
 
       const settings = await this.SettingModel.findOne(); // Fetch settings from the database
-      const retryDelay = settings.failedRefundRetry || '1800'; // Default to 1800 seconds (30 minutes)
-  
+      const retryDelay = settings?.failedRefundRetry ? settings.failedRefundRetry : 1800;  // Default to 1800 seconds if not found
+
       // Fetch all inspections that are not refunded and have either tenant or property manager status as false
       const inspectionsToRefund = await this.InspectionModel.findAll({
         where: {
