@@ -44,10 +44,6 @@
           type: DataTypes.STRING,
           allowNull: false,
         }, 
-        lasrraId: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-        },
         about: {
           type: DataTypes.TEXT,
           allowNull: true
