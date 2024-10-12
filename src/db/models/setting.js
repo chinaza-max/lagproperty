@@ -20,11 +20,11 @@ export function init(connection) {
         defaultValue: '5948568393',
       },
       failedDisburseRetry: {
-        type: DataTypes.NUMBER,//in seconds
+        type: DataTypes.INTEGER,//in seconds
         defaultValue: 1800,
       },
       failedRefundRetry: {
-        type: DataTypes.NUMBER,//in seconds
+        type: DataTypes.INTEGER,//in seconds
         defaultValue: 1800,
       },
       notificationAllowed: {
