@@ -1821,76 +1821,76 @@ async  processDisbursements() {
           // Fetch property manager related to the building
           const propertyManager = await this.PropertyManagerModel.findByPk(building.propertyManagerId);
 
-          // Check if there is an existing successful transaction for this inspection
-          const existingTransaction = await this.TransactionModel.findOne({
-              where: {
-                  inspectionId: inspection.id,
-                  paymentStatus: {
-                    [Op.in]: [TRANSACTION_STATUS.PAID, TRANSACTION_STATUS.OVERPAID, TRANSACTION_STATUS.PARTIALLY_PAID]
-                  },
-                  transactionType: {
-                    [Op.or]: ['firstRent', 'commission']
-                  },
-                  isDeleted: false
-              }
+          const doesTransaction = await this.TransactionModel.findOne({
+            where: {
+                inspectionId: inspection.id,
+                isDeleted: false,
+                transactionType: {
+                  [Op.or]: ['firstRent', 'commission']
+                }
+            },
+            order: [['createdAt', 'DESC']]
           });
 
-          console.log("fouth")
-          console.log("fouth")
+          if(!doesTransaction){
 
-
-          console.log("existingTransaction")
-          console.log(existingTransaction)
-          console.log("existingTransaction")
-
-  
-          if(!existingTransaction){
-
-           
-            const failedTransaction = await this.TransactionModel.findOne({
-              where: {
-                  inspectionId: inspection.id,
-                  paymentStatus: 'FAILED', // Only process if pending or failed
-                  isDeleted: false,
-                  createdAt: {
-                    [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
-                  },
-                  transactionType: {
-                    [Op.or]: ['firstRent', 'commission']
-                  }
-              },
-              order: [['createdAt', 'DESC']]
-            });
-  
-            if(failedTransaction){
-
-              console.log("fifth")
-              console.log("fifth")
-              await this.processDisbursement(propertyManager, inspection);
-            }
-            else{
-              console.log("six")
-              console.log("six")
-              const doesTransaction = await this.TransactionModel.findOne({
-                where: {
-                    inspectionId: inspection.id,
-                    isDeleted: false,
-                    transactionType: {
-                      [Op.or]: ['firstRent', 'commission']
-                    }
-                },
-                order: [['createdAt', 'DESC']]
-              });
-
-              if(!doesTransaction){
-                console.log("seven")
-                console.log("seven")
-                await this.processDisbursement(propertyManager, inspection);
-              }
-    
-            }
+            console.log("third")
+            console.log("third")
+            await this.processDisbursement(propertyManager, inspection);
 
           }
+          else{
+
+              // Check if there is an existing successful transaction for this inspection
+              const existingTransaction = await this.TransactionModel.findOne({
+                where: {
+                    inspectionId: inspection.id,
+                    paymentStatus: {
+                      [Op.in]: [TRANSACTION_STATUS.PAID, TRANSACTION_STATUS.OVERPAID, TRANSACTION_STATUS.PARTIALLY_PAID]
+                    },
+                    transactionType: {
+                      [Op.or]: ['firstRent', 'commission']
+                    },
+                    isDeleted: false
+                }
+              })
+
+              console.log("five")
+              console.log("five")
+
+              console.log("existingTransaction")
+              console.log(existingTransaction)
+              console.log("existingTransaction")
+
+              if(!existingTransaction){
+
+            
+                const failedTransaction = await this.TransactionModel.findOne({
+                  where: {
+                      inspectionId: inspection.id,
+                      paymentStatus: 'FAILED', // Only process if pending or failed
+                      isDeleted: false,
+                      createdAt: {
+                        [Op.lte]: new Date(new Date() - retryTimeInSeconds * 1000)  // More than 30 minutes old
+                      },
+                      transactionType: {
+                        [Op.or]: ['firstRent', 'commission']
+                      }
+                  },
+                  order: [['createdAt', 'DESC']]
+                });
+      
+                if(failedTransaction){
+    
+                  console.log("fifth")
+                  console.log("fifth")
+                  await this.processDisbursement(propertyManager, inspection);
+                }
+              
+              }
+          }
+  
+       
         
 
       }
