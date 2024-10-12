@@ -1914,8 +1914,16 @@ async  processDisbursement(propertyManager, inspection) {
 
       const authToken = await this.getAuthTokenMonify();
 
+
+      console.log("create  create create create")
+      console.log("create  create create create")
+      console.log("create  create create create")
+
       // Check if the property manager is a landlord or agent and proceed accordingly
-      if (propertyManager.type === 'landLord' && inspection.landlordPaidStatus === true) {
+      if (propertyManager.type === 'landLord' && inspection.landlordPaidStatus === false) {
+
+          console.log("landLord landLord landLord landLord")
+
           const paymentReference = "firstRent_" + this.generateReference();
 
           // Create the transaction record in the database
@@ -1945,7 +1953,7 @@ async  processDisbursement(propertyManager, inspection) {
           await this.initiateTransfer(authToken, transferDetails);
 
       } 
-      else if (propertyManager.type === 'agent' && inspection.agentPaidStatus === true) {
+      else if (propertyManager.type === 'agent' && inspection.agentPaidStatus === false) {
           // Handle agent and landlord distribution
           const landlordReference = "firstRent_" + this.generateReference();
           const agentReference = "commission_" + this.generateReference();
