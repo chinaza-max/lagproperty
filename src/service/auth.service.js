@@ -1843,6 +1843,13 @@ async  processDisbursements() {
           console.log("fouth")
           console.log("fouth")
 
+
+          console.log("existingTransaction")
+
+          console.log(existingTransaction)
+          console.log("existingTransaction")
+
+  
           if(!existingTransaction){
 
            
