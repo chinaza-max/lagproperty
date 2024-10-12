@@ -1889,12 +1889,13 @@ async  processDisbursements() {
       
                 if(failedTransaction){
     
-                  console.log("fifth")
-                  console.log("fifth")
+                  console.log("six")
+                  console.log("six")
                   await this.processDisbursement(propertyManager, inspection);
                 }
                 else{
-
+                  console.log("seven")
+                  console.log("seven")
                   const pendingTransaction = await this.TransactionModel.findOne({
                     where: {
                         inspectionId: inspection.id,
@@ -1910,10 +1911,14 @@ async  processDisbursements() {
                     order: [['createdAt', 'DESC']]
                   });
 
+                  console.log("pendingTransaction")
+                  console.log(pendingTransaction)
+                  console.log("pendingTransaction")
+
                   if(pendingTransaction){
     
-                    console.log("six")
-                    console.log("six")
+                    console.log("eight")
+                    console.log("eight")
                     await this.processDisbursement(propertyManager, inspection);
                   }
                   
