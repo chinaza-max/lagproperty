@@ -3309,7 +3309,9 @@ class UserService {
           const receiver = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.senderId);
 
           if (!chatMap.has(key)) {
-            chatMap.set(key, message);
+            //chatMap.set(key, message);
+            chatMap.set(key, { ...message.dataValues, sender, receiver });
+
           } else {
             const existingMessage = chatMap.get(key);
 
