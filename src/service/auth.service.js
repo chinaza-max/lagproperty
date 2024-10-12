@@ -1790,8 +1790,8 @@ async  processDisbursements() {
       // Fetch inspections that meet the criteria: agentPaidStatus and landlordPaidStatus are true, and inspectionStatus is "accepted"
       const inspections = await this.InspectionModel.findAll({
           where: {
-            agentPaidStatus: true,
-            landlordPaidStatus: true,
+            tenentStatus: true,
+            propertyManagerStatus: true,
             inspectionStatus: 'accepted',
             isDeleted: false
           }
