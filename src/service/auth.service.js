@@ -1918,6 +1918,12 @@ async  processDisbursement(propertyManager, inspection) {
           }
       });
 
+
+      console.log("create  create create create")
+
+      console.log(transaction)
+      console.log("create  create create create")
+
       if (!transaction) return; // Skip if no related transaction
 
       const amount = transaction.amount;
