@@ -1785,19 +1785,14 @@ class AuthenticationService {
   // Cron job function to process inspections
 async  processDisbursements() {
 
-
-
-
-
   try {  
-
-
 
     const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
     const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
 
     console.log("first 111")
     console.log("first 111")
+
       // Fetch inspections that meet the criteria: agentPaidStatus and landlordPaidStatus are true, and inspectionStatus is "accepted"
       const inspections = await this.InspectionModel.findAll({
           where: {
@@ -1845,7 +1840,6 @@ async  processDisbursements() {
 
 
           console.log("existingTransaction")
-
           console.log(existingTransaction)
           console.log("existingTransaction")
 
@@ -1889,6 +1883,8 @@ async  processDisbursements() {
               });
 
               if(!doesTransaction){
+                console.log("seven")
+                console.log("seven")
                 await this.processDisbursement(propertyManager, inspection);
               }
     
