@@ -1911,10 +1911,9 @@ async  processDisbursement(propertyManager, inspection) {
       // Get amount from the related transaction for this inspection
       const transaction = await this.TransactionModel.findOne({
           where: { 
-            inspectionId: inspection.id,
+            transactionReference: inspection.transactionReference,
             isDeleted: false ,
             paymentStatus:'PAID',
-            transactionType:'appointmentAndRent'
           }
       });
 
