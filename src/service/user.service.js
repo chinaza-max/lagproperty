@@ -215,7 +215,9 @@ class UserService {
             }
           },{
             model: this.ProspectiveTenantModel, 
-            attributes: ['id','maritalStatus','stateOfOrigin','image']
+            attributes: ['id','maritalStatus'
+              ,'stateOfOrigin','image', 
+              'firstName','lastName','tel','emailAddress','disableAccount','lasrraId']
           }],
           offset,
           limit
