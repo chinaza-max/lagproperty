@@ -604,39 +604,31 @@ export default class AuthenticationController {
   };
 
   validateTransactionHash = (req, res, next) => {
-    const monnifySignature = req.headers['monnify-signature'];
 
-
+    try {
+      const monnifySignature = req.headers['monnify-signature'];
+      if (!monnifySignature) {
+        return res.status(400).send('Missing Monnify signature');
+      }
   
-
-
-    const payload = JSON.stringify(req.body);
-    const computedHash = crypto
-      .createHmac('sha512', serverConfig.CLIENT_SECRET_MONIFY)
-      .update(payload)
-      .digest('hex');
+      const payload = JSON.stringify(req.body);
+      const computedHash = crypto
+        .createHmac('sha512', process.env.CLIENT_SECRET_MONIFY)
+        .update(payload)
+        .digest('hex');
   
-      console.log("req.body")
-    console.log("req.body")
-    console.log("req.body")
-    console.log(req.body)
-    console.log("req.body")
-    console.log("req.body")
-    console.log("req.body")
-    console.log("req.body")
-
-
-    if (computedHash !== monnifySignature) {
-      return res.status(400).send('Invalid signature');
+      console.log('Computed Hash:', computedHash);
+      console.log('Monnify Signature:', monnifySignature);
+  
+      if (computedHash !== monnifySignature) {
+        return res.status(400).send('Invalid signature');
+      }
+  
+      next();
+    } catch (error) {
+      console.error('Error in validateTransactionHash:', error);
+      res.status(500).send('An unexpected error occurred');
     }
-
-    console.log("pass pass pass pass pass pass ")
-    console.log("pass pass pass pass pass pass ")
-    console.log("pass pass pass pass pass pass ")
-    console.log("pass pass pass pass pass pass ")
-    console.log("pass pass pass pass pass pass ")
-
-    next();
   };
 
 
