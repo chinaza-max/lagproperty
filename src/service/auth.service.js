@@ -402,6 +402,12 @@ class AuthenticationService {
       console.log("ddddddddddddddddddddd")
 
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
+
+      console.log(transactionStatus)
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+
       await this.handleDisbursement(transactionStatus)
      
     } catch (error) {
