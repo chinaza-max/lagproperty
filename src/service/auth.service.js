@@ -393,8 +393,16 @@ class AuthenticationService {
 
     try {
       
+
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+      console.log("ddddddddddddddddddddd")
+
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
-      this.handleDisbursement(transactionStatus)
+      await this.handleDisbursement(transactionStatus)
      
     } catch (error) {
       throw new SystemError(error.name,  error.parent)
@@ -409,12 +417,22 @@ class AuthenticationService {
     const  {reference, transactionReference}=transactionStatus
     const paymentReference=reference
       
+
       try {
         const TransactionModelResult= await this.TransactionModel.findOne({
           where:{
             paymentReference:paymentReference
           }
         })
+
+        console.log("TransactionModelResult")
+        console.log("TransactionModelResult")
+        console.log("TransactionModelResult")
+        console.log(TransactionModelResult)
+        console.log("TransactionModelResult")
+        console.log("TransactionModelResult")
+        console.log("TransactionModelResult")
+
 
         if (TransactionModelResult) {
 
@@ -539,7 +557,9 @@ class AuthenticationService {
 
     try {
 
-      console.log(transactionReference)
+     // console.log(transactionReference)
+   
+
       const transactionStatus = await this.getTransactionStatus(transactionReference);
 
       //console.log(transactionStatus)
