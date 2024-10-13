@@ -1807,7 +1807,7 @@ class AuthenticationService {
 
 
   // Cron job function to process inspections
-async  processDisbursements() {
+async  startFirstRentDisbursements() {
 
   try {  
 
@@ -2092,6 +2092,61 @@ async  initiateTransfer(token, transferDetails) {
   };
   }
 
+ async rentDisbursements(){
+
+    const settings = await this.SettingModel.findOne(); // Fetch settings from the database
+    const pendingDisburseRentRetry = settings?.pendingDisburseRentRetry ? settings.pendingDisburseRentRetry : 1800;  // Default to 1800 seconds if not found
+
+
+    const unpaidTransactions = await this.TransactionModel.findAll({
+      where: {
+        transactionType: 'rent',
+        paymentStatus: {
+          [Op.notIn]: ['PAID', 'OVERPAID']
+        }
+      }
+    });
+
+    for(const unpaidTransaction of unpaidTransactions){
+
+      if(unpaidTransaction.paymentStatus===TRANSACTION_STATUS.ABANDONED
+        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.CANCELLED
+        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.FAILED
+        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.REVERSED
+        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.EXPIRED
+      ){
+
+        const BuildingModelResult=await this.BuildingModel.findOne({
+          where: {
+            id:unpaidTransaction.buildingId
+          }
+        })
+  
+        this.disburseRent(BuildingModelResult,unpaidTransaction.userId)
+  
+      }
+      else if(unpaidTransactions.paymentStatus===TRANSACTION_STATUS.PENDING){
+
+        if(new Date(unpaidTransaction.createdAt) < new Date(new Date() - pendingDisburseRentRetry * 1000)){
+          
+          const BuildingModelResult=await this.BuildingModel.findOne({
+            where: {
+              id:unpaidTransaction.buildingId
+            }
+          })
+    
+          this.disburseRent(BuildingModelResult,unpaidTransaction.userId)
+    
+        }
+      
+      }
+    }
+
+   
+
+
+
+  }
 
 
   generateReference() {
