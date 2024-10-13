@@ -611,7 +611,37 @@ export default class AuthenticationController {
         return res.status(400).send('Missing Monnify signature');
       }
   
+
+
+      console.log("req.body")
+      console.log("req.body")
+      console.log("req.body")
+      console.log("req.body")
+
+      console.log(req.body)
+      console.log("req.body")
+      console.log("req.body")
+      console.log("req.body")
+      console.log("req.body")
+
+
       const payload = JSON.stringify(req.body);
+
+
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+
+
+      console.log(payload)
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+      console.log("payload")
+
       const computedHash = crypto
         .createHmac('sha512', process.env.CLIENT_SECRET_MONIFY)
         .update(payload)
