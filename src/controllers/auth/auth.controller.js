@@ -607,14 +607,7 @@ export default class AuthenticationController {
     const monnifySignature = req.headers['monnify-signature'];
 
 
-    console.log("monnifySignature")
-    console.log("monnifySignature")
-    console.log("monnifySignature")
-    console.log(monnifySignature)
-    console.log("monnifySignature")
-    console.log("monnifySignature")
-    console.log("monnifySignature")
-    console.log("monnifySignature")
+  
 
 
     const payload = JSON.stringify(req.body);
@@ -623,6 +616,15 @@ export default class AuthenticationController {
       .update(payload)
       .digest('hex');
   
+      console.log("req.body")
+    console.log("req.body")
+    console.log("req.body")
+    console.log(req.body)
+    console.log("req.body")
+    console.log("req.body")
+    console.log("req.body")
+    console.log("req.body")
+
 
     if (computedHash !== monnifySignature) {
       return res.status(400).send('Invalid signature');
