@@ -611,9 +611,17 @@ export default class AuthenticationController {
       .update(payload)
       .digest('hex');
   
+
     if (computedHash !== monnifySignature) {
       return res.status(400).send('Invalid signature');
     }
+
+    console.log("pass pass pass pass pass pass ")
+    console.log("pass pass pass pass pass pass ")
+    console.log("pass pass pass pass pass pass ")
+    console.log("pass pass pass pass pass pass ")
+    console.log("pass pass pass pass pass pass ")
+
     next();
   };
 
