@@ -1796,7 +1796,7 @@ async  processDisbursements() {
 
     const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
     const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
-    const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 120;
+    const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 1800;
 
 
       // Fetch inspections that meet the criteria: agentPaidStatus and landlordPaidStatus are true, and inspectionStatus is "accepted"
