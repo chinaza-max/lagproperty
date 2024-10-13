@@ -580,8 +580,11 @@ export default class AuthenticationController {
   validateMonnifyIP = (req, res, next) => {
 
 
-    const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+    let clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
 
+    if (clientIP.includes(',')) {
+      clientIP = clientIP.split(',')[0].trim();
+    }
 
     console.log("clientIP")
 
