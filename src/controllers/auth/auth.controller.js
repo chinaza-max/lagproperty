@@ -582,10 +582,17 @@ export default class AuthenticationController {
 
     const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
 
+
+    console.log("clientIP")
+
+    console.log(clientIP !== serverConfig.MONNIFY_IP)
+    console.log(clientIP !== serverConfig.MONNIFY_IP)
+    console.log(serverConfig.MONNIFY_IP)
     console.log(clientIP)
-    console.log(clientIP)
-    console.log(clientIP)
-    console.log(clientIP)
+
+    console.log("clientIP")
+
+
 
     if (clientIP !== serverConfig.MONNIFY_IP) {
       return res.status(403).send('Unauthorized IP');
