@@ -579,10 +579,13 @@ export default class AuthenticationController {
 
   validateMonnifyIP = (req, res, next) => {
 
-    console.log(req.ip)
-    console.log(req.ip)
-    console.log(req.ip)
-    console.log(req.ip)
+
+    const clientIP2 = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+
+    console.log(clientIP2)
+    console.log(clientIP2)
+    console.log(clientIP2)
+    console.log(clientIP2)
 
     const clientIP = req.ip;
     if (clientIP !== serverConfig.MONNIFY_IP) {
