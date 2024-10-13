@@ -580,14 +580,13 @@ export default class AuthenticationController {
   validateMonnifyIP = (req, res, next) => {
 
 
-    const clientIP2 = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+    const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
 
-    console.log(clientIP2)
-    console.log(clientIP2)
-    console.log(clientIP2)
-    console.log(clientIP2)
+    console.log(clientIP)
+    console.log(clientIP)
+    console.log(clientIP)
+    console.log(clientIP)
 
-    const clientIP = req.ip;
     if (clientIP !== serverConfig.MONNIFY_IP) {
       return res.status(403).send('Unauthorized IP');
     }  
