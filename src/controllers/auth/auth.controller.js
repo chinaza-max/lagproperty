@@ -670,7 +670,7 @@ export default class AuthenticationController {
         return res.status(400).send('Missing Monnify signature');
       }
   
-      const clientSecret = process.env.CLIENT_SECRET_MONIFY;
+      const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
       if (!clientSecret) {
         console.error('CLIENT_SECRET_MONIFY is not set in the environment variables');
         return res.status(500).send('Server configuration error');
