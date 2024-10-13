@@ -587,7 +587,7 @@ export default class AuthenticationController {
     const clientIP = req.ip;
     if (clientIP !== serverConfig.MONNIFY_IP) {
       return res.status(403).send('Unauthorized IP');
-    }
+    }  
     next();
   };
 
