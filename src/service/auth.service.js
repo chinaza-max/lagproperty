@@ -394,20 +394,9 @@ class AuthenticationService {
     try {
       
 
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
 
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
-      //35.242.133.146, 172.68.174.18, 10.214.33.65
-      
-      console.log(transactionStatus)
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
-      console.log("ddddddddddddddddddddd")
+
 
       await this.handleDisbursement(transactionStatus)
      
@@ -494,6 +483,7 @@ class AuthenticationService {
                       buildingId:TransactionModelResult.buildingId,
                       prospectiveTenantId:TransactionModelResult.userId,
                       status:'active',
+                      paymentReference:paymentReference,
                       rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
                     })
                   }
