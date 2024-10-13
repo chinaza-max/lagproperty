@@ -1797,8 +1797,7 @@ async  processDisbursements() {
     const settings = await this.SettingModel.findOne({ where: { isDeleted: false } });
     const retryTimeInSeconds = settings?.failedDisburseRetry ? parseInt(settings.failedDisburseRetry) : 1800;  // Default to 1800 seconds if not found
     const pendingDisburseRetry = settings?.pendingDisburseRetry ? parseInt(settings.pendingDisburseRetry) : 120;
-    console.log("first 111")
-    console.log("first 111")
+
 
       // Fetch inspections that meet the criteria: agentPaidStatus and landlordPaidStatus are true, and inspectionStatus is "accepted"
       const inspections = await this.InspectionModel.findAll({
@@ -1822,9 +1821,6 @@ async  processDisbursements() {
           // Ensure the building exists
           if (!building) continue;
 
-          console.log("second")
-          console.log("second")
-
           // Fetch property manager related to the building
           const propertyManager = await this.PropertyManagerModel.findByPk(building.propertyManagerId);
 
@@ -1841,8 +1837,6 @@ async  processDisbursements() {
 
           if(!doesTransactionExist){
 
-            console.log("third")
-            console.log("third")
             await this.processDisbursement(propertyManager, inspection);
 
           }
@@ -1861,13 +1855,6 @@ async  processDisbursements() {
                     isDeleted: false
                 }
               })
-
-              console.log("five")
-              console.log("five")
-
-              console.log("existingTransaction")
-              console.log(existingTransaction)
-              console.log("existingTransaction")
 
               if(!existingTransaction){
 
@@ -1891,13 +1878,10 @@ async  processDisbursements() {
       
                 if(failedTransaction){
     
-                  console.log("six")
-                  console.log("six")
                   await this.processDisbursement(propertyManager, inspection);
                 }
                 else{
-                  console.log("seven")
-                  console.log("seven")
+
                   const pendingTransaction = await this.TransactionModel.findOne({
                     where: {
                         inspectionId: inspection.id,
@@ -1913,14 +1897,8 @@ async  processDisbursements() {
                     order: [['createdAt', 'DESC']]
                   });
 
-                  console.log("pendingTransaction")
-                  console.log(pendingTransaction)
-                  console.log("pendingTransaction")
-
                   if(pendingTransaction){
     
-                    console.log("eight")
-                    console.log("eight")
                     await this.processDisbursement(propertyManager, inspection);
                   }
                   
@@ -1944,9 +1922,6 @@ async  processDisbursement(propertyManager, inspection) {
 
   try {
 
-    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
 
       // Get amount from the related transaction for this inspection
       const transaction = await this.TransactionModel.findOne({
@@ -1958,24 +1933,15 @@ async  processDisbursement(propertyManager, inspection) {
       });
 
 
-      console.log("create  create create create")
-
-      console.log(transaction)
-      console.log("create  create create create")
-
       if (!transaction) return; // Skip if no related transaction
 
       const amount = transaction.amount;
 
       const authToken = await this.getAuthTokenMonify();
 
-      console.log("create  create create create")
-      console.log("create  create create create")
-
       // Check if the property manager is a landlord or agent and proceed accordingly
       if (propertyManager.type === 'landLord' && inspection.landlordPaidStatus === false) {
 
-          console.log("landLord landLord landLord landLord")
 
           const paymentReference = "firstRent_" + this.generateReference();
 
@@ -1995,17 +1961,13 @@ async  processDisbursement(propertyManager, inspection) {
               amount: this.calculateDistribution(amount, 'landlord', false, 'initial deposit').landlordShare,
               reference: paymentReference,
               narration: 'Rent Payment ',
-              destinationBankCode:"057" ||propertyManager.landlordBankCode,
-              destinationAccountNumber:"2085886393" || propertyManager.landlordBankAccount,
+              destinationBankCode:propertyManager.landlordBankCode,
+              destinationAccountNumber: propertyManager.landlordBankAccount,
               currency: 'NGN',
               sourceAccountNumber: serverConfig.MONNIFY_ACC,
-              async: true
+              async: true     
           };
-
-          console.log(propertyManager.landlordBankCode)
-          console.log(propertyManager.landlordBankAccount)
-
-            console.log(transferDetails)
+  
           // Initiate the transfer
           await this.initiateTransfer(authToken, transferDetails);
 
