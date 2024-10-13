@@ -578,6 +578,12 @@ export default class AuthenticationController {
 
 
   validateMonnifyIP = (req, res, next) => {
+
+    console.log(req.ip)
+    console.log(req.ip)
+    console.log(req.ip)
+    console.log(req.ip)
+
     const clientIP = req.ip;
     if (clientIP !== serverConfig.MONNIFY_IP) {
       return res.status(403).send('Unauthorized IP');

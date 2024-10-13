@@ -463,7 +463,6 @@ class AuthRoutes extends AuthController {
 
     this.router.post("/authorizeTransfer", /*this.validateMonnifyIP, this.validateTransactionHash,*/ this.authorizeTransfer);
 
-
   }
 }
 
