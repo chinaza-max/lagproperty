@@ -605,6 +605,18 @@ export default class AuthenticationController {
 
   validateTransactionHash = (req, res, next) => {
     const monnifySignature = req.headers['monnify-signature'];
+
+
+    console.log("monnifySignature")
+    console.log("monnifySignature")
+    console.log("monnifySignature")
+    console.log(monnifySignature)
+    console.log("monnifySignature")
+    console.log("monnifySignature")
+    console.log("monnifySignature")
+    console.log("monnifySignature")
+
+
     const payload = JSON.stringify(req.body);
     const computedHash = crypto
       .createHmac('sha512', serverConfig.CLIENT_SECRET_MONIFY)
