@@ -16,7 +16,8 @@ class DB {
 
 
     const options= { 
-      logging: console.log,
+     // logging: console.log,
+     logging: false,
       dialect: "mysql",
       host: serverConfig.DB_HOST,
       username: serverConfig.DB_USERNAME,
