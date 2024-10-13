@@ -3258,12 +3258,12 @@ class UserService {
 
         for (const message of messages) {
           const sender = await this.fetchUserDetails(
-            message.role === 'list' ? this.PropertyManagerModel : this.ProspectiveTenantModel,
+            message.role === 'rent' ? this.ProspectiveTenantModel : this.PropertyManagerModel,
             message.senderId
           );
           
           const receiver = await this.fetchUserDetails(
-            message.role === 'rent' ? this.ProspectiveTenantModel : this.PropertyManagerModel,
+            message.role === 'rent' ? this.PropertyManagerModel : this.ProspectiveTenantModel,
             message.receiverId
           );
           
@@ -3302,11 +3302,12 @@ class UserService {
         });
 
 
-        allchat.forEach(async(message) => {
+        for (const message of allchat) {
           const key = `${message.senderId}-${message.receiverId}`;
           
-          const sender = await this.fetchUserDetails( message.role === 'list' ?  this.PropertyManagerModel:this.ProspectiveTenantModel, message.senderId);
-          const receiver = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.receiverId);
+          const sender = await this.fetchUserDetails( message.role === 'rent' ? this.ProspectiveTenantModel:this.PropertyManagerModel, message.receiverId);
+          const receiver = await this.fetchUserDetails( message.role === 'rent' ?  this.PropertyManagerModel:this.ProspectiveTenantModel, message.senderId);
+
 
           if (!chatMap.has(key)) {
             //chatMap.set(key, message);
@@ -3323,17 +3324,16 @@ class UserService {
 
             }
           }
-        });
-
+        };
 
         chatMessages= Array.from(chatMap.values());
 
       } 
-    
+      
       return chatMessages;
-
  
-    } catch (error) {
+    } 
+    catch (error) {
 
       throw new SystemError(error.name,  error.parent)
 
