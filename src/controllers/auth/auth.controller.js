@@ -604,6 +604,7 @@ export default class AuthenticationController {
     next();
   };
 
+  /*
   validateTransactionHash = (req, res, next) => {
 
     try {
@@ -645,6 +646,40 @@ export default class AuthenticationController {
 
       const computedHash = crypto
         .createHmac('sha512', process.env.CLIENT_SECRET_MONIFY)
+        .update(payload)
+        .digest('hex');
+  
+      console.log('Computed Hash:', computedHash);
+      console.log('Monnify Signature:', monnifySignature);
+  
+      if (computedHash !== monnifySignature) {
+        return res.status(400).send('Invalid signature');
+      }
+  
+      next();
+    } catch (error) {
+      console.error('Error in validateTransactionHash:', error);
+      res.status(500).send('An unexpected error occurred');
+    }
+  };*/
+
+  validateTransactionHash = (req, res, next) => {
+    try {
+      const monnifySignature = req.headers['monnify-signature'];
+      if (!monnifySignature) {
+        return res.status(400).send('Missing Monnify signature');
+      }
+  
+      const clientSecret = process.env.CLIENT_SECRET_MONIFY;
+      if (!clientSecret) {
+        console.error('CLIENT_SECRET_MONIFY is not set in the environment variables');
+        return res.status(500).send('Server configuration error');
+      }
+  
+      const payload = JSON.stringify(req.body);
+      
+      // Use require('crypto').createHmac for Node.js environments
+      const computedHash = crypto.createHmac('sha512', clientSecret)
         .update(payload)
         .digest('hex');
   
