@@ -40,8 +40,8 @@ class DB {
       if (serverConfig.NODE_ENV === "development") {
         // await this.sequelize.sync({ alter: true });
         // await this.sequelize.sync({ force: true }); 
-      }               
-/*   
+      }                 
+/*     
         (async () => {
           try {  
             const [results] = await this.sequelize.query('SHOW TABLES;');
