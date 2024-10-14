@@ -18,13 +18,13 @@ export function init(connection) {
           key: 'id',
         },
       },
-      propertyManagerId: {
+      buildingId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-          model: 'PropertyManager', 
-          key: 'id',
-        },
+      },
+      propertyManagerId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
       },
       quitDate: {
         type: DataTypes.DATE,

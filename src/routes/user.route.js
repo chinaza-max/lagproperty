@@ -981,105 +981,175 @@
  */
 
 
-
 /**
  * @swagger
  * /user/quitNoticeAction:
- *   post:
- *     summary: Manage quit notice actions (send, acknowledge, get, delete).
- *     description: This endpoint allows property managers to send, view, acknowledge, or delete a quit notice. Tenants can view or acknowledge quit notices.
+ *   get:
+ *     summary: Send a quit notice to a tenant.
+ *     description: This endpoint allows property managers to send a quit notice to tenants.
  *     security:
  *       - BearerAuth: []
  *     tags:
  *       - Quit Notice
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               type:
- *                 type: string
- *                 enum: [send, acknowledged, get, delete]
- *                 description: The action to perform (send, get, acknowledge, delete).
- *                 example: "send"
- *               tenantId:
- *                 type: integer
- *                 description: The ID of the tenant (required for send and get actions).
- *                 example: 123
- *               quitNoticeId:
- *                 type: integer
- *                 description: The ID of the quit notice (required for acknowledge and delete actions).
- *                 example: 456
- *               noticeDate:
- *                 type: string
- *                 format: date
- *                 description: The date the notice was sent (required for send action).
- *                 example: "2024-09-05"
- *               quitDate:
- *                 type: string
- *                 format: date
- *                 description: The date the tenant is required to vacate the property (required for send action).
- *                 example: "2024-10-01"
- *               reason:
- *                 type: string
- *                 description: The reason for sending the quit notice (required for send action).
- *                 example: "Breach of contract"
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [send]
+ *           description: The action type (send).
+ *           example: "send"
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: The ID of the tenant.
+ *           example: 123
+ *       - in: query
+ *         name: noticeDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           description: The date the notice is sent.
+ *           example: "2024-09-05"
+ *       - in: query
+ *         name: quitDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           description: The date the tenant is required to vacate the property.
+ *           example: "2024-10-01"
+ *       - in: query
+ *         name: reason
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: The reason for sending the quit notice.
+ *           example: "Breach of contract"
  *     responses:
  *       200:
- *         description: Successfully processed the quit notice action.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "successfull"
+ *         description: Successfully sent the quit notice.
  *       400:
- *         description: Bad request. Invalid parameters or action.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid request parameters"
- *       403:
- *         description: Unauthorized. Tenant does not have permission to perform this action.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Tenant does not have this access"
- *       404:
- *         description: Quit notice not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Quit notice not found"
+ *         description: Invalid request parameters.
  *       500:
  *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Internal Server Error"
+ */
+
+
+
+
+/**
+ * @swagger
+ * /user/quitNoticeAction:
+ *   get:
+ *     summary: Retrieve a quit notice.
+ *     description: This endpoint allows tenants or property managers to retrieve quit notices.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Quit Notice
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [get]
+ *           description: The action type (get).
+ *           example: "get"
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: The ID of the tenant.
+ *           example: 123
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the quit notice.
+ *       404:
+ *         description: Quit notice not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
+/**
+ * @swagger
+ * /user/quitNoticeAction:
+ *   get:
+ *     summary: Acknowledge a quit notice.
+ *     description: This endpoint allows tenants to acknowledge receipt of a quit notice.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Quit Notice
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [acknowledged]
+ *           description: The action type (acknowledge).
+ *           example: "acknowledged"
+ *       - in: query
+ *         name: quitNoticeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: The ID of the quit notice.
+ *           example: 456
+ *     responses:
+ *       200:
+ *         description: Successfully acknowledged the quit notice.
+ *       404:
+ *         description: Quit notice not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
+
+/**
+ * @swagger
+ * /user/quitNoticeAction:
+ *   get:
+ *     summary: Delete a quit notice.
+ *     description: This endpoint allows property managers to delete a quit notice.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Quit Notice
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [delete]
+ *           description: The action type (delete).
+ *           example: "delete"
+ *       - in: query
+ *         name: quitNoticeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: The ID of the quit notice.
+ *           example: 456
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the quit notice.
+ *       404:
+ *         description: Quit notice not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 

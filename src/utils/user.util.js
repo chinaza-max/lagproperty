@@ -447,13 +447,13 @@ class UserUtil {
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
-    quitNoticeId: Joi.date().when('type', {
-      is: 'acknowledged',
+    buildingId: Joi.number().when('type', {
+      is: Joi.string().valid('send'),
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
-    noticeDate: Joi.date().when('type', {
-      is: 'send',
+    quitNoticeId: Joi.date().when('type', {
+      is: 'acknowledged',
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),

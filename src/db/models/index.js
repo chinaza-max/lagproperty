@@ -46,6 +46,27 @@ function associate() {
   })
 
 
+
+
+  PropertyManager.hasMany(QuitNotice, {
+    foreignKey: 'propertyManagerId',
+    as: "ManagerQuitNotice",
+  });
+  QuitNotice.belongsTo(PropertyManager, {
+    foreignKey: 'propertyManagerId',
+  })
+
+
+
+  Building.hasMany(QuitNotice, {
+    foreignKey: 'buildingId',
+    as: "BuildingQuitNotice",
+  });
+  QuitNotice.belongsTo(Building, {
+    foreignKey: 'buildingId',
+  })
+
+
   Building.hasMany(TenantReview, {
     foreignKey: 'buildingId',
     as: "BuildingReview",

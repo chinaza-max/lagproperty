@@ -1554,7 +1554,6 @@ class UserService {
     } = await userUtil.verifyHandleQuitNoticeAction.validateAsync(data);
     
 
-
       if (type === 'send') {
         // Create a new quit notice
 
@@ -1563,16 +1562,22 @@ class UserService {
         const newQuitNotice = await this.QuitNoticeModel.create({
           propertyManagerId: userId,
           tenantId: tenantId,
-          ...updateData,
+          ...updateData
         });
+
+        await this.sendQuitNoticeEmail(newQuitNotice.id);
+
         return newQuitNotice;
       }
       else  if (type === 'get') {
+
+
         const quitNotices = await this.QuitNoticeModel.findAll({
           where: { tenantId: tenantId, isDeleted: false },
           order: [['noticeDate', 'DESC']],
         });
         return quitNotices;
+
       }
       else  if (type === 'acknowledged') {
         // Acknowledge a particular quit notice
@@ -3449,6 +3454,46 @@ class UserService {
       console.log(error);
     }
 
+  }
+
+  async sendQuitNoticeEmail(quitNoticeId) {
+    // Fetch the quit notice
+    const quitNotice = await this.QuitNoticeModel.findByPk(quitNoticeId, {
+      include: [
+        { model: Tenant, include: [ProspectiveTenant] },
+        { model: this.PropertyManagerModel },
+        { model: this.BuildingModel }
+      ]
+    });
+  
+    if (!quitNotice) {
+      throw new Error('Quit notice not found');
+    }
+  
+    const tenant = quitNotice.Tenant;
+    const prospectiveTenant = tenant.ProspectiveTenant;
+    const propertyManager = quitNotice.PropertyManager;
+    const building = quitNotice.Building;
+  
+    // Prepare the email data
+    const emailData = {
+      tenantName: `${prospectiveTenant.firstName} ${prospectiveTenant.lastName}`,
+      propertyAddress: `${building.address}, ${building.city}`,
+      quitDate: quitNotice.quitDate.toDateString(),
+      reason: quitNotice.reason,
+      status: quitNotice.status,
+      propertyManagerName: `${propertyManager.firstName} ${propertyManager.lastName}`,
+      companyName: propertyManager.companyName , // You might want to store this in a config file
+      acknowledgeUrl: `${serverConfig.DOMAIN}/acknowledge-quit-notice/${quitNotice.id}`
+    };
+  
+    // Send the email
+    await mailService.sendMail({
+      to: prospectiveTenant.emailAddress,
+      subject: "Quit Notice",
+      templateName: "quit_notice",
+      variables: emailData
+    });
   }
 
   async generateRandomPassword(length = 12) {
