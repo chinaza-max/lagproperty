@@ -983,7 +983,7 @@
 
 /**
  * @swagger
- * /user/quitNoticeAction:
+ * /user/quitNoticeAction1:
  *   get:
  *     summary: Send a quit notice to a tenant.
  *     description: This endpoint allows property managers to send a quit notice to tenants.
@@ -1044,7 +1044,7 @@
 
 /**
  * @swagger
- * /user/quitNoticeAction:
+ * /user/quitNoticeAction1:
  *   get:
  *     summary: Retrieve a quit notice.
  *     description: This endpoint allows tenants or property managers to retrieve quit notices.
@@ -1081,7 +1081,7 @@
 
 /**
  * @swagger
- * /user/quitNoticeAction:
+ * /user/quitNoticeAction2:
  *   get:
  *     summary: Acknowledge a quit notice.
  *     description: This endpoint allows tenants to acknowledge receipt of a quit notice.
@@ -1119,7 +1119,7 @@
 
 /**
  * @swagger
- * /user/quitNoticeAction:
+ * /user/quitNoticeAction3:
  *   get:
  *     summary: Delete a quit notice.
  *     description: This endpoint allows property managers to delete a quit notice.
@@ -1152,6 +1152,40 @@
  *         description: Internal server error.
  */
 
+/**
+ * @swagger
+ * /user/quitNoticeAction4:
+ *   get:
+ *     summary: Acknowledge a quit notice.
+ *     description: This endpoint allows tenants to acknowledge receipt of a quit notice.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Quit Notice
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [acknowledged]
+ *           description: The action type (acknowledge).
+ *           example: "acknowledged"
+ *       - in: query
+ *         name: quitNoticeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: The ID of the quit notice.
+ *           example: 456
+ *     responses:
+ *       200:
+ *         description: Successfully acknowledged the quit notice.
+ *       404:
+ *         description: Quit notice not found.
+ *       500:
+ *         description: Internal server error.
+ */
 
 
 /**
