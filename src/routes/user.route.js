@@ -984,66 +984,6 @@
 /**
  * @swagger
  * /user/quitNoticeAction1:
- *   get:
- *     summary: Send a quit notice to a tenant.
- *     description: This endpoint allows property managers to send a quit notice to tenants.
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - Quit Notice
- *     parameters:
- *       - in: query
- *         name: type
- *         required: true
- *         schema:
- *           type: string
- *           enum: [send]
- *           description: The action type (send).
- *           example: "send"
- *       - in: query
- *         name: tenantId
- *         required: true
- *         schema:
- *           type: integer
- *           description: The ID of the tenant.
- *           example: 123
- *       - in: query
- *         name: noticeDate
- *         required: true
- *         schema:
- *           type: string
- *           format: date
- *           description: The date the notice is sent.
- *           example: "2024-09-05"
- *       - in: query
- *         name: quitDate
- *         required: true
- *         schema:
- *           type: string
- *           format: date
- *           description: The date the tenant is required to vacate the property.
- *           example: "2024-10-01"
- *       - in: query
- *         name: reason
- *         required: true
- *         schema:
- *           type: string
- *           description: The reason for sending the quit notice.
- *           example: "Breach of contract"
- *     responses:
- *       200:
- *         description: Successfully sent the quit notice.
- *       400:
- *         description: Invalid request parameters.
- *       500:
- *         description: Internal server error.
- */
-
-
-
-/**
- * @swagger
- * /user/quitNoticeAction1:
  *   post:
  *     summary: Retrieve a quit notice.
  *     description: This endpoint allows tenants or property managers to retrieve quit notices.
