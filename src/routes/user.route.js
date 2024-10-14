@@ -1151,13 +1151,12 @@
  *       500:
  *         description: Internal server error.
  */
-
 /**
  * @swagger
  * /user/quitNoticeAction4:
  *   get:
- *     summary: Acknowledge a quit notice.
- *     description: This endpoint allows tenants to acknowledge receipt of a quit notice.
+ *     summary: Send a quit notice to a tenant.
+ *     description: This endpoint allows property managers to send a quit notice to tenants.
  *     security:
  *       - BearerAuth: []
  *     tags:
@@ -1168,24 +1167,48 @@
  *         required: true
  *         schema:
  *           type: string
- *           enum: [acknowledged]
- *           description: The action type (acknowledge).
- *           example: "acknowledged"
+ *           enum: [send]
+ *           description: The action type (send).
+ *           example: "send"
  *       - in: query
- *         name: quitNoticeId
+ *         name: tenantId
  *         required: true
  *         schema:
  *           type: integer
- *           description: The ID of the quit notice.
- *           example: 456
+ *           description: The ID of the tenant.
+ *           example: 123
+ *       - in: query
+ *         name: noticeDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           description: The date the notice is sent.
+ *           example: "2024-09-05"
+ *       - in: query
+ *         name: quitDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           description: The date the tenant is required to vacate the property.
+ *           example: "2024-10-01"
+ *       - in: query
+ *         name: reason
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: The reason for sending the quit notice.
+ *           example: "Breach of contract"
  *     responses:
  *       200:
- *         description: Successfully acknowledged the quit notice.
- *       404:
- *         description: Quit notice not found.
+ *         description: Successfully sent the quit notice.
+ *       400:
+ *         description: Invalid request parameters.
  *       500:
  *         description: Internal server error.
  */
+
 
 
 /**
