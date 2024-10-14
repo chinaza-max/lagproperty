@@ -1178,14 +1178,6 @@
  *           description: The ID of the tenant.
  *           example: 123
  *       - in: query
- *         name: noticeDate
- *         required: true
- *         schema:
- *           type: string
- *           format: date
- *           description: The date the notice is sent.
- *           example: "2024-09-05"
- *       - in: query
  *         name: quitDate
  *         required: true
  *         schema:
