@@ -33,7 +33,7 @@ class DB {
       serverConfig.DB_PASSWORD,
       options
     );
-   
+       
     initModels(this.sequelize);
  
    
