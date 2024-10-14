@@ -1121,6 +1121,10 @@
  *                 type: string
  *                 description: The reason for sending the quit notice.
  *                 example: "Breach of contract"
+ *               buildingId:
+ *                 type: integer
+ *                 description: building id 
+ *                 example: "1"
  *     responses:
  *       200:
  *         description: Successfully sent the quit notice.
