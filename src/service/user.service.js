@@ -269,6 +269,7 @@ class UserService {
             },  
             include: [{
               model: this.BuildingModel, 
+              attributes: ['price'], 
               where:{
                 propertyManagerId:userId
               }
