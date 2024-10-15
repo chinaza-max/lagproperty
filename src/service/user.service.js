@@ -263,13 +263,12 @@ class UserService {
           tenantData = await this.TenantModel.findAndCountAll({
             where: {
               status: 'active', 
-              rentNextDueDate: {
+              /*rentNextDueDate: {
                 [Op.ne]: null, 
-              }
+              }*/
             },  
             include: [{
               model: this.BuildingModel, 
-              attributes: ['id'], 
               where:{
                 propertyManagerId:userId
               }
