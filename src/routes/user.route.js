@@ -2999,6 +2999,8 @@
  * user/getNotification:
  *   get:
  *     summary: Retrieve user notifications
+ *     tags:
+ *       - Tenant or Landlord
  *     description: Get a list of notifications for the user, with pagination support.
  *     parameters:
  *       - in: query
