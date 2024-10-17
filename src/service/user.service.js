@@ -3487,7 +3487,8 @@ class UserService {
             appShare = amount * 0.05;
             landlordShare = amount - appShare;
         }
-    } else if (paymentType === 'rent') {
+    } 
+    else if (paymentType === 'rent') {
         appShare = amount * 0.05;
         landlordShare = amount - appShare;
     }

@@ -739,7 +739,7 @@ class AuthenticationService {
           destinationBankCode:    PropertyManagerModelResult.landlordBankCode,
           destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
           currency: 'NGN',
-          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          sourceAccountNumber:serverConfig.MONNIFY_ACC,
           async:true
         };
         
@@ -1999,7 +1999,7 @@ async  processDisbursement(propertyManager, inspection) {
           const transferDetails = {
               amount: this.calculateDistribution(amount, 'landlord', false, 'initial deposit').landlordShare,
               reference: paymentReference,
-              narration: 'Rent Payment ',
+              narration: 'Rent Payment',
               destinationBankCode:propertyManager.landlordBankCode,
               destinationAccountNumber: propertyManager.landlordBankAccount,
               currency: 'NGN',
@@ -2021,7 +2021,7 @@ async  processDisbursement(propertyManager, inspection) {
               userId: inspection.prospectiveTenantId,
               inspectionId: inspection.id,
               buildingId: inspection.buildingId,
-              amount: amount,
+              amount: this.calculateDistribution(amount, 'landlord', true, 'initial deposit').landlordShare,
               paymentReference: landlordReference,
               transactionType: 'firstRent',
               paymentStatus: 'PENDING' // Initially set to PENDING
@@ -2031,7 +2031,7 @@ async  processDisbursement(propertyManager, inspection) {
               userId: inspection.prospectiveTenantId,
               inspectionId: inspection.id,
               buildingId: inspection.buildingId,
-              amount: amount,
+              amount:  this.calculateDistribution(amount, 'landlord', true, 'initial deposit').agentShare,
               paymentReference: agentReference,
               transactionType: 'commission',
               paymentStatus: 'PENDING'
@@ -2045,6 +2045,7 @@ async  processDisbursement(propertyManager, inspection) {
               destinationBankCode: propertyManager.landlordBankCode,
               destinationAccountNumber: propertyManager.landlordBankAccount,
               currency: 'NGN',
+              sourceAccountNumber: serverConfig.MONNIFY_ACC,
               async: true
           };
 
@@ -2056,6 +2057,7 @@ async  processDisbursement(propertyManager, inspection) {
               destinationBankCode: propertyManager.agentBankCode,
               destinationAccountNumber: propertyManager.agentBankAccount,
               currency: 'NGN',
+              sourceAccountNumber: serverConfig.MONNIFY_ACC,
               async: true
           };
 
