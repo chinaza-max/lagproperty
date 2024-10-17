@@ -727,7 +727,7 @@ class AuthenticationService {
         await this.TransactionModel.create({
           userId: prospectiveTenantId,
           buildingId:BuildingModel.id,
-          amount:TransactionModelResultAmount,
+          amount:userService.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'rent').landlordShare,
           paymentReference,
           transactionType:'rent'
         });
