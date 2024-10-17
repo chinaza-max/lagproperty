@@ -11,10 +11,11 @@ import { dirname } from 'path';
 import cron from "node-cron"
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
+import AdminJS from 'adminjs';
+import AdminJSExpress from '@adminjs/express';
+import AdminJSSequelize from '@adminjs/sequelize';
+//import initializeAdminJS from './src/config/adminjs.config.js';
 
-//import {  Op } from "sequelize";
-     
-   
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -57,7 +58,6 @@ class Server {
     async initializeDbAndFirebase(){
         await DB.connectDB()
 
-
       //cron.schedule('0 */2 * * *', async () => {
        /* checktransactionUpdateWebHook
         checktransactionUpdateSingleTransfer
@@ -94,19 +94,56 @@ class Server {
                 origin: '*',
             };
         }
+/*
+        const db=DB
+
+
+        console.log(db)
+  
+  AdminJS.registerAdapter(AdminJSSequelize);
+  
+  const adminJsConfig = {
+    databases: [db],
+    rootPath: '/admin',
+    resources: Object.values(db.sequelize.models).map(model => ({
+      resource: model,
+      options: {
+        navigation: {
+          name: model.name,
+          icon: 'Database',
+        },
+      },
+    })),
+    branding: {
+      companyName: 'LagProperty Admin',
+      logo: false,
+      softwareBrothers: false
+    },
+  };
+  
+  const adminJs = new AdminJS(adminJsConfig);
+  const adminRouter = AdminJSExpress.buildRouter(adminJs);
+
+*/
+        
 
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(express.json());
         this.app.use(express.static(path.join(__dirname, 'public')));
         this.app.use(cors(corsOptions));
+
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+       // this.app.use(adminJs.options.rootPath, adminRouter);  // Add admin route if available
 
         this.app.use(routes); 
         this.app.use(systemMiddleware.errorHandler);
 
     }
   
-    start() {
+    async start() {
+
+      
+
       this.app.listen(this.port, () => {
           console.log(`Server is running on http://localhost:${this.port}`);
       });  

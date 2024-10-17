@@ -446,6 +446,34 @@ export default class UserController {
 
 
 
+  async getNotification(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetNotification(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
+
+
   async getAllTrasaction(req, res, next) {
 
     try {

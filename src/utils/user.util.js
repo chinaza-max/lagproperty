@@ -430,6 +430,13 @@ class UserUtil {
   });
 
 
+  verifyHandleGetNotification= Joi.object({
+    userId: Joi.number().integer().required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    page: Joi.number().integer().min(1).default(1).required(),
+    pageSize: Joi.number().integer().min(1).default(10).required(),
+  });
+
   verifyHandleGetALLreviewTenant= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').required(),

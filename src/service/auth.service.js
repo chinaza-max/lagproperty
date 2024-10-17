@@ -10,6 +10,7 @@ import { Tenant,
      ProspectiveTenant , 
      EmailandTelValidation , 
       Admin ,
+      Notification,
       Setting
    } from "../db/models/index.js";
 import serverConfig from "../config/server.js";
@@ -51,6 +52,7 @@ class AuthenticationService {
   ProspectiveTenantModel=ProspectiveTenant
   AdminModel= Admin
   SettingModel= Setting
+  NotificationModel=Notification
 
 
 
@@ -629,6 +631,17 @@ class AuthenticationService {
             prospectiveTenantId:userId
           })
 
+
+
+          await this.NotificationModel.create({
+            notificationFor: "rent",
+            userId: existingInspection.prospectiveTenantId,
+            type: "inspection",
+            message: `Your inspection for ${BuildingModelResponse.propertyTitle} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
+            buildingId: BuildingModelResponse.id
+          });
+          
+
         }
 
       }
@@ -674,6 +687,15 @@ class AuthenticationService {
               rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration,TenantModelResult.rentNextDueDate),
               paymentReference:transactionStatus.paymentReference
             })
+
+            await this.NotificationModel.create({
+              notificationFor: "list",
+              userId: existingInspection.propertyManagerId, // Assuming propertyManagerId is available
+              type: "rentPayment",
+              message: `The rent has been paid for ${BuildingModelResult.propertyTitle} at ${BuildingModelResult.address}, ${BuildingModelResult.city}. You will receive your distribution soon.`,
+              buildingId: BuildingModelResult.id
+            });
+
   
             this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
           }

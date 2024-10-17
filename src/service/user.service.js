@@ -1053,6 +1053,112 @@ class UserService {
     
   }
 
+
+
+  
+  async handleGetNotification(data) {
+
+    const { userId, role, page, pageSize } = await userUtil.verifyHandleGetNotification.validateAsync(data);
+  
+    // Calculate pagination offset and limit
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+  
+    try {
+      // Query the notifications based on userId and role (notificationFor)
+      const { count, rows } = await this.NotificationModel.findAndCountAll({
+        where: {
+          userId: userId,
+          notificationFor: role
+        },
+        limit,
+        offset,
+        include: [
+          {
+            model: this.BuildingModel,
+            attributes: [
+              'id', 'propertyTitle', 'address', 'city', 'price', 'furnishingStatus', 'amenity'
+            ],
+            include: [
+              {
+                model: this.PropertyManagerModel,
+                attributes: ['id', 'firstName', 'lastName', 'emailAddress', 'tel', 'companyName' , 'image']
+              }
+            ]
+          }
+        ],
+        order: [['createdAt', 'DESC']] // Most recent notifications first
+      });
+  
+      const formattedNotifications = [];
+      for (let i = 0; i < rows.length; i++) {
+        const notification = rows[i];
+      
+        if (notification.type === 'inspection') {
+          const building = notification.Building;
+          const propertyManager = building ? building.PropertyManager : null;
+      
+          formattedNotifications.push({
+            notificationId: notification.id,
+            type: notification.type,
+            message: notification.message,
+            building: {
+              propertyTitle: building ? building.propertyTitle : null,
+              address: building ? building.address : null,
+              city: building ? building.city : null
+            },
+            propertyOwner: propertyManager
+              ? {
+                  firstName: propertyManager.firstName,
+                  lastName: propertyManager.lastName,
+                  emailAddress: propertyManager.emailAddress,
+                  tel: propertyManager.tel,
+                  image: propertyManager.image,
+                  companyName: propertyManager.companyName
+                }
+              : null,
+            createdAt: notification.createdAt
+          });
+        } else if (notification.type === 'rentPayment') {
+
+          const tenant = await this.ProspectiveTenantModel.findByPk(notification.userId);
+      
+          formattedNotifications.push({
+            notificationId: notification.id,
+            type: notification.type,
+            message: notification.message,
+            tenant: tenant
+              ? {
+                  name: `${tenant.firstName} ${tenant.lastName}`, // Assuming tenant has firstName and lastName
+                  image: tenant.image || null,  
+                  emailAddress: tenant.emailAddress,
+                  tel: tenant.tel
+                }
+              : null,
+            createdAt: notification.createdAt
+          });
+        } 
+      }
+
+      
+  
+      // Return paginated result and formatted notifications
+      return {
+        response: formattedNotifications,
+        pagination: {
+          totalItems: count,
+          currentPage: page,
+          totalPages: Math.ceil(count / pageSize),
+          pageSize: pageSize
+        }
+      };
+  
+    } catch (error) {
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+  
+
   async handleGetALLreviewTenant(data) {
 
     const { prospectiveTenantId, page, pageSize } = await userUtil.verifyHandleGetALLreviewTenant.validateAsync(data);

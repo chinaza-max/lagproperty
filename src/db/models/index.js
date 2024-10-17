@@ -67,6 +67,17 @@ function associate() {
   })
 
 
+
+  
+  Building.hasMany(Notification, {
+    foreignKey: 'buildingId',
+    as: "BuildingNotification",
+  });
+  Notification.belongsTo(Building, {
+    foreignKey: 'buildingId',
+  })
+
+
   Building.hasMany(TenantReview, {
     foreignKey: 'buildingId',
     as: "BuildingReview",

@@ -9,6 +9,7 @@ import fs from "fs";
 class DB {
    constructor() {
     this.sequelize 
+    this.models = null;
   }
 
   async connectDB() {
@@ -34,13 +35,14 @@ class DB {
       options
     );
        
-    initModels(this.sequelize);
+    this.models =initModels(this.sequelize);
  
    
-      if (serverConfig.NODE_ENV === "development") {
-        // await this.sequelize.sync({ alter: true });
-        // await this.sequelize.sync({ force: true }); 
-      }                 
+    if (serverConfig.NODE_ENV === "development") {
+       await this.sequelize.sync({ alter: true });
+      // await this.sequelize.sync({ force: true }); 
+    } 
+                    
 /*     
         (async () => {
           try {  

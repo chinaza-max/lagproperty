@@ -2993,6 +2993,79 @@
  */
 
 
+
+/**
+ * @swagger
+ * user/getNotification:
+ *   get:
+ *     summary: Retrieve user notifications
+ *     description: Get a list of notifications for the user, with pagination support.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: true
+ *         description: The page number to retrieve.
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         required: true
+ *         description: The number of notifications to return per page.
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: A list of notifications.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 response:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       notificationId:
+ *                         type: integer
+ *                         description: The ID of the notification.
+ *                       type:
+ *                         type: string
+ *                         description: The type of the notification.
+ *                       message:
+ *                         type: string
+ *                         description: The content of the notification.
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The creation date of the notification.
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Total number of notifications available.
+ *                     currentPage:
+ *                       type: integer
+ *                       description: The current page number.
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Total number of pages.
+ *                     pageSize:
+ *                       type: integer
+ *                       description: The number of items per page.
+ *       400:
+ *         description: Bad request if parameters are invalid.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
 import { Router } from "express";
 import UserController from"../controllers/user/user.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -3034,6 +3107,8 @@ class UserRoutes extends UserController {
     this.router.post("/reviewBuilding", this.reviewBuilding);
     this.router.post("/reviewBuildingAction", this.reviewBuildingAction);
     this.router.get("/getALLreviewTenant", this.getALLreviewTenant);
+    this.router.get("/getNotification", this.getNotification);
+
     this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
     this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
     this.router.get("/getBuildings", this.getBuildings);
