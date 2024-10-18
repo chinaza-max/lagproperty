@@ -121,7 +121,7 @@ class AuthenticationService {
         throw new SystemError(error.name,error.parent)
       }
     }
-    else if(type==="list"){
+    else if(type==="rent"){
 
 
       let existingUser = await this.isUserEmailExisting(emailAddress, this.ProspectiveTenantModel );

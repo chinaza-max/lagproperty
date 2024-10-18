@@ -2328,7 +2328,7 @@ class UserService {
               where: { 
                 inspectionStatus: 'notCreated', 
                 isDeleted: false 
-              },
+              },   
               include: [{
                 model: this.BuildingModel,
                 where: { propertyManagerId: userId },
