@@ -3478,6 +3478,7 @@ class UserService {
     let agentShare = 0;
     let appShare = 0;
 
+    amount = parseFloat(amount.toFixed(2));
     if (paymentType === 'initial deposit') {
         if (hasAgent) {
             agentShare = amount * 0.10;
@@ -3494,9 +3495,9 @@ class UserService {
     }
 
     return {
-        landlordShare,
-        agentShare,
-        appShare
+      landlordShare: parseFloat(landlordShare.toFixed(2)),
+      agentShare: parseFloat(agentShare.toFixed(2)),
+      appShare: parseFloat(appShare.toFixed(2))
     };
   }
 
