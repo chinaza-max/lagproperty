@@ -862,6 +862,9 @@ class AuthenticationService {
 
  
   async  initiateTransfer(token, transferDetails) {
+
+
+    console.log(transferDetails)
     try {
       const response = await axios.post(
         `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
