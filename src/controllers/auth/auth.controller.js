@@ -191,8 +191,15 @@ export default class AuthenticationController {
       
       const user=await authService.handleLoginUser(my_bj);
     
+      console.log(" user  user  user")
+      console.log(" user  user  user")
 
-      if (user == null){
+      console.log(user)
+
+      console.log(" user  user  user")
+      console.log(" user  user  user")
+
+      if (!user){
         return res.status(400).json({
           status: 400,
           message: "Invalid login credentials",
@@ -226,6 +233,7 @@ export default class AuthenticationController {
         message: "login successfully.",
         data: { user: modifiedUser, token },
       });
+
     } catch (error) {
       console.log(error);
       next(error)
