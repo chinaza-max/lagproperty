@@ -64,7 +64,7 @@ class UserUtil {
     occupation: Joi.string().required(),
     country: Joi.string().required(),
     stateOfOrigin: Joi.string().required(),
-    nin: Joi.string()().required(),
+    nin: Joi.string().required(),
     bankCode: Joi.string().required(),
     bankAccount: Joi.string().required(),
     propertyPreference: Joi.array().items(
