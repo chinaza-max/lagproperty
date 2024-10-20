@@ -14,7 +14,7 @@ class UserUtil {
     tel: Joi.number().required().label('Telephone Number'),
     telCode: Joi.string().required().label('Telephone Code'),
     lasrraId: Joi.string().required().label('LASRRA ID'),
-    nin: Joi.string().required().label('NIN'),
+    nin: Joi.string().label('NIN'),
     about: Joi.string().required().label('Information about your self and building'),
     country: Joi.string().required().label('Country'),
     state: Joi.string().required().label('State'),
@@ -64,7 +64,7 @@ class UserUtil {
     occupation: Joi.string().required(),
     country: Joi.string().required(),
     stateOfOrigin: Joi.string().required(),
-    nin: Joi.string().integer().required(),
+    nin: Joi.string()().required(),
     bankCode: Joi.string().required(),
     bankAccount: Joi.string().required(),
     propertyPreference: Joi.array().items(
