@@ -49,7 +49,7 @@
           allowNull: true
         },
         nin: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.STRING,
           allowNull: true,
         },
         country: {

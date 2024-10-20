@@ -12,8 +12,12 @@ export function init(connection) {
         autoIncrement: true,
       },
       commissionPercentage: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: DataTypes.FLOAT,
+        defaultValue: 0.01
+      },
+      appPercentage: {
+        type: DataTypes.FLOAT,//in seconds
+        defaultValue: 0.05
       },
       accountNumber: {
         type: DataTypes.STRING,
@@ -32,6 +36,10 @@ export function init(connection) {
         defaultValue: 1800,
       },
       pendingDisburseRentRetry: {
+        type: DataTypes.INTEGER,//in seconds
+        defaultValue: 1800,
+      },
+      appShare: {
         type: DataTypes.INTEGER,//in seconds
         defaultValue: 1800,
       },

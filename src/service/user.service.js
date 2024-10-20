@@ -2355,15 +2355,16 @@ class UserService {
               isDeleted: false 
             },
             limit,
-            offset,
-          });
+            offset
+          })
+
           return {
             response: notCreatedInspections.rows,
             pagination:{
-            totalItems: notCreatedInspections.count,
-            currentPage: page,
-            pageSize,
-            totalPages: Math.ceil(notCreatedInspections.count / pageSize),
+              totalItems: notCreatedInspections.count,
+              currentPage: page,
+              pageSize,
+              totalPages: Math.ceil(notCreatedInspections.count / pageSize),
             }
           };
         }
