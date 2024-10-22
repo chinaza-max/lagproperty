@@ -2093,11 +2093,12 @@ async  initiateTransfer(token, transferDetails) {
 }
 
 // Calculate distribution function (unchanged)
- calculateDistribution(amount, type, hasAgent, paymentType) {
+calculateDistribution(amount, type, hasAgent, paymentType) {
   let landlordShare = 0;
   let agentShare = 0;
   let appShare = 0;
 
+  amount = parseFloat(amount.toFixed(2));
   if (paymentType === 'initial deposit') {
       if (hasAgent) {
           agentShare = amount * 0.10;
@@ -2107,17 +2108,18 @@ async  initiateTransfer(token, transferDetails) {
           appShare = amount * 0.05;
           landlordShare = amount - appShare;
       }
-  } else if (paymentType === 'rent') {
+  } 
+  else if (paymentType === 'rent') {
       appShare = amount * 0.05;
       landlordShare = amount - appShare;
   }
 
   return {
-      landlordShare,
-      agentShare,
-      appShare
+    landlordShare: parseFloat(landlordShare.toFixed(2)),
+    agentShare: parseFloat(agentShare.toFixed(2)),
+    appShare: parseFloat(appShare.toFixed(2))
   };
-  }
+}
 
  async rentDisbursements(){
 
