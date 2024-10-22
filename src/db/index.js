@@ -37,12 +37,8 @@ class DB {
        
     this.models =initModels(this.sequelize);
 
-    console.log("dddddddddddddd")
     if (serverConfig.NODE_ENV === "development") {
-      console.log("ffffffffffffffffff")
-      console.log("ffffffffffffffffff")
-
-      await this.sequelize.sync({ alter: true });   
+      //await this.sequelize.sync({ alter: true });   
       // await this.sequelize.sync({ force: true }); 
     }       
                     
