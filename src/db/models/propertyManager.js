@@ -21,7 +21,7 @@
           allowNull: false,
         },
         tel: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.STRING,
           allowNull: true,
         },
         isTelValid: {

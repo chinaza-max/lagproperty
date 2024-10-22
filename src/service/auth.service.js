@@ -2100,7 +2100,7 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
 
   amount = parseFloat(amount.toFixed(2));
   if (paymentType === 'initial deposit') {
-      if (hasAgent) {
+      if (hasAgent) { 
           agentShare = amount * 0.10;
           appShare = amount * 0.05;
           landlordShare = amount - agentShare - appShare;

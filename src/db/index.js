@@ -17,8 +17,8 @@ class DB {
 
 
     const options= { 
-     // logging: console.log,
-     logging: false,
+      logging: console.log,
+     //logging: false,
       dialect: "mysql",
       host: serverConfig.DB_HOST,
       username: serverConfig.DB_USERNAME,
@@ -37,8 +37,12 @@ class DB {
        
     this.models =initModels(this.sequelize);
 
+    console.log("dddddddddddddd")
     if (serverConfig.NODE_ENV === "development") {
-      //await this.sequelize.sync({ alter: true });   
+      console.log("ffffffffffffffffff")
+      console.log("ffffffffffffffffff")
+
+      await this.sequelize.sync({ alter: true });   
       // await this.sequelize.sync({ force: true }); 
     }       
                     
