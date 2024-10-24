@@ -98,6 +98,8 @@ class authUtil {
       bankCode: Joi.string().required(),
       accountNumber: Joi.string().required(),
     });
+
+
     
   validatePasswordReset = Joi.object().keys({
     password: Joi.string().min(6).required(),

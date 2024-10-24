@@ -744,6 +744,34 @@ export default class UserController {
 
 
 
+  async validateNIN(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+
+      const data = req.body;        
+
+      let my_bj = {
+        ...data,
+      }
+      
+      await userService.handleValidateNIN(my_bj);
+
+      return res.status(200).json({
+        status: 200,
+        message: "opt has been sent to the number attached the nin",
+        data:result
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
   async reviewTenant(req, res, next) {
 
     try {

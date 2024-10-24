@@ -1624,6 +1624,43 @@ class UserService {
     
   }
 
+
+
+  async handleValidateNIN(data) {
+
+    var { NIN, userId,  role} = await userUtil.validateHandleValidateNIN.validateAsync(data);
+
+    const accessToken = await this.getAuthTokenMonify()
+    const body={
+      nin:NIN
+    }
+    
+    try {
+      const response = await axios.post(
+        `${serverConfig.MONNIFY_BASE_URL}/api/v1/vas/nin-details`,
+          body,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+  
+      const phone=response.data.responseBody.mobileNumber
+
+      authService.sendNINVerificationCode(phone, userId, role) 
+
+    } catch (error) {
+
+      //console.log(error)
+
+      console.log(error?.response?.data)
+      throw new SystemError(error.name,  error?.response?.data?.error)
+
+    }
+
+  }
+
   async handleReviewTenant(data) {
 
     let { 

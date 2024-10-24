@@ -52,6 +52,10 @@
           type: DataTypes.STRING,
           allowNull: true,
         },
+        isNINValid: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false
+        },
         country: {
           type: DataTypes.STRING,
           allowNull: true,

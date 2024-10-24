@@ -20,7 +20,8 @@ import {
       type: {
         type: DataTypes.ENUM(
           'email',
-          'tel'
+          'tel',
+          'nin'
         ),
         allowNull: false,
       },

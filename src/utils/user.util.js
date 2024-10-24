@@ -415,6 +415,13 @@ class UserUtil {
 
 
 
+  validateHandleValidateNIN= Joi.object().keys({
+    NIN: Joi.string().required(),
+    role: Joi.string().valid('list', 'rent'),
+    userId: Joi.number().integer().required()
+  });
+
+
   verifyHandleDisableAccount= Joi.object({
     userId: Joi.number().integer().required(),
     role: Joi.string().valid('list', 'rent').optional(),

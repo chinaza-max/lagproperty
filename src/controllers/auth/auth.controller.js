@@ -51,7 +51,6 @@ export default class AuthenticationController {
 
       const user = await authService.handleVerifyEmailorTel(my_bj);
 
-
       const generateTokenFrom={id:user.dataValues.id,role:user.dataValues.role}
 
       const token = await authService.generateToken(generateTokenFrom);
@@ -457,6 +456,9 @@ export default class AuthenticationController {
       next(error);
     }
   }
+
+
+
   async resetPassword(
     req,
     res,

@@ -1599,9 +1599,26 @@ class AuthenticationService {
         return  relatedUser
         
       }
+      else if(type==='nin'){
+
+        relatedUser.update({
+          isNINValid: true,
+        });
+
+        relatedEmailoRTelValidationCode.update({
+          expiresIn: new Date(),
+        });
+
+        return  relatedUser
+        
+      }
       else{
         relatedUser.update({
           isTelValid: true,
+        });
+
+        relatedEmailoRTelValidationCode.update({
+          expiresIn: new Date(),
         });
 
         return  relatedUser
@@ -1688,6 +1705,51 @@ class AuthenticationService {
 
 
 
+  }
+
+
+  async  sendNINVerificationCode(phone, userId, validateFor) {
+
+    try {
+      
+        var keyExpirationMillisecondsFromEpoch = new Date().getTime() + 30 * 60 * 1000;
+        const verificationCode = Math.floor(Math.random() * 900000) + 100000;
+  
+        await this.EmailandTelValidationModel.upsert({
+          userId,
+          type: 'nin',
+          validateFor,
+          verificationCode,
+          expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
+        }, {
+          where: {
+            userId,
+            validateFor
+          }
+        });
+        
+        const apiUrl = `http://smslive247.com.ng/components/com_smsreseller/smsapi.php?username=${serverConfig.SMS_USER_NAME}&password=${serverConfig.SMS_PASSWORD}&sender=YourSenderID&recipient=${phone}&message=Your NIN verification code is ${verificationCode}`;
+
+        try {
+              
+          const response = await axios.get(apiUrl);
+
+          if (response.status === 200) {
+            console.log('SMS sent successfully');
+          } 
+          else {
+            console.log('Failed to send SMS:', response.data);
+          }
+
+        } catch (error) {
+            console.log(error)
+        }
+    
+    
+    } catch (error) {
+      console.log(error);
+    }
+  
   }
 
   async  sendTelVerificationCode(tel, userId) {

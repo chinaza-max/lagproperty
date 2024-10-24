@@ -95,6 +95,10 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: true,
       }, 
+      isNINValid: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false
+      },
       lasrraId: {
         type: DataTypes.STRING,
         allowNull: true,

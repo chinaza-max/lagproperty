@@ -52,48 +52,93 @@
  *         description: Internal server error
  */
 
+
+
+
 /**
  * @swagger
  * /auth/verifyEmailorTel:
  *   post:
- *     summary: Verify a user's email or telephone
+ *     summary: Verify Email or Telephone with a Verification Code
+ *     description: Verifies the user's email or telephone number using a verification code. The request body also specifies the context (`validateFor`) and the type (`email`, `tel`, or `nin`).
+ *     tags:
+ *       - Verification
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - verificationCode
+ *               - validateFor
+ *               - type
  *             properties:
- *               userId:
- *                 type: number
- *                 description: The ID of the user to be verified
- *                 example: 123
- *                 required: true
+ *               verificationCode:
+ *                 type: integer
+ *                 description: The 6-digit verification code sent to the user.
+ *                 example: 123456
  *               validateFor:
  *                 type: string
- *                 description: Validation context, either rent or list
- *                 enum: ["rent", "list"]
- *                 example: rent
- *                 required: true
- *               verificationCode:
- *                 type: number
- *                 description: The verification code sent to the user
- *                 example: 456789
- *                 required: true
+ *                 description: The context in which the validation is being done (e.g., list, rent, admin).
+ *                 enum:
+ *                   - list
+ *                   - rent
+ *                   - admin
+ *                 example: "list"
  *               type:
  *                 type: string
- *                 description: Specifies whether the verification is for email or telephone
- *                 enum: ["email", "tel"]
- *                 example: email
- *                 required: true
+ *                 description: Specifies whether the verification is for email, telephone, or NIN.
+ *                 enum:
+ *                   - email
+ *                   - tel
+ *                   - nin
+ *                 example: "email"
  *     responses:
  *       200:
- *         description: Email or telephone verified successfully
+ *         description: Successfully verified the email or telephone.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Verification successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       example: "12345"
+ *                     verificationCode:
+ *                       type: integer
+ *                       example: 123456
  *       400:
- *         description: Bad request, validation error
+ *         description: Bad request, missing or invalid parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid verification code or type"
  *       500:
- *         description: Internal server error
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred during verification"
  */
+
+
+
+
 
 
 /**
@@ -453,7 +498,8 @@ class AuthRoutes extends AuthController {
     this.router.post("/sendPasswordResetLink", this.sendPasswordResetLink);
     this.router.post("/resetPassword", this.resetPassword);
     this.router.post("/validateBankAccount", this.validateBankAccount);
-    this.router.get("/pingme", this.pingme);
+
+    this.router.get("/pingme", this.pingme); 
     this.router.post("/intializePayment", this.intializePayment);
     
 

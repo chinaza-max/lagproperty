@@ -3067,6 +3067,71 @@
  */
 
 
+/**
+ * @swagger
+ * /user/validateNIN:
+ *   post:
+ *     summary: Validate NIN (National Identification Number)
+ *     description: Validates the user's National Identification Number (NIN) for verification purposes.
+ *     tags:
+ *       - NIN Verification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - NIN
+ *             properties:
+ *               NIN:
+ *                 type: string
+ *                 description: The user's National Identification Number (NIN).
+ *                 example: "12345678901"
+ *     responses:
+ *       200:
+ *         description: Successfully validated the NIN.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "NIN validation successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       example: "12345"
+ *                     NIN:
+ *                       type: string
+ *                       example: "12345678901"
+ *       400:
+ *         description: Bad request, invalid or missing NIN.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid NIN"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred during validation"
+ */
+
+
+
 
 import { Router } from "express";
 import UserController from"../controllers/user/user.controller.js";
@@ -3124,6 +3189,7 @@ class UserRoutes extends UserController {
     this.router.get("/prospectiveTenantInformation", this.ProspectiveTenantInformation);
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
     this.router.post("/reviewTenant", this.reviewTenant);
+    this.router.post("/validateNIN", this.validateNIN);
 
 
     //API FOR ADMIN
