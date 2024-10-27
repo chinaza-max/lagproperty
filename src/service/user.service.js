@@ -11,6 +11,7 @@ import {
   PropertyManagerReview,
   TenantReview,
   Notification,
+  Setting,
   Tenant
 } from "../db/models/index.js";
 import userUtil from "../utils/user.util.js";
@@ -50,7 +51,7 @@ class UserService {
   PropertyManagerReviewModel=PropertyManagerReview
   TenantReviewModel=TenantReview
   NotificationModel=Notification
-
+  SettingModel=Setting
 
   
 
@@ -590,7 +591,7 @@ class UserService {
 
   async handleGetBuildings(data) {
 
-    const { userId, page, pageSize, type} = await userUtil.verifyHandleGetBuildings.validateAsync(data);
+    const { userId, page, pageSize, type, propertyLocation, propertyPreference, furnishingStatus, bedrooms, amenities, budgetMin, budgetMax, propertyRating  } = await userUtil.verifyHandleGetBuildings.validateAsync(data);
 
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
@@ -668,19 +669,37 @@ class UserService {
       }
       else if(type=== 'all'){
 
+
+        if (propertyLocation) whereConditions.propertyLocation = propertyLocation;
+        if (propertyPreference) whereConditions.propertyPreference = propertyPreference;
+        if (furnishingStatus) whereConditions.furnishingStatus = furnishingStatus;
+        if (bedrooms) whereConditions.numberOfRooms = bedrooms;
+        if (propertyRating) whereConditions.propertyRating = propertyRating;
+
+        if (amenities && amenities.length > 0) {
+          whereConditions.amenity = {
+            [Op.contains]: amenities
+          };
+        }
+    
+        if (budgetMin || budgetMax) {
+          whereConditions.price = {};
+          if (budgetMin) whereConditions.price[Op.gte] = budgetMin;
+          if (budgetMax) whereConditions.price[Op.lte] = budgetMax;
+        }
+
         const { count, rows } = await this.BuildingModel.findAndCountAll({
           where:{
             availability:'vacant',
+            ...whereConditions,
             isDeleted:false
           },
           offset,
           limit
         });
 
-
         buildings=rows? rows:[]
         totalCount=count
-
       }
       else if(type === 'topRated'){
 
@@ -1054,6 +1073,19 @@ class UserService {
   }
 
 
+  
+  async handleGetBuildingPreference(data) {
+
+    try {
+      const SettingModelResult = await this.SettingModel.findByPk(1);
+  
+      return{
+        buildingPreferences:JSON.parse(SettingModelResult.preferences).buildingPreferences
+      }
+    } catch (error) {
+      throw new SystemError(error.name, error.parent);
+    }
+  }
 
   
   async handleGetNotification(data) {
@@ -1626,16 +1658,59 @@ class UserService {
 
 
 
+  async handleBuildingPreferenceAction(data) {
+
+    const { preferenceName, type} =await userUtil.validateHandleValidateNIN.validateAsync(data);
+
+    try { 
+      const setting = await this.SettingModel.findOne({ where: { id: 1 } });
+
+      if (!setting) {
+        throw new SystemError('NotFoundError', 'Settings not found');
+      }
+
+      const buildingPreferences = JSON.parse(setting.preferences)?.buildingPreferences || [];
+
+
+      
+      if (type === 'add') {
+        if (!buildingPreferences.includes(preferenceName)) {
+          buildingPreferences.push(preferenceName);
+        }
+
+      } 
+      else if (type === 'deleted') {
+
+        const index = buildingPreferences.indexOf(preferenceName);
+        if (index !== -1) {
+          buildingPreferences.splice(index, 1);
+        }
+
+      }
+  
+      await setting.update({
+        preferences: { buildingPreferences }
+      });
+       
+  
+    } catch (error) {
+      throw new SystemError(error.name,  error?.response?.data?.error)
+
+    }
+
+  }
+
   async handleValidateNIN(data) {
 
     var { NIN, userId,  role} = await userUtil.validateHandleValidateNIN.validateAsync(data);
 
-    const accessToken = await this.getAuthTokenMonify()
+    const accessToken = await authService.getAuthTokenMonify()
     const body={
       nin:NIN
     }
     
-    try {
+
+    try { 
       const response = await axios.post(
         `${serverConfig.MONNIFY_BASE_URL}/api/v1/vas/nin-details`,
           body,
@@ -1651,9 +1726,6 @@ class UserService {
       authService.sendNINVerificationCode(phone, userId, role) 
 
     } catch (error) {
-
-      //console.log(error)
-
       console.log(error?.response?.data)
       throw new SystemError(error.name,  error?.response?.data?.error)
 

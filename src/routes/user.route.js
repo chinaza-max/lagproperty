@@ -1689,6 +1689,133 @@
 
 
 
+
+/**
+ * @swagger
+ * /user/getBuildings2:
+ *   get:
+ *     summary: Retrieve a list of buildings based on filters
+ *     description: Fetch buildings based on specific criteria such as type, location, budget, and more.
+ *     tags:
+ *       - Buildings
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Unique ID of the user.
+ *       - in: query
+ *         name: role
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [list, rent]
+ *         description: Role of the user, either listing properties or renting.
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [popular, recommended, bestOffer, topRated, flats, duplex, selfContains, roomAndParlour, all]
+ *         description: Type of building filter to apply. If set to "all", additional query parameters become optional.
+ *       - in: query
+ *         name: propertyLocation
+ *         schema:
+ *           type: string
+ *         description: Location of the property. Optional if type is "all".
+ *       - in: query
+ *         name: propertyPreference
+ *         schema:
+ *           type: string
+ *         description: Property preference type (e.g., furnished, partly furnished). Optional if type is "all".
+ *       - in: query
+ *         name: furnishingStatus
+ *         schema:
+ *           type: string
+ *           enum: [furnished, unfurnished, partly furnished, unset]
+ *         description: Furnishing status of the property. Optional if type is "all".
+ *       - in: query
+ *         name: bedrooms
+ *         schema:
+ *           type: integer
+ *         description: Number of bedrooms. Optional if type is "all".
+ *       - in: query
+ *         name: amenities
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Array of amenities available in the building. Optional if type is "all".
+ *       - in: query
+ *         name: budgetMin
+ *         schema:
+ *           type: integer
+ *         description: Minimum budget. Optional if type is "all".
+ *       - in: query
+ *         name: budgetMax
+ *         schema:
+ *           type: integer
+ *         description: Maximum budget. Optional if type is "all".
+ *       - in: query
+ *         name: propertyRating
+ *         schema:
+ *           type: number
+ *           minimum: 1
+ *           maximum: 5
+ *         description: Property rating between 1 and 5. Optional if type is "all".
+ *       - in: query
+ *         name: page
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for paginated results.
+ *       - in: query
+ *         name: pageSize
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 10
+ *         description: Number of items per page.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of buildings.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       name:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       location:
+ *                         type: string
+ *                       price:
+ *                         type: integer
+ *                       rating:
+ *                         type: number
+ *       400:
+ *         description: Invalid query parameter.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
 /**
  * @swagger
  * /user/getBuildingDetails:
@@ -3132,6 +3259,47 @@
 
 
 
+/**
+ * @swagger
+ * /user/getBuildingPreference:
+ *   get:
+ *     summary: Retrieve building preferences
+ *     description: Get a list of available building preferences such as "flat", "a room", "duplex", "self-contain", etc.
+ *     tags:
+ *       - Building Preferences
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of building preferences.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 preferences:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["flat", "a room", "duplex", "self-contain"]
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error."
+ */
+
+
+
 
 import { Router } from "express";
 import UserController from"../controllers/user/user.controller.js";
@@ -3175,6 +3343,7 @@ class UserRoutes extends UserController {
     this.router.post("/reviewBuildingAction", this.reviewBuildingAction);
     this.router.get("/getALLreviewTenant", this.getALLreviewTenant);
     this.router.get("/getNotification", this.getNotification);
+    this.router.get("/getBuildingPreference", this.getBuildingPreference);
 
     this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
     this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
@@ -3190,6 +3359,7 @@ class UserRoutes extends UserController {
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
     this.router.post("/reviewTenant", this.reviewTenant);
     this.router.post("/validateNIN", this.validateNIN);
+    this.router.post("/BuildingPreferenceAction", this.BuildingPreferenceAction);
 
 
     //API FOR ADMIN

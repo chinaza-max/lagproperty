@@ -354,6 +354,14 @@ class UserUtil {
       'roomAndParlour', 
       'all'
     ).required(),
+    propertyLocation: Joi.string().when('type', { is: 'all', then: Joi.optional() }),
+    propertyPreference: Joi.string().when('type', { is: 'all', then: Joi.optional() }),
+    furnishingStatus: Joi.string().valid('furnished', 'unfurnished', 'partly furnished', 'unset').when('type', { is: 'all', then: Joi.optional() }),
+    bedrooms: Joi.number().integer().when('type', { is: 'all', then: Joi.optional() }),
+    amenities: Joi.array().items(Joi.string()).when('type', { is: 'all', then: Joi.optional() }),
+    budgetMin: Joi.number().integer().when('type', { is: 'all', then: Joi.optional() }),
+    budgetMax: Joi.number().integer().when('type', { is: 'all', then: Joi.optional() }),
+    propertyRating: Joi.number().min(1).max(5).when('type', { is: 'all', then: Joi.optional() }),
     page: Joi.number().integer().min(1).default(1).required(),
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
@@ -416,9 +424,14 @@ class UserUtil {
 
 
   validateHandleValidateNIN= Joi.object().keys({
-    NIN: Joi.string().required(),
-    role: Joi.string().valid('list', 'rent'),
-    userId: Joi.number().integer().required()
+    type: Joi.string().valid('deleted', 'add').required(),
+    role: Joi.string().valid('list', 'rent').required(),
+    userId: Joi.number().integer().required(),
+    preferenceName: Joi.string().when('type', {
+      is: Joi.valid('add', 'deleted'),
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    })
   });
 
 

@@ -14,6 +14,8 @@ import swaggerJsDoc from 'swagger-jsdoc';
 import AdminJS from 'adminjs';
 import AdminJSExpress from '@adminjs/express';
 import AdminJSSequelize from '@adminjs/sequelize';
+import {Setting} from './src/db/models/index.js';
+
 //import initializeAdminJS from './src/config/adminjs.config.js';
 
 
@@ -57,6 +59,26 @@ class Server {
   
     async initializeDbAndFirebase(){
         await DB.connectDB()
+
+
+        await Setting.findOrCreate({
+          where: { id: 1 },
+          defaults: {
+            commissionPercentage: 0.01,
+            appPercentage: 0.05,
+            accountNumber: '5948568393',
+            failedDisburseRetry: 1800,
+            failedRefundRetry: 1800,
+            pendingDisburseRetry: 1800,
+            pendingDisburseRentRetry: 1800,
+            appShare: 1800,
+            preferences: {
+              buildingPreferences: ["flat", "a room", "duplex", "self-contain"]
+            },
+            notificationAllowed: true,
+            isDeleted: false
+          }
+        });   
 
       //cron.schedule('0 */2 * * *', async () => {
        /* checktransactionUpdateWebHook

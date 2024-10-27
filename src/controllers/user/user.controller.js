@@ -445,6 +445,32 @@ export default class UserController {
   }
 
 
+  async   getBuildingPreference(req, res, next) {
+
+    try {
+      const data = req.query;        
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+
+      const response=await userService.handleGetBuildingPreference(my_bj);
+  
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data:response
+      });
+      
+     
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+    
+  }
 
   async getNotification(req, res, next) {
 
@@ -744,6 +770,36 @@ export default class UserController {
 
 
 
+  async BuildingPreferenceAction(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+
+      const data = req.body;        
+
+
+
+      let my_bj = {
+        ...data,
+        role:req.user.role,
+        userId:req.user.id
+      }
+      
+      await userService.handleBuildingPreferenceAction(my_bj);
+
+      return res.status(200).json({
+        status: 200,
+        message: "successfull"
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async validateNIN(
     req,
     res,
@@ -762,8 +818,7 @@ export default class UserController {
 
       return res.status(200).json({
         status: 200,
-        message: "opt has been sent to the number attached the nin",
-        data:result
+        message: "opt has been sent to the number attached to the nin"
       });
 
     } catch (error) {
@@ -836,7 +891,6 @@ export default class UserController {
         role:req.user.role
       }
 
-      console.log(my_bj)
       const response= await userService.handleGetMyProperty(my_bj);
   
       return res.status(200).json({

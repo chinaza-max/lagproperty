@@ -43,6 +43,11 @@ export function init(connection) {
         type: DataTypes.INTEGER,//in seconds
         defaultValue: 1800,
       },
+      preferences: {
+        type: DataTypes.JSON, 
+        allowNull: true,
+        defaultValue: {} 
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
