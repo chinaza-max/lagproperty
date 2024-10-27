@@ -670,28 +670,28 @@ class UserService {
       else if(type=== 'all'){
 
 
-        if (propertyLocation) whereConditions.propertyLocation = propertyLocation;
-        if (propertyPreference) whereConditions.propertyPreference = propertyPreference;
-        if (furnishingStatus) whereConditions.furnishingStatus = furnishingStatus;
-        if (bedrooms) whereConditions.numberOfRooms = bedrooms;
-        if (propertyRating) whereConditions.propertyRating = propertyRating;
+        if (propertyLocation) whereClause.propertyLocation = propertyLocation;
+        if (propertyPreference) whereClause.propertyPreference = propertyPreference;
+        if (furnishingStatus) whereClause.furnishingStatus = furnishingStatus;
+        if (bedrooms) whereClause.numberOfRooms = bedrooms;
+        if (propertyRating) whereClause.propertyRating = propertyRating;
 
         if (amenities && amenities.length > 0) {
-          whereConditions.amenity = {
+          whereClause.amenity = {
             [Op.contains]: amenities
           };
         }
     
         if (budgetMin || budgetMax) {
-          whereConditions.price = {};
-          if (budgetMin) whereConditions.price[Op.gte] = budgetMin;
-          if (budgetMax) whereConditions.price[Op.lte] = budgetMax;
+          whereClause.price = {};
+          if (budgetMin) whereClause.price[Op.gte] = budgetMin;
+          if (budgetMax) whereClause.price[Op.lte] = budgetMax;
         }
 
         const { count, rows } = await this.BuildingModel.findAndCountAll({
           where:{
             availability:'vacant',
-            ...whereConditions,
+            ...whereClause,
             isDeleted:false
           },
           offset,
