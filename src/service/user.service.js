@@ -1097,9 +1097,8 @@ class UserService {
       
       console.log(SettingModelResult.preferences)
 
-      return{
-        buildingPreferences:SettingModelResult.preferences
-      }
+      return SettingModelResult.preferences
+      
     } catch (error) {   
 
       console.log(error)

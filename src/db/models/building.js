@@ -135,6 +135,17 @@ export function init(connection) {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      propertyImages: {
+        type: DataTypes.TEXT, 
+        allowNull: true,
+        get() {
+          const rawValue = this.getDataValue('propertyImages');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+          this.setDataValue('propertyImages', JSON.stringify(value));
+        },
+      },
       bedroomSizeLength: {
         type: DataTypes.INTEGER ,
         allowNull: true,
