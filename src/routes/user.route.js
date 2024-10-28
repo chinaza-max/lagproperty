@@ -153,6 +153,18 @@
  *                 type: string
  *                 description: City where the property is located
  *                 example: 'New York'
+ *               electricityBillArreas:
+ *                 type: string
+ *                 description: electricity Bill Arreas
+ *                 example: '2000'
+ *               electricityBillArreasType:
+ *                 type: string
+ *                 description: electricity Bill Arreas Type
+ *                 example: 'prepaid'
+ *               waterBillArreas:
+ *                 type: string
+ *                 description: waterBillArreas
+ *                 example: '2000'
  *               address:
  *                 type: string
  *                 description: Full address of the property
