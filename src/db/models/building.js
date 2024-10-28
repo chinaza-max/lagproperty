@@ -61,7 +61,7 @@ export function init(connection) {
         get() {
           const rawValue = this.getDataValue('amenity');
           return rawValue ? JSON.parse(rawValue) : [];
-        },
+        }, 
         set(value) {
           this.setDataValue('amenity', JSON.stringify(value));
         }

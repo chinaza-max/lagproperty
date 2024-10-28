@@ -591,6 +591,8 @@ class UserService {
 
   async handleGetBuildings(data) {
 
+ 
+
     const { userId, page, pageSize, type, propertyLocation, propertyPreference, furnishingStatus, bedrooms, amenities, budgetMin, budgetMax, propertyRating  } = await userUtil.verifyHandleGetBuildings.validateAsync(data);
 
     const offset = (page - 1) * pageSize;
@@ -677,16 +679,30 @@ class UserService {
         if (propertyRating) whereClause.propertyRating = propertyRating;
 
         if (amenities && amenities.length > 0) {
+        
           whereClause.amenity = {
-            [Op.contains]: amenities
+            [Op.and]: amenities.map(amenity => 
+              Sequelize.where(
+                Sequelize.fn('JSON_CONTAINS', 
+                  Sequelize.col('amenity'), 
+                  Sequelize.literal(`'"${amenity}"'`)
+                ),
+                true
+              )
+            )
           };
+
+
         }
-    
+          
         if (budgetMin || budgetMax) {
           whereClause.price = {};
           if (budgetMin) whereClause.price[Op.gte] = budgetMin;
           if (budgetMax) whereClause.price[Op.lte] = budgetMax;
         }
+                     
+
+        console.log(whereClause)
 
         const { count, rows } = await this.BuildingModel.findAndCountAll({
           where:{

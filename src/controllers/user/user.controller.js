@@ -342,7 +342,18 @@ export default class UserController {
   async getBuildings(req, res, next) {
 
     try {
-      const data = req.query;        
+      const data = req.query;     
+      
+      if (typeof data.amenities === 'string') {
+        try {
+          
+          const stringData = data.amenities;
+          data.amenities =JSON.parse(stringData.replace(/'/g, '"'))
+
+        } catch (error) {
+          throw new Error('Invalid array format for amenities');
+        }
+      } 
 
       let my_bj = {
         ...data,
