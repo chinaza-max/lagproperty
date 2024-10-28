@@ -23,6 +23,18 @@ export function init(connection) {
         ),
         allowNull: false,
       },
+      electricityBillArreas: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      electricityBillArreasType:{
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      waterBillArreas: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
       propertyLocation: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -37,7 +49,7 @@ export function init(connection) {
       },
       lat: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       lng: {
         type: DataTypes.STRING,
@@ -66,9 +78,19 @@ export function init(connection) {
           this.setDataValue('amenity', JSON.stringify(value));
         }
       },
-      roomPreference: {
+      roomPreference: {/* take out after test */
         type: DataTypes.TEXT,
         allowNull: false,
+      },
+      buildingPreference: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        /*defaultValue: {
+          maritalStatus: null,
+          religion: null,
+          region: null,
+          gender: null,
+        },*/
       },
       availability: {
         type: DataTypes.ENUM(

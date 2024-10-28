@@ -1094,11 +1094,14 @@ class UserService {
 
     try {
       const SettingModelResult = await this.SettingModel.findByPk(1);
-  
+      
+      console.log(SettingModelResult)
       return{
         buildingPreferences:JSON.parse(SettingModelResult.preferences).buildingPreferences
       }
     } catch (error) {
+
+      console.log(error)
       throw new SystemError(error.name, error.parent);
     }
   }
