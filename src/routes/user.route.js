@@ -263,7 +263,7 @@
  *                 example: ['600', '400']
  *               buildingOccupantPreference:
  *                 type: object
- *                 description: Preferences for building occupants
+ *                 description: Preferences for building occupants, represented as JSON stringify it.
  *                 properties:
  *                   maritalStatus:
  *                     type: string
@@ -281,6 +281,12 @@
  *                     type: string
  *                     description: Preferred gender of occupants
  *                     example: 'any'
+ *                 example: {
+ *                   maritalStatus: 'single',
+ *                   religion: 'any',
+ *                   region: 'any',
+ *                   gender: 'any'
+ *                 }
  *     responses:
  *       200:
  *         description: Building listed successfully
@@ -301,8 +307,7 @@
  *         description: Bad request, validation error
  *       500:
  *         description: Internal server error
- */
-
+*/
 
 
 /**
@@ -441,6 +446,7 @@
  *                 type: number
  *                 description: Page number for pagination
  */
+
 
 /**
  * @swagger
@@ -3086,6 +3092,32 @@
  *               buildingId:
  *                 type: integer
  *                 description: The unique ID of the building to update.
+ *               buildingOccupantPreference:
+ *                 type: object
+ *                 description: Preferences for building occupants, represented as JSON stringify it.
+ *                 properties:
+ *                   maritalStatus:
+ *                     type: string
+ *                     description: Preferred marital status of occupants
+ *                     example: 'single'
+ *                   religion:
+ *                     type: string
+ *                     description: Preferred religion of occupants
+ *                     example: 'any'
+ *                   region:
+ *                     type: string
+ *                     description: Preferred region of occupants
+ *                     example: 'any'
+ *                   gender:
+ *                     type: string
+ *                     description: Preferred gender of occupants
+ *                     example: 'any'
+ *                 example: {
+ *                   maritalStatus: 'single',
+ *                   religion: 'any',
+ *                   region: 'any',
+ *                   gender: 'any'
+ *                 }
  *           encoding:
  *             bedroomSizeImage:
  *               contentType: image/png, image/jpeg
