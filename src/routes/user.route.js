@@ -3095,7 +3095,7 @@
  *               buildingOccupantPreference:
  *                 type: object
  *                 description: Preferences for building occupants, represented as JSON stringify it.
- *                 properties:
+ *                 properties:   
  *                   maritalStatus:
  *                     type: string
  *                     description: Preferred marital status of occupants
