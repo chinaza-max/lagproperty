@@ -23,7 +23,8 @@ import mailService from "../service/mail.service.js";
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { addMonths,  format} from 'date-fns';
-import { fn, col, literal} from 'sequelize';   
+import { fn, col, literal } from 'sequelize';   
+
 import axios from'axios';
 
 import {
@@ -643,40 +644,14 @@ class UserService {
       let buildings = []
       let totalCount = 0
 
-      if (['flats', 'duplex', 'selfContains', 'roomAndParlour'].includes(type)) {
-        
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-            where:{
-              propertyPreference:type,
-              availability:'vacant',
-              isDeleted:false
-            },
-            offset,
-            limit
-        });
-
-       /* totalCount = await this.BuildingModel.count({
-          where:{
-            propertyPreference:type,
-            availability:'vacant',
-            isDeleted:false
-          },
-          offset,
-          limit
-        });*/
-
-
-        buildings=rows ?rows:[]
-        totalCount=count
-      }
-      else if(type=== 'all'){
+    
+      if(type=== 'all'){
 
 
         if (propertyLocation) whereClause.propertyLocation = propertyLocation;
         if (propertyPreference) whereClause.propertyPreference = propertyPreference;
         if (furnishingStatus) whereClause.furnishingStatus = furnishingStatus;
         if (bedrooms) whereClause.numberOfRooms = bedrooms;
-        if (propertyRating) whereClause.propertyRating = propertyRating;
 
         if (amenities && amenities.length > 0) {
         
@@ -702,20 +677,70 @@ class UserService {
         }
                      
 
-        console.log(whereClause)
 
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where:{
-            availability:'vacant',
-            ...whereClause,
-            isDeleted:false
-          },
-          offset,
-          limit
-        });
 
-        buildings=rows? rows:[]
-        totalCount=count
+        if(propertyRating){
+
+          try {
+            const { count, rows } = await this.BuildingModel.findAndCountAll({
+              attributes: {
+                include: [
+                  [
+                    fn('ROUND', fn('AVG', col('BuildingReview.rating'))), 
+                    'averageRating'
+                  ],
+                  [
+                    fn('COUNT', col('BuildingReview.id')),
+                    'reviewCount'
+                  ]
+                ]
+              },
+              include: [{
+                model:  this.TenantReviewModel,
+                as: 'BuildingReview',
+                attributes: [], 
+                required: false 
+              }],
+              where: {
+                availability: 'vacant',
+                isDeleted: false,
+                ...whereClause
+              },
+              group: ['Building.id'], 
+              having: where(fn('ROUND', fn('AVG', col('BuildingReview.rating'))), '=', propertyRating)
+              ,
+              offset,
+              limit,
+              subQuery: false // Important for proper pagination with aggregates
+            });
+        
+
+            buildings=rows? rows:[]
+            totalCount=count
+            
+          } catch (error) {
+            console.error('Error fetching buildings with average rating:', error);
+            throw error;
+          }
+
+        }else{  
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+            where:{
+              availability:'vacant',
+              ...whereClause,
+              isDeleted:false
+            },
+            offset,
+            limit
+          });
+  
+  
+  
+          buildings=rows? rows:[]
+          totalCount=count
+        }
+
+       
       }
       else if(type === 'topRated'){
 
@@ -727,7 +752,12 @@ class UserService {
           attributes: [
             ...buildingAttributes,
             // Calculate average rating, default to 0 if no reviews
-            [fn('COALESCE', fn('AVG', col('BuildingReview.rating')), 0), 'averageRating'],
+            [
+              
+              //fn('COALESCE', fn('AVG', col('BuildingReview.rating')), 0), 'averageRating'
+              fn('ROUND', fn('COALESCE',fn('AVG',col('BuildingReview.rating')), 0)),'averageRating'
+
+            ],
             // Count number of reviews
             [fn('COUNT', col('BuildingReview.id')), 'reviewCount']
           ],
@@ -953,6 +983,33 @@ class UserService {
         totalCount = count.length;
       
       }
+      else{
+        
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+              where:{
+                propertyPreference:type,
+                availability:'vacant',
+                isDeleted:false
+              },
+              offset,
+              limit
+          });
+  
+         /* totalCount = await this.BuildingModel.count({
+            where:{
+              propertyPreference:type,
+              availability:'vacant',
+              isDeleted:false
+            },
+            offset,
+            limit
+          });*/
+  
+  
+          buildings=rows ?rows:[]
+          totalCount=count
+        
+      }
 
   
 
@@ -1059,6 +1116,8 @@ class UserService {
           /*[Op.or]: [
             { status: 'rentDue' },
             { status: 'terminated' }
+
+
           ],*/
           status: 'rentDue',
           isDeleted: false,
@@ -1077,7 +1136,7 @@ class UserService {
           totalItems: count,
           currentPage: page,
           totalPages: Math.ceil(count / pageSize),
-          pageSize: pageSize,
+          pageSize: pageSize
         },
       }
 
@@ -1095,13 +1154,10 @@ class UserService {
     try {
       const SettingModelResult = await this.SettingModel.findByPk(1);
       
-      console.log(SettingModelResult.preferences)
-
       return SettingModelResult.preferences
       
-    } catch (error) {   
-
-      console.log(error)
+    } 
+    catch (error) {   
       throw new SystemError(error.name, error.parent);
     }
   }
@@ -1844,17 +1900,13 @@ class UserService {
   }
 
 
+/*
 
-
-  async   handleUpdatelistedBuilding(data, files) {
+  async   handleUpdatelistedBuilding(data) {
     let { 
       userId,
       role,
       image,
-      bedroomSizeImage,
-      kitchenSizeImage,
-      livingRoomSizeImage,
-      diningAreaSizeImage,
       propertyTerms,
       buildingId,
       ...updateData
@@ -1898,10 +1950,6 @@ class UserService {
         throw new Error('Building not found');
       }
   
-      // Check if the user has permission to update this building
-      if (building.propertyManagerId !== userId) {
-        throw new Error('User does not have permission to update this building');
-      }
   
       // Update the building with the new data
       await building.update(finalUpdateData);
@@ -1913,9 +1961,95 @@ class UserService {
       throw new SystemError(error.name, error.message);
     }
   }
+*/
+
+  
+
+
+  async handleUpdatelistedBuilding(data) {
+    const {
+      buildingId,
+      userId,
+      role,
+      propertyImages,
+      propertyTerms,
+      ...updateData
+    } = await userUtil.verifyHandleUpdatelistedBuilding.validateAsync(data);
+  
+    try {
+      // Check if building exists and belongs to the user
+      const building = await this.BuildingModel.findOne({
+        where: {
+          id: buildingId,
+          propertyManagerId: userId
+        },
+      });
+  
+      if (!building) {
+        throw new Error('Building not found or unauthorized');
+      }
+  
+      // Handle property images update
+      if (propertyImages) {
+        // Get current images and ensure it's an array
+        let currentImages = [];
+        try {
+          // Safely get current images
+
+          currentImages = building.propertyImages ? building.propertyImages: [];
+        } catch (error) {
+          console.error('Error parsing current images:', error);
+          currentImages = [];
+        }
+  
 
 
 
+        // Process each new image
+        const updatedImages = propertyImages.reduce((acc, newImage) => {
+          // Find if an image with this title already exists
+          const existingImageIndex = acc.findIndex(img => img.title === newImage.title);
+          
+          if (existingImageIndex !== -1) {
+            // Update existing image
+            acc[existingImageIndex] = {
+              ...acc[existingImageIndex],
+              ...newImage
+            };
+          } else {
+            // Add new image
+            acc.push(newImage);
+          }
+          
+          return acc;
+        }, [...currentImages]);
+
+
+        // Set the stringified array directly
+        updateData.propertyImages = updatedImages;
+      }
+  
+      // Handle property terms if provided
+      if (propertyTerms) {
+        updateData.propertyTerms = propertyTerms.url;
+      }
+  
+      // Update the building with merged data
+      await this.BuildingModel.update(updateData, {
+        where: {
+          id: buildingId,
+          propertyManagerId: userId
+        }
+      });
+  
+    } catch (error) {
+      console.error(error);
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+  
+
+/*
   async handleListBuilding(data,files) {
 
     let { 
@@ -1936,7 +2070,7 @@ class UserService {
       livingRoomSizeImage: "",
       diningAreaSizeImage: "",
       propertyTerms: ""
-    };
+    }
 
 
     try {
@@ -1993,7 +2127,34 @@ class UserService {
     }
 
   }
+*/
 
+
+
+
+async handleListBuilding(data) {
+  const {
+    userId,
+    role,
+    propertyImages,
+    propertyTerms,
+    ...updateData
+  } = await userUtil.verifyHandleListBuilding.validateAsync(data);
+
+  try {
+
+    await this.BuildingModel.create({
+      propertyManagerId: userId,
+      propertyImages,
+      propertyTerms:propertyTerms.url,
+      ...updateData
+    })
+
+  } catch (error) {
+    console.error(error);
+    throw new SystemError(error.name, error.parent);
+  }
+}
 
   
   async handleGetMyProperty(data) {

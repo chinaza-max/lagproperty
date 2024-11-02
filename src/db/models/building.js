@@ -14,26 +14,21 @@ export function init(connection) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      propertyPreference: {
-        type: DataTypes.ENUM(
-          'flats',
-          'duplex',
-          'selfContains',
-          'roomAndParlour',
-        ),
+      propertyPreference: {//property like self con
+        type: DataTypes.STRING,
         allowNull: false,
       },
       electricityBillArreas: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       electricityBillArreasType:{
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
       },
       waterBillArreas: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
       },
       propertyLocation: {
         type: DataTypes.STRING,
@@ -57,7 +52,7 @@ export function init(connection) {
       },
       propertyTitle: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       numberOfFloors: {
         type: DataTypes.INTEGER,
@@ -82,9 +77,9 @@ export function init(connection) {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      buildingPreference: {
+      buildingOccupantPreference: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
         /*defaultValue: {
           maritalStatus: null,
           religion: null,
@@ -119,13 +114,13 @@ export function init(connection) {
         type: DataTypes.INTEGER ,
         allowNull: false,
       },
-      electricityBill: {
+      electricityBill: {//remove later
         type: DataTypes.INTEGER ,
-        allowNull: false,
+        allowNull: true,
       },
-      wasteBill: {
+      wasteBill: { //remove later
         type: DataTypes.INTEGER ,
-        allowNull: false,
+        allowNull: true,
       },
       commissionBill: {
         type: DataTypes.INTEGER ,
@@ -140,57 +135,61 @@ export function init(connection) {
         allowNull: true,
         get() {
           const rawValue = this.getDataValue('propertyImages');
-          return rawValue ? JSON.parse(rawValue) : [];
+          try {
+            return rawValue ? JSON.parse(rawValue) : [];
+          } catch (error) {
+            return [];
+          }
         },
         set(value) {
-          this.setDataValue('propertyImages', JSON.stringify(value));
+          this.setDataValue('propertyImages', value ? JSON.stringify(value) : null);
         },
       },
-      bedroomSizeLength: {
+      bedroomSizeLength: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      bedroomSizeWidth: {
+      bedroomSizeWidth: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      bedroomSizeImage: {
+      bedroomSizeImage: {//remove later
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      kitchenSizeLength: {
+      kitchenSizeLength: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      kitchenSizeWidth: {
+      kitchenSizeWidth: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      kitchenSizeImage: {
+      kitchenSizeImage: {//remove later
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      livingRoomSizeLength: {
+      livingRoomSizeLength: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      livingRoomSizeWidth: {
+      livingRoomSizeWidth: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      livingRoomSizeImage: {
+      livingRoomSizeImage: {//remove later
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      diningAreaSizeLength: {
+      diningAreaSizeLength: {//remove later
         type: DataTypes.INTEGER ,
         allowNull: true,
       },
-      diningAreaSizeWidth: {
+      diningAreaSizeWidth: {//remove later
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      diningAreaSizeImage: {
+      diningAreaSizeImage: {//remove later
         type: DataTypes.TEXT,
         allowNull: true,
       },

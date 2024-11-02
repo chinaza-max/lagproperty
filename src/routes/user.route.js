@@ -131,7 +131,7 @@
  * /user/listBuilding:
  *   post:
  *     summary: List a building with multiple images
- *     description: Allows property managers to list a building by providing property details and uploading multiple images related to the building's different areas.
+ *     description: Allows property managers to list a building by providing property details and uploading multiple images related to the building's different areas, along with the property terms document.
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -141,6 +141,14 @@
  *           schema:
  *             type: object
  *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: User ID of the property manager
+ *                 example: 1
+ *               role:
+ *                 type: string
+ *                 description: Role of the user
+ *                 enum: ['list']
  *               propertyPreference:
  *                 type: string
  *                 description: Type of property
@@ -153,18 +161,6 @@
  *                 type: string
  *                 description: City where the property is located
  *                 example: 'New York'
- *               electricityBillArreas:
- *                 type: string
- *                 description: electricity Bill Arreas
- *                 example: '2000'
- *               electricityBillArreasType:
- *                 type: string
- *                 description: electricity Bill Arreas Type
- *                 example: 'prepaid'
- *               waterBillArreas:
- *                 type: string
- *                 description: waterBillArreas
- *                 example: '2000'
  *               address:
  *                 type: string
  *                 description: Full address of the property
@@ -198,27 +194,33 @@
  *               availability:
  *                 type: string
  *                 description: Availability status of the property
+ *                 enum: ['vacant', 'occupied']
  *                 example: 'vacant'
  *               furnishingStatus:
  *                 type: string
  *                 description: Furnishing status of the property
+ *                 enum: ['furnished', 'unfurnished', 'partly furnished']
  *                 example: 'furnished'
  *               rentalDuration:
- *                 type: string
- *                 description: Duration for which the property is available for rent
- *                 example: '12 months'
+ *                 type: integer
+ *                 description: Duration for which the property is available for rent (in months)
+ *                 example: 12
  *               price:
  *                 type: integer
  *                 description: Rental price of the property
  *                 example: 1500
- *               electricityBill:
- *                 type: integer
- *                 description: Monthly electricity bill for the property
- *                 example: 100
- *               wasteBill:
- *                 type: integer
- *                 description: Monthly waste bill for the property
- *                 example: 50
+ *               electricityBillArreas:
+ *                 type: string
+ *                 description: Electricity bill arrears
+ *                 example: '2000'
+ *               electricityBillArreasType:
+ *                 type: string
+ *                 description: Type of electricity bill arrears
+ *                 example: 'prepaid'
+ *               waterBillArreas:
+ *                 type: string
+ *                 description: Water bill arrears
+ *                 example: '2000'
  *               commissionBill:
  *                 type: integer
  *                 description: Commission bill for the property
@@ -227,58 +229,58 @@
  *                 type: string
  *                 description: Additional description of the property
  *                 example: 'Spacious and modern apartment with a great view'
- *               bedroomSizeLength:
- *                 type: integer
- *                 description: Length of the bedroom
- *                 example: 15
- *               bedroomSizeWidth:
- *                 type: integer
- *                 description: Width of the bedroom
- *                 example: 12
- *               bedroomSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Upload an image 
- *               kitchenSizeLength:
- *                 type: integer
- *                 description: Length of the kitchen
- *                 example: 10
- *               kitchenSizeWidth:
- *                 type: integer
- *                 description: Width of the kitchen
- *                 example: 8
- *               kitchenSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Upload an image 
- *               livingRoomSizeLength:
- *                 type: integer
- *                 description: Length of the living room
- *                 example: 20
- *               livingRoomSizeWidth:
- *                 type: integer
- *                 description: Width of the living room
- *                 example: 15
- *               livingRoomSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Upload an image 
- *               diningAreaSizeLength:
- *                 type: integer
- *                 description: Length of the dining area
- *                 example: 12
- *               diningAreaSizeWidth:
- *                 type: integer
- *                 description: Width of the dining area
- *                 example: 10
- *               diningAreaSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Upload an image 
  *               propertyTerms:
- *                 type: string
- *                 format: binary
- *                 description: PDF of the property terms document
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Files of the property terms document to be uploaded
+ *                 example: ['terms.pdf'] 
+ *               propertyImages:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Files of the property images to be uploaded
+ *                 example: ['file1.jpg', 'file2.png'] 
+ *               titles:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Titles of the images
+ *                 example: ['Living Room', 'Bedroom']
+ *               widths:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Widths of the images
+ *                 example: ['800', '600']
+ *               lengths:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Lengths of the images
+ *                 example: ['600', '400']
+ *               buildingOccupantPreference:
+ *                 type: object
+ *                 description: Preferences for building occupants
+ *                 properties:
+ *                   maritalStatus:
+ *                     type: string
+ *                     description: Preferred marital status of occupants
+ *                     example: 'single'
+ *                   religion:
+ *                     type: string
+ *                     description: Preferred religion of occupants
+ *                     example: 'any'
+ *                   region:
+ *                     type: string
+ *                     description: Preferred region of occupants
+ *                     example: 'any'
+ *                   gender:
+ *                     type: string
+ *                     description: Preferred gender of occupants
+ *                     example: 'any'
  *     responses:
  *       200:
  *         description: Building listed successfully
@@ -300,6 +302,7 @@
  *       500:
  *         description: Internal server error
  */
+
 
 
 /**
@@ -2988,9 +2991,14 @@
  *                 format: binary
  *                 description: Image of the dining area size.
  *               propertyTerms:
- *                 type: string
- *                 format: binary
- *                 description: Document of property terms.
+ *                 type: object
+ *                 properties:
+ *                   url:
+ *                     type: string
+ *                     description: URL of the document of property terms.
+ *                   size:
+ *                     type: number
+ *                     description: Size of the property terms document in bytes (max 3MB).
  *               amenity:
  *                 type: string
  *                 description: JSON string of an array of amenities for the building.
@@ -3087,8 +3095,6 @@
  *               contentType: image/png, image/jpeg
  *             diningAreaSizeImage:
  *               contentType: image/png, image/jpeg
- *             propertyTerms:
- *               contentType: application/pdf
  *     responses:
  *       200:
  *         description: Building details updated successfully.
@@ -3328,21 +3334,40 @@ class UserRoutes extends UserController {
   routes() {
 
     this.router.post("/updateProfile",uploadHandler.image.single('image'), this.updateProfile);
-    this.router.post("/listBuilding",uploadHandler.image.fields([
+   /* this.router.post("/listBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 
       { name: 'kitchenSizeImage', maxCount: 1 },  
       { name: 'livingRoomSizeImage', maxCount: 1 }, 
       { name: 'diningAreaSizeImage', maxCount: 1 },
       { name: 'propertyTerms', maxCount: 1 },
     ]), this.listBuilding);
+    */
 
+    this.router.post(
+      "/listBuilding",
+      uploadHandler.image.fields([
+        { name: 'propertyTerms', maxCount: 1 }, // License uploaded independently
+        { name: 'propertyImages', maxCount: 20 }, // Allow multiple property images
+      ]),
+      this.listBuilding
+    )
+/*
     this.router.post("/updatelistedBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 
       { name: 'kitchenSizeImage', maxCount: 1 },  
       { name: 'livingRoomSizeImage', maxCount: 1 }, 
       { name: 'diningAreaSizeImage', maxCount: 1 },
       { name: 'propertyTerms', maxCount: 1 },
-    ]), this.updatelistedBuilding);
+    ]), this.updatelistedBuilding);*/
+
+    this.router.post(
+      "/updatelistedBuilding",
+      uploadHandler.image.fields([
+        { name: 'propertyTerms', maxCount: 1 },
+        { name: 'propertyImages', maxCount: 20 },
+      ]),
+      this.updatelistedBuilding
+    )
 
 
     this.router.post("/inspectionAction", this.inspectionAction);

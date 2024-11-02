@@ -67,9 +67,7 @@ class UserUtil {
     nin: Joi.string().required(),
     bankCode: Joi.string().required(),
     bankAccount: Joi.string().required(),
-    propertyPreference: Joi.array().items(
-      Joi.string().valid('all', 'flats', 'duplex', 'selfContains', 'roomAndParlour')
-    ).required(),
+    propertyPreference: Joi.array().items(Joi.string()).required(),
     propertyLocation: Joi.string().required()
   });
 
@@ -343,17 +341,7 @@ class UserUtil {
   verifyHandleGetBuildings= Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list', 'rent').required(),
-    type: Joi.string().valid(
-      'popular', 
-      'recommended', 
-      'bestOffer', 
-      'topRated', 
-      'flats', 
-      'duplex', 
-      'selfContains', 
-      'roomAndParlour', 
-      'all'
-    ).required(),
+    type: Joi.string().required(),
     propertyLocation: Joi.string().when('type', { is: 'all', then: Joi.optional() }),
     propertyPreference: Joi.string().when('type', { is: 'all', then: Joi.optional() }),
     furnishingStatus: Joi.string().valid('furnished', 'unfurnished', 'partly furnished', 'unset').when('type', { is: 'all', then: Joi.optional() }),
@@ -496,7 +484,7 @@ class UserUtil {
     }),
   });
   
-
+/*
   verifyHandleUpdatelistedBuilding= Joi.object({
     role: Joi.string().valid('list').required(),
     buildingId: Joi.number().required(),
@@ -504,7 +492,7 @@ class UserUtil {
     propertyPreference: Joi.string()
         .valid('flats', 'duplex', 'selfContains', 'roomAndParlour')
         .optional(),
-    propertyLocation: Joi.string(),
+    propertyLocation: Joi.string(), 
     propertyTitle: Joi.string(),
     city: Joi.string(),
     address: Joi.string(),
@@ -548,7 +536,71 @@ class UserUtil {
       size: Joi.number().positive().less(3000000).optional(),
     }),
   });
+*/
 
+
+ verifyHandleUpdatelistedBuilding = Joi.object({
+  buildingId: Joi.alternatives().try(Joi.number(), Joi.string()).required(),
+  userId: Joi.number().required(),
+  role: Joi.string().valid('list').required(),
+  propertyPreference: Joi.string().optional(),
+  propertyLocation: Joi.string().optional(),
+  city: Joi.string().optional(),
+  address: Joi.string().optional(),
+  lat: Joi.string().optional(),
+  lng: Joi.string().optional(),
+  numberOfFloors: Joi.number().integer().optional(),
+  numberOfRooms: Joi.number().integer().optional(),
+  amenity: Joi.array().items(Joi.string()).optional(),
+  roomPreference: Joi.string().optional(),
+  availability: Joi.string().valid('vacant', 'occupied').optional(),
+  furnishingStatus: Joi.string()
+    .valid('furnished', 'unfurnished', 'partly furnished')
+    .optional(),
+  rentalDuration: Joi.number().integer().optional(),
+  price: Joi.number().integer().optional(),
+  electricityBillArreas: Joi.string().optional(),
+  electricityBillArreasType: Joi.string().optional(),
+  waterBillArreas: Joi.string().optional(),
+  commissionBill: Joi.number().integer().optional(),
+  propertyDescription: Joi.string().optional(),
+  propertyTerms: Joi.object({
+    url: Joi.string().required(),
+    size: Joi.number().positive().less(3000000).required(),
+  }).optional(),
+  propertyImages: Joi.array()
+    .items(
+      Joi.object({
+        url: Joi.string().required(),
+        title: Joi.string().required(),
+        width: Joi.number().integer().required(),
+        length: Joi.number().integer().required(),
+        size: Joi.number().max(5000000).required(),
+      })
+    )
+    .optional(),
+  titles: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string())
+  ).optional(),
+  widths: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string().regex(/^\d+$/))
+  ).optional(),
+  lengths: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string().regex(/^\d+$/))
+  ).optional(),
+  buildingOccupantPreference: Joi.object({
+    maritalStatus: Joi.required(),
+    religion: Joi.required(),
+    region: Joi.required(),
+    gender: Joi.required(),
+  }).optional(),   
+}).unknown(true)
+
+
+  /*
   verifyHandleListBuilding= Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid('list').required(),
@@ -599,7 +651,68 @@ class UserUtil {
       size: Joi.number().positive().less(3000000).required(),
     }),
   });
+  */
 
+
+  verifyHandleListBuilding= Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid('list').required(),
+    propertyPreference: Joi.string().required(),
+    propertyLocation: Joi.string().required(),
+   // propertyTitle: Joi.string().required(),
+    city: Joi.string().required(),
+    address: Joi.string().required(),
+    lat: Joi.string().required(),
+    lng: Joi.string().required(),
+    numberOfFloors: Joi.number().integer().required(),
+    numberOfRooms: Joi.number().integer().required(),
+    amenity: Joi.array().items(Joi.string()).required(),
+    roomPreference:Joi.string().required(),
+    availability: Joi.string()
+        .valid('vacant', 'occupied').required(),
+    furnishingStatus: Joi.string()
+        .valid('furnished', 'unfurnished', 'partly furnished')
+        .required(),
+    rentalDuration: Joi.number().integer().required(),
+    price: Joi.number().integer().required(),
+    electricityBillArreas: Joi.string().optional(),
+    electricityBillArreasType: Joi.string().optional(),
+    waterBillArreas: Joi.string().optional(),
+    commissionBill: Joi.number().integer().required(),
+    propertyDescription: Joi.string().optional().required(),
+    propertyTerms: Joi.object({
+      url: Joi.string().required(),
+      size: Joi.number().positive().less(3000000).required(),
+    }),
+    propertyImages: Joi.array()
+    .items(
+      Joi.object({
+        url: Joi.string().required(),
+        title: Joi.string().required(),
+        width: Joi.number().integer().required(),
+        length: Joi.number().integer().required(),
+        size: Joi.number().max(5000000).required(), // Ensure file size is under 5MB
+      }))
+    .required(),
+  titles: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string())
+  ).required(),
+  widths: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string().regex(/^\d+$/))
+  ).required(),
+  lengths: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string().regex(/^\d+$/))
+  ).required(),
+  buildingOccupantPreference: Joi.object({
+    maritalStatus: Joi.required(),
+    religion: Joi.required(),
+    region: Joi.required(),
+    gender: Joi.required(),
+  }).required(),
+  });
 }
 
 export default new UserUtil();

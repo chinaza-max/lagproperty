@@ -38,7 +38,7 @@ export default class UserController {
     
   }
 
-
+/*
   
   async updatelistedBuilding(req, res, next) {
 
@@ -86,7 +86,81 @@ export default class UserController {
     }
     
   }
+*/
 
+  async updatelistedBuilding(req, res, next) {
+    try {
+      const data = req.body;
+      const { files } = req;
+  
+
+
+      data.buildingOccupantPreference= data.buildingOccupantPreference?  JSON.parse(data.buildingOccupantPreference): null
+
+      // Handle amenities update if provided
+      let amenities;
+      if (data.amenity) {
+        amenities = typeof data.amenity === 'string' ? JSON.parse(data.amenity) : data.amenity;
+      }
+       
+
+
+    // Ensure `titles`, `widths`, and `lengths` are arrays
+    const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
+    const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
+    const lengths = Array.isArray(data.lengths) ? data.lengths : [data.lengths];
+
+      // Handle property images update if provided
+      let propertyImages;
+      if (files.propertyImages) {
+        propertyImages = files.propertyImages.map((file, index) => ({
+          url: process.env.NODE_ENV === "production"
+            ? process.env.DOMAIN + file.path.replace("/home", "")
+            : process.env.DOMAIN + file.path.replace("public", ""),
+          title: titles[`${index}`] || 'Default Title',
+          width: parseFloat(widths[`${index}`]) || 0,
+          length: parseFloat(lengths[`${index}`]) || 0,
+          size: file.size
+        }));
+      }
+  
+      // Handle property terms update if provided
+      let propertyTerms;
+      if (files.propertyTerms) {
+        propertyTerms = {
+          url: process.env.NODE_ENV === "production"
+            ? process.env.DOMAIN + files.propertyTerms[0].path.replace("/home", "")
+            : process.env.DOMAIN + files.propertyTerms[0].path.replace("public", ""),
+          size: files.propertyTerms[0].size,
+        };
+      }
+  
+      const buildingData = {
+        ...data,
+        role: req.user.role,
+        userId: req.user.id,
+        ...(propertyImages && { propertyImages }),
+        ...(propertyTerms && { propertyTerms }),
+        ...(amenities && { amenity: amenities })
+      }
+
+      await userService.handleUpdatelistedBuilding(buildingData);
+      
+      return res.status(200).json({
+        status: 200,
+        message: "Building updated successfully",
+      });
+
+    } catch (error) {
+      console.error(error);
+      next(error);
+    }
+  }
+  
+
+
+
+  /*
   async listBuilding(req, res, next) {
 
     try {
@@ -133,7 +207,65 @@ export default class UserController {
     }
     
   }
+*/
 
+async listBuilding(req, res, next) {
+  try {
+    const data = req.body;
+    const { files } = req;
+
+    data.buildingOccupantPreference=JSON.parse(data.buildingOccupantPreference)
+   
+    // Parse amenities if provided as a JSON string
+    let amenities = typeof data.amenity === 'string' ? JSON.parse(data.amenity) : data.amenity;
+  
+
+    const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
+    const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
+    const lengths = Array.isArray(data.lengths) ? data.lengths : [data.lengths];
+
+
+    // Prepare propertyImages array with associated data
+    const propertyImages = (files.propertyImages || []).map((file, index) => ({
+      url: process.env.NODE_ENV === "production"
+        ? process.env.DOMAIN + file.path.replace("/home", "")
+        : process.env.DOMAIN + file.path.replace("public", ""),
+      title: titles[`${index}`] || 'Default Title',
+      width: parseFloat(widths[`${index}`]) || 0,
+      length: parseFloat(lengths[`${index}`]) || 0,
+      size: file.size
+    })); 
+
+    // Collect propertyTerms information with environment-based path replacement
+    const propertyTerms = files.propertyTerms
+      ? {
+          url: process.env.NODE_ENV === "production"
+            ? process.env.DOMAIN + files.propertyTerms[0].path.replace("/home", "")
+            : process.env.DOMAIN + files.propertyTerms[0].path.replace("public", ""),
+          size: files.propertyTerms[0].size, // Add file size for validation
+        }
+      : undefined;
+
+    const buildingData = {   
+      ...data,
+      role: req.user.role,
+      propertyImages,
+      propertyTerms,    
+      amenity: amenities,
+      userId: req.user.id,
+    };
+
+    await userService.handleListBuilding(buildingData);
+
+    return res.status(200).json({
+      status: 200,
+      message: "Building listed successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
 
 
   
