@@ -99,8 +99,17 @@ export default class UserController {
 
       // Handle amenities update if provided
       let amenities;
-      if (data.amenity) {
-        amenities = typeof data.amenity === 'string' ? JSON.parse(data.amenity) : data.amenity;
+      if (typeof data?.amenity === 'string') {
+        try {
+          // Try to parse the stringified array
+          amenities = JSON.parse(data.amenity);
+        } catch (error) {
+          // If parsing fails, keep it as is (string or invalid JSON)
+          amenities = data.amenity;
+        }
+      } else {
+        // If it's already an array, keep it as is
+        amenities = data.amenity;
       }
        
 
