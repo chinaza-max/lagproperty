@@ -217,8 +217,21 @@ async listBuilding(req, res, next) {
     data.buildingOccupantPreference=JSON.parse(data.buildingOccupantPreference)
    
     // Parse amenities if provided as a JSON string
-    let amenities = typeof data.amenity === 'string' ? JSON.parse(data.amenity) : data.amenity;
-  
+    let amenities;
+    if (typeof data.amenity === 'string') {
+      try {
+        // Try to parse the stringified array
+        amenities = JSON.parse(data.amenity);
+      } catch (error) {
+        // If parsing fails, keep it as is (string or invalid JSON)
+        amenities = data.amenity;
+      }
+    } else {
+      // If it's already an array, keep it as is
+      amenities = data.amenity;
+    }
+    console.log(data);
+
 
     const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
     const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
