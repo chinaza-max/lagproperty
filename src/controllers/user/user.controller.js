@@ -246,6 +246,10 @@ async listBuilding(req, res, next) {
     const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
     const lengths = Array.isArray(data.lengths) ? data.lengths : [data.lengths];
 
+    console.log("files");
+    console.log(files);
+    console.log("files");
+
 
     // Prepare propertyImages array with associated data
     const propertyImages = (files.propertyImages || []).map((file, index) => ({
