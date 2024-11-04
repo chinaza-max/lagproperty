@@ -239,7 +239,7 @@ async listBuilding(req, res, next) {
       // If it's already an array, keep it as is
       amenities = data.amenity;
     }
-    console.log(data);
+   
 
 
     const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
@@ -276,7 +276,8 @@ async listBuilding(req, res, next) {
       amenity: amenities,
       userId: req.user.id,
     };
-
+    console.log(buildingData);
+    
     await userService.handleListBuilding(buildingData);
 
     return res.status(200).json({
