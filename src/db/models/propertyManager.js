@@ -55,7 +55,7 @@ import { Model, DataTypes } from "sequelize";
         },
         isNINValid: {
           type: DataTypes.BOOLEAN,
-          allowNull: roundToNearestHours
+          allowNull: true
         },
         country: {
           type: DataTypes.STRING,
