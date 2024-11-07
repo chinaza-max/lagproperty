@@ -1,4 +1,5 @@
-  import { Model, DataTypes } from "sequelize";
+  import { roundToNearestHours } from "date-fns/roundToNearestHours";
+import { Model, DataTypes } from "sequelize";
 
 
   class PropertyManager extends Model {}
@@ -54,7 +55,7 @@
         },
         isNINValid: {
           type: DataTypes.BOOLEAN,
-          allowNull: false
+          allowNull: roundToNearestHours
         },
         country: {
           type: DataTypes.STRING,

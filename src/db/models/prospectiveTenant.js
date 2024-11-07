@@ -97,7 +97,7 @@ export function init(connection) {
       }, 
       isNINValid: {
         type: DataTypes.BOOLEAN,
-        allowNull: false
+        allowNull: true
       },
       lasrraId: {
         type: DataTypes.STRING,
