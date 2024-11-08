@@ -36,7 +36,11 @@ class UserUtil {
     landlordBankCode: Joi.string().required().label('Landlord Bank Code'),
     landlordBankAccount:Joi.string().required().label('Landlord Bank Account'),
     companyName: Joi.string().required().label('Company Name'),
-    agentRegistrationNO: Joi.string().required().label('Agent Registration Number'),
+    agentRegistrationNO: Joi.string().when('type', {
+      is: 'agent',
+      then:Joi.required().label('Agent Registration Number'),
+      otherwise: Joi.forbidden(), 
+    }),
   });
 
 
