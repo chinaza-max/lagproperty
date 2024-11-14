@@ -478,6 +478,162 @@
 
 
 
+/**
+ * @swagger
+ * /auth/getRegion:
+ *   get:
+ *     summary: Retrieve region preferences
+ *     description: Fetches region preferences from the settings model.
+ *     tags:
+ *       - Region
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved region preferences.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successful"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: "North America"
+ *       404:
+ *         description: Settings not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Settings not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to retrieve region preferences"
+ */
+
+
+/**
+ * @swagger
+ * /auth/getMaritalStatus:
+ *   get:
+ *     summary: Retrieve marital status options.
+ *     description: Fetches the marital status options stored in the system settings.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved marital status options.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Single", "Married", "Divorced", "Widowed"]
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal Server Error"
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "NotFoundError"
+ *                     message:
+ *                       type: string
+ *                       example: "Settings not found"
+ */
+
+
+
+
+
+
+/**
+ * @swagger
+ * /auth/getReligion:
+ *   get:
+ *     summary: Get the list of religions
+ *     description: Fetches a list of religions from the system settings. If no religions are found, an error is thrown.
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the list of religions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successful"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: "Christianity"
+ *       500:
+ *         description: Internal Server Error, settings not found or database issue
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Settings not found"
+ *                 error:
+ *                   type: string
+ *                   example: "SystemError"
+ */
+
+
+
+
 import { Router } from"express";
 import AuthController from "../controllers/auth/auth.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -498,6 +654,9 @@ class AuthRoutes extends AuthController {
     this.router.post("/sendPasswordResetLink", this.sendPasswordResetLink);
     this.router.post("/resetPassword", this.resetPassword);
     this.router.post("/validateBankAccount", this.validateBankAccount);
+    this.router.get("/getRegion", this.getRegion);
+    this.router.get("/getMaritalStatus", this.getMaritalStatus);
+    this.router.get("/getReligion", this.getReligion);
 
     this.router.get("/pingme", this.pingme); 
     this.router.post("/intializePayment", this.intializePayment);

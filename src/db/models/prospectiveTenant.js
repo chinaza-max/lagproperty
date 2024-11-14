@@ -152,6 +152,11 @@ export function init(connection) {
         allowNull: false,
         defaultValue:false
       },
+      isProfileCompleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue:false
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

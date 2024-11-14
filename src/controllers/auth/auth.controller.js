@@ -459,6 +459,74 @@ export default class AuthenticationController {
 
 
 
+  async getRegion(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      const result=await authService.getRegion();
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufull",
+        data:result
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
+  async getMaritalStatus(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      const result=await authService.getMaritalStatus();
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufull",
+        data:result
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
+  
+  async getReligion(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      const result=await authService.getReligion();
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufull",
+        data:result
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
+
   async resetPassword(
     req,
     res,

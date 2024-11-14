@@ -807,6 +807,73 @@ class AuthenticationService {
   }
 
 
+  async getRegion() {
+
+
+    try {
+
+      const setting = await this.SettingModel.findOne({ where: { id: 1 } });
+
+      if (!setting) {
+        throw new SystemError('NotFoundError', 'Settings not found');
+      }
+
+      const buildingPreferences = JSON.parse(setting.preferences)?.region || [];
+
+      return buildingPreferences
+         
+    } catch (error) {
+      throw new SystemError("Failed to update password");
+    }
+  }
+
+
+
+  async getMaritalStatus() {
+
+    try {
+
+      const setting = await this.SettingModel.findOne({ where: { id: 1 } });
+
+      if (!setting) {
+        throw new SystemError('NotFoundError', 'Settings not found');
+      }
+
+      const maritalStatus = JSON.parse(setting.maritalStatus) || [];
+
+      return maritalStatus 
+         
+    } catch (error) {
+      //throw new SystemError(error.parent.);
+      throw new SystemError(error.name, error.parent)
+
+    }
+  }
+
+
+  async getReligion() {
+
+    try {
+
+      const setting = await this.SettingModel.findOne({ where: { id: 1 } });
+
+      if (!setting) {
+        throw new SystemError('NotFoundError', 'Settings not found');
+      }
+
+      const religion = JSON.parse(setting.religion) || [];
+
+      return religion 
+         
+    } catch (error) {
+      //throw new SystemError(error.parent.);
+      throw new SystemError(error.name, error.parent)
+
+    }
+  }
+
+
+
   async handleResetPassword(data) {
 
     var {  password, resetPasswordKey } =

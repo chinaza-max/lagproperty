@@ -119,6 +119,11 @@ import { Model, DataTypes } from "sequelize";
           allowNull: false,
           defaultValue:false
         },
+        isProfileCompleted: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue:false
+        },
         notificationAllowed: {
           type: DataTypes.BOOLEAN,
           allowNull: false,

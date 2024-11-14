@@ -61,7 +61,7 @@ class Server {
         await DB.connectDB()
 
 
-        await Setting.findOrCreate({
+       const [setting, created] = await Setting.findOrCreate({
           where: { id: 1 },
           defaults: {
             commissionPercentage: 0.01,
@@ -73,12 +73,34 @@ class Server {
             pendingDisburseRentRetry: 1800,
             appShare: 1800,
             preferences: {
-              buildingPreferences: ["flat", "a room", "duplex", "self-contain"]
+              buildingPreferences: ["flat", "a room", "duplex", "self-contain"],
             },
             notificationAllowed: true,
             isDeleted: false
           }
         });   
+
+
+        if (!created) {
+          await setting.update({
+            preferences: {
+              buildingPreferences: ["flat", "a room", "duplex", "self-contain"],
+              region: ["North Central", "North East", "North West", "South East", "South South", "South West", "All"]
+            },
+            maritalStatus: ["Married", "Single", "All"],
+            religion: [
+              "Islam",
+              "Christianity",
+              "Traditional African Religions",
+              "Baha'i Faith",
+              "Judaism",
+              "Hinduism",
+              "Other Minor Religions",
+              "All"
+            ],
+          });
+        }
+        
 
       //cron.schedule('0 */2 * * *', async () => {
        /* checktransactionUpdateWebHook

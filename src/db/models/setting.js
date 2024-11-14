@@ -48,6 +48,16 @@ export function init(connection) {
         allowNull: true,
         defaultValue: {} 
       },
+      maritalStatus: {
+        type: DataTypes.JSON, 
+        allowNull: true,
+        defaultValue: {} 
+      },
+      religion: {
+        type: DataTypes.JSON, 
+        allowNull: true,
+        defaultValue: {} 
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

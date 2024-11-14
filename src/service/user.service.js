@@ -37,6 +37,16 @@ import {
 import { type } from "os";
 import { response } from "express";
 
+const regions = {
+  "North Central": ["Benue", "Kogi", "Kwara", "Nasarawa", "Niger", "Plateau", "Federal Capital Territory"],
+  "North East": ["Adamawa", "Bauchi", "Borno", "Gombe", "Taraba", "Yobe"],
+  "North West": ["Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Sokoto", "Zamfara"],
+  "South East": ["Abia", "Anambra", "Ebonyi", "Enugu", "Imo"],
+  "South South": ["Akwa Ibom", "Bayelsa", "Cross River", "Delta", "Edo", "Rivers"],
+  "South West": ["Ekiti", "Lagos", "Ogun", "Ondo", "Osun", "Oyo"]
+};
+
+
 class UserService {
 
   EmailandTelValidationModel=EmailandTelValidation
@@ -86,16 +96,14 @@ class UserService {
     
         }
 
-
-  
           if(file){
 
-    
-            await this.PropertyManagerModel.update({image:imageUrl  ,...updateData}, { where: { id: userId } });
+            updateData.isProfileCompleted=true
 
-  
+            await this.PropertyManagerModel.update({image:imageUrl  ,...updateData}, { where: { id: userId } });
           }else{
 
+            updateData.isProfileCompleted=true
             await this.PropertyManagerModel.update(updateData, { where: { id: userId } });
 
           }
@@ -118,9 +126,13 @@ class UserService {
 
       try {
         if(lasrraId){
+
+          updateData.isProfileCompleted=true
           await this.ProspectiveTenantModel.update({lasrraId,...updateData}, { where: { id: userId } });
   
         }else{
+
+          updateData.isProfileCompleted=true
           await this.ProspectiveTenantModel.update({lasrraId:uuidv4(),...updateData}, { where: { id: userId } })
         }
       } catch (error) {
@@ -592,8 +604,6 @@ class UserService {
 
   async handleGetBuildings(data) {
 
- 
-
     const { userId, page, pageSize, type, propertyLocation, propertyPreference, furnishingStatus, bedrooms, amenities, budgetMin, budgetMax, propertyRating  } = await userUtil.verifyHandleGetBuildings.validateAsync(data);
 
     const offset = (page - 1) * pageSize;
@@ -644,6 +654,8 @@ class UserService {
       let buildings = []
       let totalCount = 0
 
+      const user = await this.ProspectiveTenantModel.findByPk(userId);
+
     
       if(type=== 'all'){
 
@@ -667,7 +679,6 @@ class UserService {
             )
           };
 
-
         }
           
         if (budgetMin || budgetMax) {
@@ -676,8 +687,6 @@ class UserService {
           if (budgetMax) whereClause.price[Op.lte] = budgetMax;
         }
                      
-
-
 
         if(propertyRating){
 
@@ -709,8 +718,8 @@ class UserService {
               group: ['Building.id'], 
               having: where(fn('ROUND', fn('AVG', col('BuildingReview.rating'))), '=', propertyRating)
               ,
-              offset,
-              limit,
+              //offset,
+              //limit,
               subQuery: false // Important for proper pagination with aggregates
             });
         
@@ -730,11 +739,9 @@ class UserService {
               ...whereClause,
               isDeleted:false
             },
-            offset,
-            limit
+            //offset,
+            //limit
           });
-  
-  
   
           buildings=rows? rows:[]
           totalCount=count
@@ -771,8 +778,8 @@ class UserService {
           ],
           group: ['Building.id'],
           order: [[literal('averageRating'), 'DESC']],
-          offset,
-          limit,
+        //  offset,
+        //  limit,
           subQuery: false
         });
 
@@ -782,15 +789,6 @@ class UserService {
           reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
         })):[]
 
-        /*
-        totalCount = await this.BuildingModel.count({
-          where:{
-            availability:'vacant',
-            isDeleted:false
-          },
-          offset,
-          limit
-        });*/
         totalCount=count.length
       }
 
@@ -824,14 +822,11 @@ class UserService {
         /*  group: ['Building.id', 'Building.propertyPreference'],*/
           group: ['Building.id'],
           order: [[literal('tenantCount'), 'DESC']],
-          offset,
-          limit,
+         // offset,
+         // limit,
           distinct: true,
           subQuery: false
         });
-
-
-        console.log(rows)
       
         buildings = rows? rows.map(building => ({
           ...building.toJSON(),
@@ -840,10 +835,7 @@ class UserService {
           tenantCount: parseInt(building.get('tenantCount'), 10) || 0
         })):[];
       
-
-        //totalCount = count.length;
         totalCount = count.length;
-
 
       }
 
@@ -888,8 +880,8 @@ class UserService {
          /* group: ['Building.id'],*/
           group: ['Building.id'],
           order: [[literal('averageRating'), 'DESC']],
-          offset,
-          limit,
+         // offset,
+         // limit,
           subQuery: false
         });
 
@@ -899,23 +891,7 @@ class UserService {
           reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
         })):[];
 
-        /*
-        totalCount = await this.BuildingModel.count({
-          where:{
-            availability:'vacant',
-            propertyPreference: {
-              [Op.in]: propertyPreference,
-            },
-            rentalDuration: rentalDuration,
-            isDeleted:false
-          },
-          offset,
-          limit
-        });
-        */
-
         totalCount = count.length;
-
 
       }
 
@@ -955,8 +931,8 @@ class UserService {
          /* group: ['Building.id'],*/
           group: ['Building.id'],
           order: [['price', 'ASC']],
-          offset,
-          limit,
+         // offset,
+         // limit,
           subQuery: false
         });
 
@@ -965,20 +941,6 @@ class UserService {
           averageRating: parseFloat(building.getDataValue('averageRating')) || 0,
           reviewCount: parseInt(building.getDataValue('reviewCount'), 10) || 0
         })):[];
-
-        /*totalCount = await this.BuildingModel.count({
-          where:{
-            availability:'vacant',
-            propertyPreference: {
-              [Op.in]: propertyPreference,
-            },
-            rentalDuration: rentalDuration,
-            isDeleted:false
-          },
-          offset,
-          limit
-        });
-        */
 
         totalCount = count.length;
       
@@ -991,29 +953,21 @@ class UserService {
                 availability:'vacant',
                 isDeleted:false
               },
-              offset,
-              limit
+             // offset,
+             // limit
           });
-  
-         /* totalCount = await this.BuildingModel.count({
-            where:{
-              propertyPreference:type,
-              availability:'vacant',
-              isDeleted:false
-            },
-            offset,
-            limit
-          });*/
-  
   
           buildings=rows ?rows:[]
           totalCount=count
         
       }
 
-  
+      const filteredBuildings = this.filterBuildingsByUserPreferences(buildings, user);
+      totalCount=filteredBuildings.length;
+      const totalPages = Math.ceil(totalCount / pageSize);
 
-    const totalPages = Math.ceil(totalCount / pageSize);
+      //const totalPages = Math.ceil(totalCount / pageSize);
+      const paginatedBuildings = filteredBuildings.slice((page - 1) * pageSize, page * pageSize);
 
     return {
       pagination: {
@@ -1022,7 +976,7 @@ class UserService {
       currentPage: page,
       pageSize, 
       }, 
-      buildings: buildings,
+      buildings: paginatedBuildings,
     };
 
     } catch (error) {
@@ -3904,6 +3858,49 @@ async handleListBuilding(data) {
     }
 
     return password;
+  }
+
+  isStateInRegions(state, regionArray) {
+
+    if (regionArray.includes("All")) {
+      return true;
+    }
+
+    for (let region of regionArray) {
+      if (regions[region] && regions[region].includes(state)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  filterBuildingsByUserPreferences(buildings, user) {
+    
+    return buildings.filter(building => {
+        const preferences = building.buildingOccupantPreference || {};
+
+        // Check marital status
+        if (preferences.maritalStatus && preferences.maritalStatus !== 'All' && preferences.maritalStatus !== user.maritalStatus) {
+            return false;
+        }
+
+        // Check religion
+        if (preferences.religion && preferences.religion !== 'All' && preferences.religion !== user.religion) {
+            return false;
+        }
+
+        // Check gender
+        if (preferences.gender && preferences.gender !== 'All' && preferences.gender !== user.gender) {
+            return false;
+        }
+
+        // Check region using the provided `isStateInRegions` function
+        if (preferences.region && preferences.region !== 'All' && !isStateInRegions(user.stateOfOrigin, preferences.region)) {
+            return false;
+        }
+
+        return true;
+    });
   }
 
 
