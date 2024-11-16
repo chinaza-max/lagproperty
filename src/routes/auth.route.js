@@ -633,6 +633,61 @@
 
 
 
+/**
+ * @swagger
+ * /auth/getGender:
+ *   get:
+ *     summary: Retrieve the list of available genders.
+ *     tags:
+ *       - General API
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of genders.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "successful"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Male", "Female", "Other"]
+ *       404:
+ *         description: Settings not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Settings not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+
+
 
 import { Router } from"express";
 import AuthController from "../controllers/auth/auth.controller.js";
@@ -657,6 +712,7 @@ class AuthRoutes extends AuthController {
     this.router.get("/getRegion", this.getRegion);
     this.router.get("/getMaritalStatus", this.getMaritalStatus);
     this.router.get("/getReligion", this.getReligion);
+    this.router.get("/getGender", this.getGender);
 
     this.router.get("/pingme", this.pingme); 
     this.router.post("/intializePayment", this.intializePayment);

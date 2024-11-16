@@ -189,14 +189,6 @@ export default class AuthenticationController {
       }
       
       const user=await authService.handleLoginUser(my_bj);
-    
-      console.log(" user  user  user")
-      console.log(" user  user  user")
-
-      console.log(user)
-
-      console.log(" user  user  user")
-      console.log(" user  user  user")
 
       if (!user){
         return res.status(400).json({
@@ -512,6 +504,27 @@ export default class AuthenticationController {
     try {
 
       const result=await authService.getReligion();
+
+      return res.status(200).json({
+        status: 200,
+        message: "successufull",
+        data:result
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+  async getGender(
+    req,
+    res,
+    next
+  ) {
+    try {
+
+      const result=await authService.getGender();
 
       return res.status(200).json({
         status: 200,

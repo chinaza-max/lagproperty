@@ -223,6 +223,10 @@ async listBuilding(req, res, next) {
     const data = req.body;
     const { files } = req;
 
+
+
+   // console.log(data.buildingOccupantPreference)  
+      
     data.buildingOccupantPreference=JSON.parse(data.buildingOccupantPreference)
    
     // Parse amenities if provided as a JSON string
@@ -245,11 +249,6 @@ async listBuilding(req, res, next) {
     const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
     const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
     const lengths = Array.isArray(data.lengths) ? data.lengths : [data.lengths];
-
-    console.log("files");
-    console.log(files);
-    console.log("files");
-
 
     // Prepare propertyImages array with associated data
     const propertyImages = (files.propertyImages || []).map((file, index) => ({
@@ -279,9 +278,9 @@ async listBuilding(req, res, next) {
       propertyTerms,    
       amenity: amenities,
       userId: req.user.id,
-    };
-    console.log(buildingData);
-    
+    };                
+
+
     await userService.handleListBuilding(buildingData);
 
     return res.status(200).json({

@@ -141,14 +141,6 @@
  *           schema:
  *             type: object
  *             properties:
- *               userId:
- *                 type: integer
- *                 description: User ID of the property manager
- *                 example: 1
- *               role:
- *                 type: string
- *                 description: Role of the user
- *                 enum: ['list']
  *               propertyPreference:
  *                 type: string
  *                 description: Type of property
@@ -230,63 +222,69 @@
  *                 description: Additional description of the property
  *                 example: 'Spacious and modern apartment with a great view'
  *               propertyTerms:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: Files of the property terms document to be uploaded
- *                 example: ['terms.pdf'] 
+ *                 type: object
+ *                 properties:
+ *                   url:
+ *                     type: string
+ *                     description: URL of the property terms document
+ *                     example: 'terms.pdf'
+ *                   size:
+ *                     type: integer
+ *                     description: Size of the document in bytes (max 3MB)
+ *                     example: 2000000
  *               propertyImages:
  *                 type: array
  *                 items:
- *                   type: string
- *                   format: binary
- *                 description: Files of the property images to be uploaded
- *                 example: ['file1.jpg', 'file2.png'] 
- *               titles:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Titles of the images
- *                 example: ['Living Room', 'Bedroom']
- *               widths:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Widths of the images
- *                 example: ['800', '600']
- *               lengths:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Lengths of the images
- *                 example: ['600', '400']
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       description: URL of the property image
+ *                       example: 'file1.jpg'
+ *                     title:
+ *                       type: string
+ *                       description: Title of the image
+ *                       example: 'Living Room'
+ *                     width:
+ *                       type: integer
+ *                       description: Width of the image
+ *                       example: 800
+ *                     length:
+ *                       type: integer
+ *                       description: Length of the image
+ *                       example: 600
+ *                     size:
+ *                       type: integer
+ *                       description: Size of the image file in bytes (max 5MB)
+ *                       example: 4000000
  *               buildingOccupantPreference:
  *                 type: object
- *                 description: Preferences for building occupants, represented as JSON stringify it.
+ *                 description: Preferences for building occupants, represented as JSON
  *                 properties:
  *                   maritalStatus:
- *                     type: string
- *                     description: Preferred marital status of occupants
- *                     example: 'single'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Preferred marital statuses of occupants
+ *                     example: ['Single', 'Married']
  *                   religion:
- *                     type: string
- *                     description: Preferred religion of occupants
- *                     example: 'any'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Preferred religions of occupants
+ *                     example: ['Christianity', 'All']
  *                   region:
- *                     type: string
- *                     description: Preferred region of occupants
- *                     example: 'any'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Preferred regions of occupants
+ *                     example: ['South-West']
  *                   gender:
- *                     type: string
- *                     description: Preferred gender of occupants
- *                     example: 'any'
- *                 example: {
- *                   maritalStatus: 'single',
- *                   religion: 'any',
- *                   region: 'any',
- *                   gender: 'any'
- *                 }
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Preferred genders of occupants
+ *                     example: ['Male']
  *     responses:
  *       200:
  *         description: Building listed successfully
@@ -307,7 +305,8 @@
  *         description: Bad request, validation error
  *       500:
  *         description: Internal server error
-*/
+ */
+
 
 
 /**
@@ -2980,34 +2979,12 @@
  *           schema:
  *             type: object
  *             properties:
- *               bedroomSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Image of the bedroom size.
- *               kitchenSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Image of the kitchen size.
- *               livingRoomSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Image of the living room size.
- *               diningAreaSizeImage:
- *                 type: string
- *                 format: binary
- *                 description: Image of the dining area size.
  *               propertyTerms:
  *                 type: object
- *                 properties:
- *                   url:
- *                     type: string
- *                     description: URL of the document of property terms.
- *                   size:
- *                     type: number
- *                     description: Size of the property terms document in bytes (max 3MB).
+ *                 description: Document size in bytes (max 3MB).
  *               amenity:
  *                 type: string
- *                 description: JSON string of an array of amenities for the building.
+ *                 description: JSON string of an array of building amenities.
  *               propertyPreference:
  *                 type: string
  *                 enum: [flats, duplex, selfContains, roomAndParlour]
@@ -3015,9 +2992,6 @@
  *               propertyLocation:
  *                 type: string
  *                 description: Location of the property.
- *               propertyTitle:
- *                 type: string
- *                 description: Title of the property.
  *               city:
  *                 type: string
  *                 description: City where the property is located.
@@ -3042,7 +3016,7 @@
  *               availability:
  *                 type: string
  *                 enum: [vacant, occupied]
- *                 description: Availability status of the building.
+ *                 description: Building availability status.
  *               furnishingStatus:
  *                 type: string
  *                 enum: [furnished, unfurnished, partly furnished]
@@ -3053,80 +3027,64 @@
  *               price:
  *                 type: integer
  *                 description: Rental price of the property.
- *               electricityBill:
- *                 type: integer
- *                 description: Monthly electricity bill.
- *               wasteBill:
- *                 type: integer
- *                 description: Waste management bill.
+ *               electricityBillArreas:
+ *                 type: string
+ *                 description: Electricity bill arrears information.
+ *               electricityBillArreasType:
+ *                 type: string
+ *                 description: Type of electricity bill arrears.
+ *               waterBillArreas:
+ *                 type: string
+ *                 description: Water bill arrears information.
  *               commissionBill:
  *                 type: integer
  *                 description: Commission fee for property management.
  *               propertyDescription:
  *                 type: string
- *                 description: Detailed description of the property.
- *               bedroomSizeLength:
- *                 type: integer
- *                 description: Length of the bedroom in the property.
- *               bedroomSizeWidth:
- *                 type: integer
- *                 description: Width of the bedroom in the property.
- *               kitchenSizeLength:
- *                 type: integer
- *                 description: Length of the kitchen in the property.
- *               kitchenSizeWidth:
- *                 type: integer
- *                 description: Width of the kitchen in the property.
- *               livingRoomSizeLength:
- *                 type: integer
- *                 description: Length of the living room in the property.
- *               livingRoomSizeWidth:
- *                 type: integer
- *                 description: Width of the living room in the property.
- *               diningAreaSizeLength:
- *                 type: integer
- *                 description: Length of the dining area in the property.
- *               diningAreaSizeWidth:
- *                 type: integer
- *                 description: Width of the dining area in the property.
- *               buildingId:
- *                 type: integer
- *                 description: The unique ID of the building to update.
+ *                 description: Detailed property description.
  *               buildingOccupantPreference:
  *                 type: object
- *                 description: Preferences for building occupants, represented as JSON stringify it.
- *                 properties:   
+ *                 description: Preferences for building occupants.
+ *                 properties:
  *                   maritalStatus:
- *                     type: string
- *                     description: Preferred marital status of occupants
- *                     example: 'single'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Check this API path `/getMaritalStatus` for the list of marital statuses.
+ *                     example: ['Single']
  *                   religion:
- *                     type: string
- *                     description: Preferred religion of occupants
- *                     example: 'any'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Check this API path `/getReligion` for the list of religions.
+ *                     example: ['All']
  *                   region:
- *                     type: string
- *                     description: Preferred region of occupants
- *                     example: 'any'
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     description: Check this API path `/getRegion` for the list of regions.
+ *                     example: ['All']
  *                   gender:
  *                     type: string
- *                     description: Preferred gender of occupants
- *                     example: 'any'
- *                 example: {
- *                   maritalStatus: 'single',
- *                   religion: 'any',
- *                   region: 'any',
- *                   gender: 'any'
- *                 }
+ *                     description: Check this API path `/getGender` for the list of genders.
+ *                     example: 'All'
  *           encoding:
  *             bedroomSizeImage:
- *               contentType: image/png, image/jpeg
+ *               contentType: 
+ *                 - image/png
+ *                 - image/jpeg
  *             kitchenSizeImage:
- *               contentType: image/png, image/jpeg
+ *               contentType: 
+ *                 - image/png
+ *                 - image/jpeg
  *             livingRoomSizeImage:
- *               contentType: image/png, image/jpeg
+ *               contentType: 
+ *                 - image/png
+ *                 - image/jpeg
  *             diningAreaSizeImage:
- *               contentType: image/png, image/jpeg
+ *               contentType: 
+ *                 - image/png
+ *                 - image/jpeg
  *     responses:
  *       200:
  *         description: Building details updated successfully.
@@ -3168,6 +3126,8 @@
  *                   type: string
  *                   example: "Internal server error"
  */
+
+
 
 
 

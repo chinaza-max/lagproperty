@@ -596,10 +596,10 @@ class UserUtil {
     Joi.array().items(Joi.string().regex(/^\d+$/))
   ).optional(),
   buildingOccupantPreference: Joi.object({
-    maritalStatus: Joi.required(),
-    religion: Joi.required(),
-    region: Joi.required(),
-    gender: Joi.required(),
+    maritalStatus: Joi.array().items(Joi.string()).required(),
+    religion: Joi.array().items(Joi.string()).required(),
+    region: Joi.array().items(Joi.string()).required(),
+    gender: Joi.array().items(Joi.string()).required()
   }).optional(),   
 }).unknown(true)
 
@@ -711,10 +711,10 @@ class UserUtil {
     Joi.array().items(Joi.string().regex(/^\d+$/))
   ).required(),
   buildingOccupantPreference: Joi.object({
-    maritalStatus: Joi.required(),
-    religion: Joi.required(),
-    region: Joi.required(),
-    gender: Joi.required(),
+    maritalStatus: Joi.array().items(Joi.string()).required(),
+    religion: Joi.array().items(Joi.string()).required(),
+    region: Joi.array().items(Joi.string()).required(),
+    gender: Joi.array().items(Joi.string()).required()
   }).required(),
   });
 }

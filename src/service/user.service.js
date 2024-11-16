@@ -2177,20 +2177,42 @@ async handleListBuilding(data) {
 
         }
 
-          const buildings = await this.BuildingModel.findAndCountAll({
+          let  buildings = await this.BuildingModel.findAndCountAll({
             where: whereCondition, 
             limit,
             offset
           })
-        
+
+
+         // buildings.buildingOccupantPreference=JSON.parse(buildings.buildingOccupantPreference)
+         // buildings.buildingOccupantPreference=JSON.parse(buildings.buildingOccupantPreference)
+/*
+         console.log(buildings)
+         const my=buildings.rows.map(obj => {
+          const property="buildingOccupantPreference"
+          if (obj.hasOwnProperty(property)) {
+              return {
+                  ...obj,
+                  [property]: JSON.parse(obj[property])
+              };
+          }
+              return obj; // If the property doesn't exist, return the object as is.
+          });
+          console.log(my)*/
+
+
           return {
             response: buildings.rows,
-            pagination:{
+            pagination:{      
               totalItems: buildings.count,
               currentPage: page,
               totalPages: Math.ceil(buildings.count / pageSize)
             }
           };
+
+
+
+          
       }
       else if(role==='rent'){
 
@@ -2309,6 +2331,9 @@ async handleListBuilding(data) {
           limit,
           offset
         })
+
+        buildings.buildingOccupantPreference=JSON.parse(buildings.buildingOccupantPreference)
+
       
         return {
           response: buildings.rows,
@@ -3875,27 +3900,58 @@ async handleListBuilding(data) {
   }
   
   filterBuildingsByUserPreferences(buildings, user) {
-    
-    return buildings.filter(building => {
-        const preferences = building.buildingOccupantPreference || {};
 
+
+    return buildings.filter(building => {
+
+
+        let  preferences = JSON.parse(building.buildingOccupantPreference) || {};
+        
+
+        console.log("======================")
+        console.log("======================")
+
+        console.log(preferences.gender)
+      
+
+        console.log( user.gender)
+
+        console.log("======================")
+        console.log("======================")
         // Check marital status
-        if (preferences.maritalStatus && preferences.maritalStatus !== 'All' && preferences.maritalStatus !== user.maritalStatus) {
+        if (
+          preferences.maritalStatus &&
+          Array.isArray(preferences.maritalStatus) &&
+          !preferences.maritalStatus.includes('All') &&
+          !preferences.maritalStatus.includes(user.maritalStatus)
+        ) {
             return false;
         }
 
         // Check religion
-        if (preferences.religion && preferences.religion !== 'All' && preferences.religion !== user.religion) {
+        if (
+          preferences.religion &&
+          Array.isArray(preferences.religion) &&
+          !preferences.religion.includes('All') &&
+          !preferences.religion.includes(user.religion)
+        ) {
             return false;
         }
 
         // Check gender
-        if (preferences.gender && preferences.gender !== 'All' && preferences.gender !== user.gender) {
+        if (
+          preferences.gender &&
+          Array.isArray(preferences.gender) &&
+          !preferences.gender.includes('All') &&
+          !preferences.gender.includes(user.gender)
+        ) {
             return false;
         }
 
         // Check region using the provided `isStateInRegions` function
-        if (preferences.region && preferences.region !== 'All' && !isStateInRegions(user.stateOfOrigin, preferences.region)) {
+        if (preferences.region && Array.isArray(preferences.region) &&
+            !preferences.region.includes('All') && 
+            !this.isStateInRegions(user.stateOfOrigin, preferences.region)) {
             return false;
         }
 
@@ -3903,7 +3959,7 @@ async handleListBuilding(data) {
     });
   }
 
-
+ 
 }
 
 export default new UserService();

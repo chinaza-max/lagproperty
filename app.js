@@ -85,19 +85,25 @@ class Server {
           await setting.update({
             preferences: {
               buildingPreferences: ["flat", "a room", "duplex", "self-contain"],
-              region: ["North Central", "North East", "North West", "South East", "South South", "South West", "All"]
+              region: ["North Central", "North East", "North West", "South East", "South South", "South West", "All"],
+              maritalStatus: ["Married", "Single", "All"],
+              religion: [
+                "Islam",
+                "Christianity",
+                "Traditional African Religions",
+                "Baha'i Faith",
+                "Judaism",
+                "Hinduism",
+                "Other Religions",
+                "All"
+              ],
+              gender: [
+                "Male",
+                "Female",
+                "All"
+              ],
             },
-            maritalStatus: ["Married", "Single", "All"],
-            religion: [
-              "Islam",
-              "Christianity",
-              "Traditional African Religions",
-              "Baha'i Faith",
-              "Judaism",
-              "Hinduism",
-              "Other Minor Religions",
-              "All"
-            ],
+          
           });
         }
         
