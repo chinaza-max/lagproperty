@@ -821,7 +821,7 @@ class AuthenticationService {
       const buildingPreferences =setting.preferences.region || [];
 
       return buildingPreferences
-         
+                     
     } catch (error) {
       throw new SystemError("Failed to update password");
     }
