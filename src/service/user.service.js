@@ -3904,22 +3904,31 @@ async handleListBuilding(data) {
 
     return buildings.filter(building => {
 
+      if (building.buildingOccupantPreference) {
+
+        if (!Array.isArray(preferences.maritalStatus)) {
 
         //let  preferences = JSON.parse(building.buildingOccupantPreference) || {};
         
-        let preferences = typeof building.buildingOccupantPreference === 'string' ? JSON.parse(building.buildingOccupantPreference) : building.buildingOccupantPreference;
 
-
+    
         console.log("======================")
         console.log("======================")
-
-        console.log(preferences.gender)
-      
+        console.log("======================")
 
         console.log( user.gender)
 
         console.log("======================")
         console.log("======================")
+
+          console.error("maritalStatus is not an array.");
+          return false; // Exit or handle the invalid case
+  
+        }
+        else{
+
+          let preferences = typeof building.buildingOccupantPreference === 'string' ? JSON.parse(building.buildingOccupantPreference) : building.buildingOccupantPreference;
+
         // Check marital status
         if (
           preferences.maritalStatus &&
@@ -3958,6 +3967,10 @@ async handleListBuilding(data) {
         }
 
         return true;
+
+
+        }
+      }
     });
   }
 
