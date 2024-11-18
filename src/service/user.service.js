@@ -3905,8 +3905,10 @@ async handleListBuilding(data) {
     return buildings.filter(building => {
 
 
-        let  preferences = building.buildingOccupantPreference || {};
+        //let  preferences = JSON.parse(building.buildingOccupantPreference) || {};
         
+        let preferences = typeof building.buildingOccupantPreference === 'string' ? JSON.parse(building.buildingOccupantPreference) : building.buildingOccupantPreference;
+
 
         console.log("======================")
         console.log("======================")

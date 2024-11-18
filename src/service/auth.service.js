@@ -818,10 +818,14 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
 
-      const buildingPreferences =setting.preferences.region || [];
+     // const buildingPreferences = setting.preferences.region || [];
+     // console.log( typeof setting.preferences === 'string' )
 
+      const buildingPreferences = typeof setting.preferences === 'string' ? JSON.parse(setting.preferences)?.region : setting.preferences.region;
+
+      
       return buildingPreferences
-                     
+                                              
     } catch (error) {
       throw new SystemError("Failed to update password");
     }
@@ -838,10 +842,11 @@ class AuthenticationService {
       if (!setting) {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
-      console.log(setting.preferences.maritalStatus)
-      const maritalStatus = setting.preferences.maritalStatus || [];
 
-      return maritalStatus 
+
+      const maritalStatus = typeof setting.preferences === 'string' ? JSON.parse(setting.preferences)?.maritalStatus : setting.preferences.maritalStatus;
+
+      return maritalStatus
          
     } catch (error) {
       //throw new SystemError(error.parent.);
@@ -861,9 +866,9 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
 
-      const religion = setting.preferences.religion || [];
+      const religion = typeof setting.preferences === 'string' ? JSON.parse(setting.preferences)?.religion : setting.preferences.religion;
 
-      return religion 
+      return religion
          
     } catch (error) {
       //throw new SystemError(error.parent.);
@@ -882,10 +887,10 @@ class AuthenticationService {
       if (!setting) {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
-      //console.log(setting.gender)
-      const gender = setting.preferences.gender || [];
 
-      return gender 
+      const gender = typeof setting.preferences === 'string' ? JSON.parse(setting.preferences)?.gender : setting.preferences.gender;
+
+      return gender  
          
     } catch (error) {
       console.log(error)
