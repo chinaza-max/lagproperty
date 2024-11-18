@@ -79,7 +79,18 @@ export function init(connection) {
       },
       buildingOccupantPreference: {
         type: DataTypes.JSON,
-        allowNull: true
+        allowNull: true,
+        get() {
+          const value = this.getDataValue('buildingOccupantPreference');
+          try {
+            // Ensure it is always parsed to an object
+            return typeof value === 'string' ? JSON.parse(value) : value;
+          } catch (err) {
+            // Handle any unexpected parsing issues
+            console.error('Error parsing buildingOccupantPreference:', err);
+            return {}; // Return a default empty object on error
+          }
+        }
         /*defaultValue: {
           maritalStatus: null,
           religion: null,

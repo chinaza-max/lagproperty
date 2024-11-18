@@ -818,7 +818,7 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
 
-      const buildingPreferences = JSON.parse(setting.preferences)?.region || [];
+      const buildingPreferences =setting.preferences.region || [];
 
       return buildingPreferences
          
@@ -839,7 +839,7 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
       console.log(setting.preferences.maritalStatus)
-      const maritalStatus = JSON.parse(setting.preferences)?.maritalStatus || [];
+      const maritalStatus = setting.preferences.maritalStatus || [];
 
       return maritalStatus 
          
@@ -861,7 +861,7 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
 
-      const religion = JSON.parse(setting.preferences)?.religion || [];
+      const religion = setting.preferences.religion || [];
 
       return religion 
          
@@ -883,7 +883,7 @@ class AuthenticationService {
         throw new SystemError('NotFoundError', 'Settings not found');
       }
       //console.log(setting.gender)
-      const gender = JSON.parse(setting.preferences)?.gender || [];
+      const gender = setting.preferences.gender || [];
 
       return gender 
          

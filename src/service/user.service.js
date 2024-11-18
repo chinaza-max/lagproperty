@@ -3905,7 +3905,7 @@ async handleListBuilding(data) {
     return buildings.filter(building => {
 
 
-        let  preferences = JSON.parse(building.buildingOccupantPreference) || {};
+        let  preferences = building.buildingOccupantPreference || {};
         
 
         console.log("======================")
