@@ -3905,6 +3905,7 @@ async handleListBuilding(data) {
     return buildings.filter(building => {
 
       if (building.buildingOccupantPreference) {
+        let preferences = typeof building.buildingOccupantPreference === 'string' ? JSON.parse(building.buildingOccupantPreference) : building.buildingOccupantPreference;
 
         if (!Array.isArray(preferences.maritalStatus)) {
 
@@ -3917,18 +3918,15 @@ async handleListBuilding(data) {
 
        
 
-          let preferences = typeof building.buildingOccupantPreference === 'string' ? JSON.parse(building.buildingOccupantPreference) : building.buildingOccupantPreference;
           console.log("======================")
           console.log("======================")
           console.log("======================")
   
           console.log( user.gender)
-  
+   
           console.log("======================")
           console.log("======================")
 
-
-          
         // Check marital status
         if (
           preferences.maritalStatus &&
