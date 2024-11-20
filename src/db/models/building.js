@@ -50,10 +50,7 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      propertyTitle: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+     
       numberOfFloors: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -64,7 +61,7 @@ export function init(connection) {
       },
       amenity: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
         get() {
           const rawValue = this.getDataValue('amenity');
           return rawValue ? JSON.parse(rawValue) : [];
@@ -73,10 +70,7 @@ export function init(connection) {
           this.setDataValue('amenity', JSON.stringify(value));
         }
       },
-      roomPreference: {/* take out after test */
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
+    
       buildingOccupantPreference: {
         type: DataTypes.JSON,
         allowNull: true,
@@ -126,14 +120,6 @@ export function init(connection) {
         type: DataTypes.INTEGER ,
         allowNull: false,
       },
-      electricityBill: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      wasteBill: { //remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
       commissionBill: {
         type: DataTypes.INTEGER ,
         allowNull: false,
@@ -156,54 +142,6 @@ export function init(connection) {
         set(value) {
           this.setDataValue('propertyImages', value ? JSON.stringify(value) : null);
         },
-      },
-      bedroomSizeLength: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      bedroomSizeWidth: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      bedroomSizeImage: {//remove later
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      kitchenSizeLength: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      kitchenSizeWidth: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      kitchenSizeImage: {//remove later
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      livingRoomSizeLength: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      livingRoomSizeWidth: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      livingRoomSizeImage: {//remove later
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      diningAreaSizeLength: {//remove later
-        type: DataTypes.INTEGER ,
-        allowNull: true,
-      },
-      diningAreaSizeWidth: {//remove later
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      diningAreaSizeImage: {//remove later
-        type: DataTypes.TEXT,
-        allowNull: true,
       },
       propertyTerms: {
         type: DataTypes.TEXT,
