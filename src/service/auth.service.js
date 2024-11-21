@@ -637,7 +637,7 @@ class AuthenticationService {
             notificationFor: "rent",
             userId: existingInspection.prospectiveTenantId,
             type: "inspection",
-            message: `Your inspection for ${BuildingModelResponse.propertyTitle} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
+            message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
             buildingId: BuildingModelResponse.id
           });
           
@@ -692,7 +692,7 @@ class AuthenticationService {
               notificationFor: "list",
               userId: existingInspection.propertyManagerId, // Assuming propertyManagerId is available
               type: "rentPayment",
-              message: `The rent has been paid for ${BuildingModelResult.propertyTitle} at ${BuildingModelResult.address}, ${BuildingModelResult.city}. You will receive your distribution soon.`,
+              message: `The rent has been paid for ${BuildingModelResult.propertyPreference} at ${BuildingModelResult.address}, ${BuildingModelResult.city}. You will receive your distribution soon.`,
               buildingId: BuildingModelResult.id
             });
 

@@ -223,7 +223,7 @@ class UserService {
           },
           include: [{
             model: this.BuildingModel, 
-            attributes: ['price','propertyTitle'], 
+            attributes: ['price','propertyPreference'], 
             where:{
               propertyManagerId:userId
             }
@@ -622,29 +622,17 @@ class UserService {
       'numberOfFloors',
       'numberOfRooms',
       'amenity',
-      'roomPreference',
       'availability',
       'furnishingStatus',
       'rentalDuration',
       'price',
-      'electricityBill',
-      'wasteBill',
+      'electricityBillArreas',
+      'waterBillArreas',
+      'electricityBillArreasType',
       'commissionBill',
       'propertyDescription',
-      'bedroomSizeLength',
-      'bedroomSizeWidth',
-      'bedroomSizeImage',
-      'kitchenSizeLength',
-      'kitchenSizeWidth',
-      'kitchenSizeImage',
-      'livingRoomSizeLength',
-      'livingRoomSizeWidth',
-      'livingRoomSizeImage',
-      'diningAreaSizeLength',
-      'diningAreaSizeWidth',
-      'diningAreaSizeImage',
       'propertyTerms',
-      'propertyTitle'
+      'buildingOccupantPreference',
     ];
     
     try {
@@ -1138,7 +1126,7 @@ class UserService {
           {
             model: this.BuildingModel,
             attributes: [
-              'id', 'propertyTitle', 'address', 'city', 'price', 'furnishingStatus', 'amenity'
+              'id', 'propertyPreference', 'address', 'city', 'price', 'furnishingStatus', 'amenity'
             ],
             include: [
               {
@@ -1164,7 +1152,7 @@ class UserService {
             type: notification.type,
             message: notification.message,
             building: {
-              propertyTitle: building ? building.propertyTitle : null,
+              propertyPreference: building ? building.propertyPreference : null,
               address: building ? building.address : null,
               city: building ? building.city : null
             },
