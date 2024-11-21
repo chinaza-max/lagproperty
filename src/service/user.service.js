@@ -2096,7 +2096,7 @@ async handleListBuilding(data) {
   } = await userUtil.verifyHandleListBuilding.validateAsync(data);
 
   try {
-
+  
     await this.BuildingModel.create({
       propertyManagerId: userId,
       propertyImages,
