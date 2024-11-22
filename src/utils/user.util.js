@@ -505,7 +505,6 @@ class UserUtil {
     numberOfFloors: Joi.number().integer().optional(),
     numberOfRooms: Joi.number().integer().optional(),
     amenity: Joi.array().items(Joi.string()),
-    roomPreference:Joi.string(),
     availability: Joi.string()
         .valid('vacant', 'occupied'), 
     furnishingStatus: Joi.string()
@@ -556,7 +555,6 @@ class UserUtil {
   numberOfFloors: Joi.number().integer().optional(),
   numberOfRooms: Joi.number().integer().optional(),
   amenity: Joi.array().items(Joi.string()).optional(),
-  roomPreference: Joi.string().optional(),
   availability: Joi.string().valid('vacant', 'occupied').optional(),
   furnishingStatus: Joi.string()
     .valid('furnished', 'unfurnished', 'partly furnished')
@@ -619,7 +617,6 @@ class UserUtil {
     numberOfFloors: Joi.number().integer().required(),
     numberOfRooms: Joi.number().integer().required(),
     amenity: Joi.array().items(Joi.string()).required(),
-    roomPreference:Joi.string().required(),
     availability: Joi.string()
         .valid('vacant', 'occupied').required(),
     furnishingStatus: Joi.string()
@@ -671,7 +668,6 @@ class UserUtil {
     numberOfFloors: Joi.number().integer().required(),
     numberOfRooms: Joi.number().integer().required(),
     amenity: Joi.array().items(Joi.string()).required(),
-    roomPreference:Joi.string().required(),
     availability: Joi.string()
         .valid('vacant', 'occupied').required(),
     furnishingStatus: Joi.string()

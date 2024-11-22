@@ -179,10 +179,6 @@
  *                   type: string
  *                 description: Amenities available in the property
  *                 example: ['WiFi', 'Pool']
- *               roomPreference:
- *                 type: string
- *                 description: Preferred room type
- *                 example: 'suite'
  *               availability:
  *                 type: string
  *                 description: Availability status of the property
@@ -3010,9 +3006,6 @@
  *               numberOfRooms:
  *                 type: integer
  *                 description: Number of rooms in the building.
- *               roomPreference:
- *                 type: string
- *                 description: Room preferences for the building.
  *               availability:
  *                 type: string
  *                 enum: [vacant, occupied]

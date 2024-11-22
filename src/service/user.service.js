@@ -349,12 +349,13 @@ class UserService {
           });
 
 
-          console.log("tenantData")
-          console.log(tenantData)
-          console.log("tenantData")
+    
 
         } 
-    
+        console.log("tenantData")
+        console.log(tenantData)
+        console.log("tenantData")
+        
         totalPages = Math.ceil(tenantData.count / pageSize);
     
       }
@@ -2320,7 +2321,7 @@ async handleListBuilding(data) {
           offset
         })
 
-        buildings.buildingOccupantPreference=JSON.parse(buildings.buildingOccupantPreference)
+        buildings.buildingOccupantPreference=typeof buildings.buildingOccupantPreference === 'string' ?  JSON.parse(buildings.buildingOccupantPreference):buildings.buildingOccupantPreference
 
       
         return {
@@ -2649,7 +2650,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
@@ -2708,7 +2708,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
@@ -2773,7 +2772,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
@@ -2835,7 +2833,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
@@ -2898,7 +2895,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
@@ -2959,7 +2955,6 @@ async handleListBuilding(data) {
                   'numberOfFloors',
                   'numberOfRooms',
                   'amenity',
-                  'roomPreference',
                   'availability',
                   'furnishingStatus',
                   'rentalDuration',
