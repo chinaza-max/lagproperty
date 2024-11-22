@@ -2597,10 +2597,13 @@
  *               budgetMin:
  *                 type: integer
  *                 description: Minimum budget for rent.
- *               budgetMax:
+ *               budgetMax:   
  *                 type: integer
  *                 description: Maximum budget for rent.
  *               occupation:
+ *                 type: string
+ *                 description: User's occupation.
+ *               religion:
  *                 type: string
  *                 description: User's occupation.
  *               country:
