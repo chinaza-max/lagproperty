@@ -40,6 +40,10 @@ export function init(connection) {
         type: DataTypes.STRING,
         allowNull: false,
       }, 
+      religion: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
