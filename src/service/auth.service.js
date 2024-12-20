@@ -157,7 +157,7 @@ class AuthenticationService {
           lastName,
           emailAddress,
           password:hashedPassword,
-          image:"https://res.cloudinary.com/dvznn9s4g/image/upload/v1734701747/generic_duxtuq.jpg",
+          image:"https://res.cloudinary.com/dvznn9s4g/image/upload/v1734708983/avatar_i1xry2.png",
           privilege
       });
       await this.sendEmailVerificationCode(user.emailAddress,user.id,type)
