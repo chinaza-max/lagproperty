@@ -1523,6 +1523,25 @@ class AuthenticationService {
           isDeleted:false
         }
       });  
+
+      console.log("first")
+      console.log(user)
+      console.log("first")
+
+
+     const user2= await this.AdminModel.findOne({
+        where: {
+          emailAddress, 
+          isEmailValid:false,
+          isDeleted:false
+        }
+      });  
+
+      console.log("first2")
+      console.log(user2)
+      console.log("first2")
+
+
     }
     
     if (!user) throw new NotFoundError("User not found.");
