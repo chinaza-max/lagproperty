@@ -247,11 +247,6 @@ async listBuilding(req, res, next) {
     const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
     const lengths = Array.isArray(data.lengths) ? data.lengths : [data.lengths];
 
-    console.log("widths")
-    console.log(titles)
-
-    console.log("widths")
-
 
     // Prepare propertyImages array with associated data
     const propertyImages = (files.propertyImages || []).map((file, index) => ({
@@ -263,7 +258,7 @@ async listBuilding(req, res, next) {
       length: parseFloat(lengths[`${index}`]) || 0,
       size: file.size
     })); 
-
+    
     // Collect propertyTerms information with environment-based path replacement
     const propertyTerms = files.propertyTerms
       ? {
