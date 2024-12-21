@@ -2035,7 +2035,7 @@ async  startFirstRentDisbursements() {
                 isDeleted: false,
                 transactionType: {
                   [Op.or]: ['firstRent', 'commission']
-                }
+                },
             },
             order: [['createdAt', 'DESC']]
           });

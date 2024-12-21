@@ -1492,7 +1492,7 @@ class UserService {
       if(type==="list"){
         const propertyManagers = await this.PropertyManagerModel.findAll({
           where: {
-            isDeleted: false,
+            isDeleted: false
           },
           attributes: {
             exclude: [
@@ -1501,36 +1501,33 @@ class UserService {
               'agentBankCode',
               'agentBankAccount',
               'landlordBankCode',
-              'landlordBankAccount',
+              'landlordBankAccount'
             ],
             include: [
-              [
-                Sequelize.fn("COUNT", Sequelize.col("propertyManagerBuilding.id")),
-                "buildingCount",
-              ],
-              [
-                Sequelize.fn("COUNT", Sequelize.col("propertyManagerBuilding.BuildingTenant.id")),
-                "tenantCount",
-              ],
-            ],
+              [Sequelize.fn('COUNT', Sequelize.col('propertyManagerBuilding.id')), 'buildingCount'],
+              [Sequelize.fn('COUNT', Sequelize.col('propertyManagerBuilding->BuildingTenant.id')), 'tenantCount']
+            ]
           },
           include: [
             {
-              model: this.BuildingModel, // Replace with your actual Building model reference
-              as: "propertyManagerBuilding",
+              model: Building,
+              as: 'propertyManagerBuilding',
               attributes: [],
               include: [
                 {
-                  model: this.TenantModel, // Replace with your actual Tenant model reference
-                  as: "BuildingTenant",
-                  attributes: [],
-                },
-              ],
-            },
+                  model: Tenant,
+                  as: 'BuildingTenant',
+                  attributes: []
+                }
+              ]
+            }
           ],
-          group: ["PropertyManager.id"], // Grouping by Property Manager ID
+          group: ['PropertyManager.id'],
+          subQuery: false // Ensures proper aggregation handling with includes
         });
+          console.log(propertyManagers)
         return propertyManagers;
+        
         
       }
       else{
