@@ -1542,8 +1542,7 @@ class UserService {
               'password',
               'nin',
               'bankCode',
-              'bankAccount',
-              'lasrraId'
+              'bankAccount'
             ]
           }
         });
