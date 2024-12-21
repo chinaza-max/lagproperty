@@ -2006,6 +2006,10 @@ async  startFirstRentDisbursements() {
             tenentStatus: true,
             propertyManagerStatus: true,
             inspectionStatus: 'accepted',
+            [Sequelize.Op.or]: [
+              { agentPaidStatus: false },
+              { landlordPaidStatus: false }
+            ],
             isDeleted: false
           }
       });
@@ -2082,7 +2086,7 @@ async  startFirstRentDisbursements() {
                   await this.processDisbursement(propertyManager, inspection);
                 }
                 else{
-
+/*
                   const pendingTransaction = await this.TransactionModel.findOne({
                     where: {
                         inspectionId: inspection.id,
@@ -2101,7 +2105,7 @@ async  startFirstRentDisbursements() {
                   if(pendingTransaction){
     
                     await this.processDisbursement(propertyManager, inspection);
-                  }
+                  }*/
                   
 
                 }
@@ -2313,7 +2317,7 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
         this.disburseRent(BuildingModelResult,unpaidTransaction.userId)
   
       }
-      else if(unpaidTransactions.paymentStatus===TRANSACTION_STATUS.PENDING){
+     /* else if(unpaidTransactions.paymentStatus===TRANSACTION_STATUS.PENDING){
 
         if(new Date(unpaidTransaction.createdAt) < new Date(new Date() - pendingDisburseRentRetry * 1000)){
           
@@ -2327,7 +2331,7 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
     
         }
       
-      }
+      }*/
     }
 
    

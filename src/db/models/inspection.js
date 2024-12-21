@@ -23,11 +23,11 @@ export function init(connection) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      propertyManagerStatus: {
+      propertyManagerStatus: {//this attribute set to true means that the landlord has accepted the tenant
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
-      tenentStatus: {
+      tenentStatus: {//this attribute set to true means that the prospective tenant likes the building
         type: DataTypes.BOOLEAN, 
         allowNull: true,
       },
