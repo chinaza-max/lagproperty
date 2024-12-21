@@ -1512,11 +1512,13 @@ class UserService {
             {
               model:  this.BuildingModel,
               as: 'propertyManagerBuilding',
+              required: false,
               attributes: [],
               include: [
                 {
                   model: this.TenantModel,
                   as: 'BuildingTenant',
+                  required: false,
                   attributes: []
                 }
               ]
