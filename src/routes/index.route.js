@@ -38,26 +38,21 @@ class Routes {
 
 
 
-    this.router.get("/admin", (req, res) => {
-
-      console.log("dddddddddd")
-      console.log("dddddddddd")
-      console.log("dddddddddd")
-
-
+    this.router.get('*', (req, res, next) => {
+      const requestedPath = req.path;
       
-
-      try {
-        console.log("ssssssssssssssss")
+      // Check if path ends with .html
+      if (requestedPath.endsWith('.html')) {
+        res.sendFile(path.join(__dirname, '../../public/lagproperty-admin', requestedPath), (err) => {
+          if (err) {
+            next(); // Pass to next handler if file not found
+          }
+        });
+      } else if (requestedPath === '/admin') {
+        // Serve index.html for /admin route
         res.sendFile(path.join(__dirname, '../../public/lagproperty-admin', 'index.html'));
-        //res.sendFile(path.join(__dirname, 'public', 'lagproperty-admin', 'index.html'));
-      } catch (error) {
-        console.log("qqqqqqqqqqqqqqqqqqqq")
-        console.log("qqqqqqqqqqqqqqqqqqqq")
-        console.log("qqqqqqqqqqqqqqqqqqqq")
-
-        console.log(error);
-        res.status(500).send('Error serving file');
+      } else {
+        next(); // Pass to next handler
       }
     });
 

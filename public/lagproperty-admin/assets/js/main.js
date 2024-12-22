@@ -90,7 +90,10 @@ class General {
               success: (response) => {
                 //this.hideLoader();
                 const response2=response.data
-                callback()
+
+                if(callback){
+                  callback()
+                }
 
                 if(buttonL){
                   $(`#${buttonL}`).hide();
@@ -129,8 +132,15 @@ class General {
               },
               error: function(error) {
 
+                if(error.responseJSON.message==="Invalid token."){
 
-                callback()
+                  myGeneral.logout()
+
+                }
+
+                if(callback){
+                  callback()
+                }
 
                 if(buttonL){
                   $(`#${buttonL}`).hide();
@@ -148,9 +158,10 @@ class General {
           
       } catch (error) {
    
-
-        callback()
-
+        if(callback){
+          callback()
+        }
+        
         if(buttonL){
           $(`#${buttonL}`).hide();
         }
@@ -195,7 +206,11 @@ class General {
 
               },
               error: function(error) {
+                if(error.responseJSON.message==="Invalid token."){
 
+                  myGeneral.logout()
+
+                }
                 if(loader){
                   $(`#${loader}`).css('display', 'none');
                 }
