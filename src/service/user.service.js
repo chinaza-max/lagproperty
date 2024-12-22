@@ -1734,6 +1734,7 @@ class UserService {
        
   
     } catch (error) {
+      console.log(error)
       throw new SystemError(error.name,  error?.response?.data?.error)
 
     }
