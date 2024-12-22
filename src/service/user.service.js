@@ -1510,12 +1510,12 @@ class UserService {
           },
           include: [
             {
-              model: Building,
+              model: this.BuildingModel,
               as: 'propertyManagerBuilding',
               attributes: [],
               include: [
                 {
-                  model: Tenant,
+                  model: this.TenantModel,
                   as: 'BuildingTenant',
                   attributes: []
                 }
@@ -1525,7 +1525,6 @@ class UserService {
           group: ['PropertyManager.id'],
           subQuery: false // Ensures proper aggregation handling with includes
         });
-          console.log(propertyManagers)
         return propertyManagers;
         
         
