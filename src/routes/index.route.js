@@ -32,6 +32,7 @@ class Routes {
 
     this.router.use(`${rootAPI}/user`, userRoute)
     
+    this.router.use(`admin`, userRoute)
 
     this.router.all("*", (req, res) => {
       res.status(404).json({
