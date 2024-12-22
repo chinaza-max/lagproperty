@@ -1707,15 +1707,13 @@ class UserService {
       const setting = await this.SettingModel.findOne({ where: { id: 1 } });
 
       if (!setting) {
-        throw new SystemError('NotFoundError', 'Settings not found');
+        throw new NotFoundError('NotFoundError', 'Settings not found');
       }
 
       const buildingPreferences = JSON.parse(setting.preferences)?.buildingPreferences || [];
 
-
-      
       if (type === 'add') {
-        
+
         if (!buildingPreferences.includes(preferenceName)) {
           buildingPreferences.push(preferenceName);
         }
