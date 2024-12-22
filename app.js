@@ -37,7 +37,7 @@ const swaggerOptions = {
         url: `${serverConfig.DOMAIN}/api/v1/`,
         description: 'live server',
       },
-    ],
+    ], 
   },
   apis: ['./src/routes/*.js', './src/controllers/**/*.js'], // Define where your route/controller files are located
 };
