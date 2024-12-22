@@ -1706,16 +1706,25 @@ class UserService {
     try { 
       const setting = await this.SettingModel.findOne({ where: { id: 1 } });
 
+
+      console.log(setting)
       if (!setting) {
         throw new NotFoundError('NotFoundError', 'Settings not found');
       }
 
-      const buildingPreferences = JSON.parse(setting.preferences)?.buildingPreferences || [];
+
+      console.log("start parse")
+     // const buildingPreferences = JSON.parse(setting.preferences)?.buildingPreferences || [];
+
+      const buildingPreferences =typeof setting.preferences === 'string' ?  JSON.parse(setting.preferences)?.buildingPreferences||[] : setting.preferences?.buildingPreferences||[]
+
+      console.log("end parse")
 
       if (type === 'add') {
 
         if (!buildingPreferences.includes(preferenceName)) {
           buildingPreferences.push(preferenceName);
+
         }
 
       } 
