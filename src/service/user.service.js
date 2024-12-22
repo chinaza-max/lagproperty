@@ -1732,6 +1732,7 @@ class UserService {
       //remove duplicate 
       buildingPreferences = [...new Set(buildingPreferences)];
 
+      console.log(buildingPreferences)
       await setting.update({
         preferences: { buildingPreferences }
       });
