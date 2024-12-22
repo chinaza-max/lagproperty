@@ -25,7 +25,7 @@ import {
   SystemError,
   NotFoundError
 } from "../errors/index.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 const TRANSACTION_STATUS = {
   UNVERIFIED: 'UNVERIFIED',

@@ -418,7 +418,7 @@ class UserUtil {
 
   validateHandleValidateNIN= Joi.object().keys({
     type: Joi.string().valid('deleted', 'add').required(),
-    role: Joi.string().valid('list', 'rent').required(),
+    role: Joi.string().valid('list', 'rent', 'admin').required(),
     userId: Joi.number().integer().required(),
     preferenceName: Joi.string().when('type', {
       is: Joi.valid('add', 'deleted'),

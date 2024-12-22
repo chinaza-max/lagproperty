@@ -1430,7 +1430,6 @@ class UserService {
     
     try {
 
-
       if(type==='transaction'){
         const TransactionResult = await this.TransactionModel.findAll({
           where: {
@@ -1440,6 +1439,7 @@ class UserService {
         })
         return TransactionResult;
       }
+
       else if(type==='building'){
         const BuildingModelResult = await this.BuildingModel.findAll({
           where: {
@@ -1510,13 +1510,15 @@ class UserService {
           },
           include: [
             {
-              model: this.BuildingModel,
+              model:  this.BuildingModel,
               as: 'propertyManagerBuilding',
+              required: false,
               attributes: [],
               include: [
                 {
                   model: this.TenantModel,
                   as: 'BuildingTenant',
+                  required: false,
                   attributes: []
                 }
               ]
@@ -1539,8 +1541,7 @@ class UserService {
               'password',
               'nin',
               'bankCode',
-              'bankAccount',
-              'lasrraId'
+              'bankAccount'
             ]
           }
         });
@@ -1714,6 +1715,7 @@ class UserService {
 
       
       if (type === 'add') {
+        
         if (!buildingPreferences.includes(preferenceName)) {
           buildingPreferences.push(preferenceName);
         }
