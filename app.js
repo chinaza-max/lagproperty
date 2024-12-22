@@ -187,7 +187,8 @@ class Server {
 
         this.app.use(routes); 
         this.app.use(systemMiddleware.errorHandler);
-        
+        this.app.use(cors(corsOptions));
+
     }
   
     async start() {
