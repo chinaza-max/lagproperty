@@ -189,7 +189,8 @@ Circles.create({
 	styleText:    true
 })
 
-//Notify
+
+//Notify/*
 $.notify({
 	icon: 'icon-bell',
 	title: 'Kaiadmin',
@@ -202,7 +203,7 @@ $.notify({
 	},	
 	time: 1000,
 });
-
+*/
 // Jsvectormap
 var world_map = new jsVectorMap({
 	selector: "#world-map",

@@ -40,7 +40,8 @@ class Routes {
 
     this.router.get('*', (req, res, next) => {
       const requestedPath = req.path;
-      
+
+
       // Check if path ends with .html
       if (requestedPath.endsWith('.html')) {
         res.sendFile(path.join(__dirname, '../../public/lagproperty-admin', requestedPath), (err) => {
@@ -51,7 +52,11 @@ class Routes {
       } else if (requestedPath === '/admin') {
         // Serve index.html for /admin route
         res.sendFile(path.join(__dirname, '../../public/lagproperty-admin', 'index.html'));
-      } else {
+      } 
+      else if(requestedPath.endsWith('.map')){
+          return
+      }
+      else {
         next(); // Pass to next handler
       }
     });
