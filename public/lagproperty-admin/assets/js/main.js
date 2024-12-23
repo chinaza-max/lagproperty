@@ -251,6 +251,11 @@ class General {
   }
   generateTransactionTable(transactions) {
 
+
+    const statusSucess=["completed", "paid"]
+
+
+    console.log(statusSucess.includes("paid"))
     if (!Array.isArray(transactions)) {
       console.error("Invalid transactions array.");
       return "";
@@ -268,13 +273,17 @@ class General {
             </button>
             ${transaction.id}
           </td>
-          <td scope="row">${transaction.type}</td>
-          <td class="text-end">${transaction.date}</td>
-          <td class="text-end">${transaction.amount}</td>
+          <td scope="row">${transaction.transactionType}</td>
+          <td class="text-end">${new Date(transaction.updatedAt).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })}</td>
+          <td class="text-end">₦ ${transaction.amount}</td>
           <td class="text-end">
             <span class="badge ${
-              transaction.status === "Completed" ? "badge-success" : "badge-warning"
-            }">${transaction.status}</span>
+              statusSucess.includes(transaction.paymentStatus)===true ? "badge-success" : "badge-warning"
+            }">${transaction.paymentStatus}</span>
           </td>
         </tr>`
       )
@@ -431,23 +440,6 @@ const myGeneral = new General();
     function callback4(data){
       console.log(data.length)
 
-
-      data = [
-        {
-          id: "#10231-23333-3333939",
-          type: "commission",
-          date: "Mar 19, 2020, 2.45pm",
-          amount: "₦ 250.00",
-          status: "Completed",
-        },
-        {     
-          id: "#10232-23333-3333940",
-          type: "payment",
-          date: "Mar 20, 2020, 1.15pm",
-          amount: "₦ 300.00",
-          status: "Pending",
-        },
-      ];
       if(data.length>0){
         $('#alertTransaction').css('display', 'none');
         const htmlContent=myGeneral.generateTransactionTable(data)
@@ -1000,27 +992,19 @@ const myGeneral = new General();
                     preferenceName:newPrefName
                   }
                   function callback2(){
-
-                    console.log("ooooooooooooooooo")
-
                     const newPref = {
                       id: preferences.length + 1,
                       name: newPrefName
                     };
 
-                    console.log("wwwwwwwwwwwwwwwww")
-
                     preferences.unshift(newPref);
                     filteredPreferences = [...preferences];
-
-                    console.log("pppppppppppppppp")
 
                     $('#newPreference').val('');
                     $('#addPreferenceModal').modal('hide');
                     currentPage = 1;
                     renderPreferences();
 
-                    console.log("dddddddddd")
                     showLoading(false);
 
                   }
@@ -1041,6 +1025,16 @@ const myGeneral = new General();
 
   myGeneral.getData("user/getBuildingPreference",callback, {} ,"loader")
 
+
+  }
+
+  else if (basePath === "memo") {
+    
+    const user= JSON.parse(localStorage.getItem("user"))
+    $("#userEmail").text(user.emailAddress) 
+    $("#userName").text(user.firstName+" "+user.lastName)
+    $("#userName2").text(user.firstName)
+    $('.my-avatar').attr('src',user.image);
 
   }
 
