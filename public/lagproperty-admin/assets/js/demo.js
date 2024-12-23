@@ -190,7 +190,8 @@ Circles.create({
 })
 
 
-//Notify/*
+//Notify
+/*
 $.notify({
 	icon: 'icon-bell',
 	title: 'Kaiadmin',
