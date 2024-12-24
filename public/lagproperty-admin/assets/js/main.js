@@ -12,7 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
 class General {
   constructor() {
 
-      this.domain="https://lagproperty.onrender.com/api/v1/"
+      //this.domain="https://lagproperty.onrender.com/api/v1/"
+      this.domain="http://209.38.236.66:8080/api/v1/"
       this.token=localStorage.getItem("token")
       this.restrictedPathsNoLogin = ["login"];
       this.navigateM=this.navigateM.bind(this)

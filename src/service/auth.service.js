@@ -2440,10 +2440,15 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
         const refundStatus = refundExists.refundStatus;
 
         // If the refund has failed and the delay time has passed, retry the refund
-        if (refundStatus === 'FAILED' && Date.now() - new Date(refundExists.updatedAt) >= retryDelay * 1000) {
+        if (refundStatus===TRANSACTION_STATUS.ABANDONED
+          ||refundStatus===TRANSACTION_STATUS.CANCELLED
+          ||refundStatus===TRANSACTION_STATUS.FAILED
+          ||refundStatus===TRANSACTION_STATUS.REVERSED
+          ||refundStatus===TRANSACTION_STATUS.EXPIRED) {
           await this.handleRefund(inspection);
         }
-      } else {
+      } 
+      else {
         // If no refund log exists, initiate the refund
         await this.handleRefund(inspection);
       }
