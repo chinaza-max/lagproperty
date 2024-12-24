@@ -327,7 +327,6 @@ class UserService {
     
         if (type === "tenantInvoicesDue") {
 
-
           // Fetch tenants with rent due
           tenantData = await this.TenantModel.findAndCountAll({
             where: {
@@ -349,12 +348,8 @@ class UserService {
           });
 
 
-    
-
         } 
-        console.log("tenantData")
-        console.log(tenantData)
-        console.log("tenantData")
+
         
         totalPages = Math.ceil(tenantData.count / pageSize);
     
@@ -3525,6 +3520,7 @@ async handleListBuilding(data) {
               buildingId:TransactionModelResult.buildingId,
               prospectiveTenantId:TransactionModelResult.prospectiveTenantId,
               status:'active',
+              rentMoneyStatus:'paid',
               rentNextDueDate:this.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
             })
           }
@@ -3926,17 +3922,6 @@ async handleListBuilding(data) {
   
         }
         else{
-
-       
-
-          console.log("======================")
-          console.log("======================")
-          console.log("======================")
-  
-          console.log( user.gender)
-   
-          console.log("======================")
-          console.log("======================")
 
         // Check marital status
         if (

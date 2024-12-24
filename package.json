@@ -1,10 +1,10 @@
-{
+  {
   "name": "lagproperty",
   "version": "1.0.0",
   "description": "for lagos property ",
   "main": "app.js",
   "type": "module",
-  "scripts": {
+    "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js"
   },

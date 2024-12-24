@@ -395,10 +395,7 @@ class AuthenticationService {
 
     try {
       
-
-
       const transactionStatus = await this.getTransactionStatusDisbursement(paymentReference);
-
 
       await this.handleDisbursement(transactionStatus)
      
@@ -415,21 +412,12 @@ class AuthenticationService {
     const  {reference, transactionReference}=transactionStatus
     const paymentReference=reference
       
-
       try {
         const TransactionModelResult= await this.TransactionModel.findOne({
           where:{
             paymentReference:paymentReference
           }
         })
-
-        console.log("TransactionModelResult")
-        console.log("TransactionModelResult")
-        console.log("TransactionModelResult")
-        console.log(TransactionModelResult)
-        console.log("TransactionModelResult")
-        console.log("TransactionModelResult")
-        console.log("TransactionModelResult")
 
 
         if (TransactionModelResult) {
@@ -456,14 +444,34 @@ class AuthenticationService {
               })
 
 
-              if(InspectionModelResult.agentPaidStatus==true){
-
-                InspectionModelResult.update({
-                  inspectionStatus:"disbursed"
-                })
-              }
-    
                 const BuildingModelResult=await this.BuildingModel.findByPk(TransactionModelResult.buildingId)
+
+
+                const PropertyManagerModelResult=await this.PropertyManagerModel.findOne({
+                  where:{
+                    id:PropertyManagerModelResult.propertyManagerId
+                  }
+                })
+
+                if(PropertyManagerModelResult.type==="landLord"){
+
+                  InspectionModelResult.update({
+                    inspectionStatus:"disbursed"
+                  })
+
+                }else{
+                    
+                  if(InspectionModelResult.agentPaidStatus==true){
+
+                    InspectionModelResult.update({
+                      inspectionStatus:"disbursed"
+                    })
+
+                  }
+    
+                }
+
+                //BELOW CREATING OF TENANT RESERVATION 
 
                 if(BuildingModelResult){
 
@@ -485,6 +493,7 @@ class AuthenticationService {
                       buildingId:TransactionModelResult.buildingId,
                       prospectiveTenantId:TransactionModelResult.userId,
                       status:'active',
+                      rentMoneyStatus:'disbursed',
                       paymentReference:paymentReference,
                       rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration)
                     })
@@ -492,7 +501,6 @@ class AuthenticationService {
 
                 }
               
-
             }
     
           } 
@@ -528,12 +536,29 @@ class AuthenticationService {
             }
 
           }
-          else if(transactionStatus.reference.startsWith("rent")){
+          else if(transactionStatus.reference.startsWith("subsequentRent")){
 
             await TransactionModelResult.update({
               paymentStatus:transactionStatus.status,
               transactionReference
             });
+
+            const record = await this.TenantModel.findOne(
+              { 
+                where: { 
+                  buildingId:TransactionModelResult.buildingId,
+                  prospectiveTenantId:TransactionModelResult.userId
+                 } 
+              });
+
+            if (record) {
+              await record.update({
+                rentMoneyStatus:'disbursed'
+              });
+              console.log('Record updated:', record);
+            } else {
+              console.log('Record not found');
+            }
 
           }
 
@@ -632,7 +657,6 @@ class AuthenticationService {
           })
 
 
-
           await this.NotificationModel.create({
             notificationFor: "rent",
             userId: existingInspection.prospectiveTenantId,
@@ -685,7 +709,8 @@ class AuthenticationService {
             TenantModelResult.update({
               status:'active',
               rentNextDueDate:userService.calculateRentNextDueDate(BuildingModelResult.rentalDuration,TenantModelResult.rentNextDueDate),
-              paymentReference:transactionStatus.paymentReference
+              paymentReference:transactionStatus.paymentReference,
+              rentMoneyStatus:'paid',
             })
 
             await this.NotificationModel.create({
@@ -697,7 +722,7 @@ class AuthenticationService {
             });
 
   
-            this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
+            //this.disburseRent(BuildingModelResult,TransactionModelResult.userId)
           }
          
         }
@@ -729,7 +754,7 @@ class AuthenticationService {
           buildingId:BuildingModel.id,
           amount:userService.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'rent').landlordShare,
           paymentReference,
-          transactionType:'rent'
+          transactionType:'subsequentRent'
         });
 
         const transferDetails = {
@@ -2010,6 +2035,9 @@ async  startFirstRentDisbursements() {
               { agentPaidStatus: false },
               { landlordPaidStatus: false }
             ],
+            inspectionStatus: {
+              [Sequelize.Op.not]: 'disbursed',
+            },
             isDeleted: false
           }
       });
@@ -2041,12 +2069,9 @@ async  startFirstRentDisbursements() {
           });
 
           if(!doesTransactionExist){
-
             await this.processDisbursement(propertyManager, inspection);
-
           }
           else{
-
               // Check if there is an existing successful transaction for this inspection
               const existingTransaction = await this.TransactionModel.findOne({
                 where: {
@@ -2138,7 +2163,13 @@ async  processDisbursement(propertyManager, inspection) {
       });
 
 
-      if (!transaction) return; // Skip if no related transaction
+      const totalBalance=await this.getAcctBalance(5948568393)
+
+      //MAKING SURE YOU ENOUGH MONEY IN YOUR ACCOUNT 
+      if((transaction.amount)+100  > totalBalance){
+        return
+      }
+      if (transaction) return;
 
       const amount = transaction.amount;
 
@@ -2233,6 +2264,8 @@ async  processDisbursement(propertyManager, inspection) {
 
   } catch (error) {
       console.error('Error processing disbursement:', error);
+
+
   }
 }
 
@@ -2287,40 +2320,37 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
  async rentDisbursements(){
 
     const settings = await this.SettingModel.findOne(); // Fetch settings from the database
-    const pendingDisburseRentRetry = settings?.pendingDisburseRentRetry ? settings.pendingDisburseRentRetry : 1800;  // Default to 1800 seconds if not found
 
-
-    const unpaidTransactions = await this.TransactionModel.findAll({
-      where: {
-        transactionType: 'rent',
-        paymentStatus: {
-          [Op.notIn]: ['PAID', 'OVERPAID']
-        }
-      }
+    const TenantModelResult = await this.TenantModel.findAll({
+      where: { 
+        rentMoneyStatus: 'paid'
+       },
     });
 
-    for(const unpaidTransaction of unpaidTransactions){
+    for (let index = 0; index < TenantModelResult.length; index++) {
+      const element = TenantModelResult[index];
 
-      if(unpaidTransaction.paymentStatus===TRANSACTION_STATUS.ABANDONED
-        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.CANCELLED
-        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.FAILED
-        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.REVERSED
-        ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.EXPIRED
-      ){
-
-        const BuildingModelResult=await this.BuildingModel.findOne({
-          where: {
-            id:unpaidTransaction.buildingId
+      const TransactionModelResult= await this.TransactionModel.findOne({
+        where:{
+          userId:element.prospectiveTenantId,
+          buildingId:element.buildingId,
+          transactionType:"subsequentRent",
+          paymentStatus: {
+            [Op.notIn]: ['PAID', 'OVERPAID','PARTIALLY_PAID' ]
           }
-        })
-  
-        this.disburseRent(BuildingModelResult,unpaidTransaction.userId)
-  
-      }
-     /* else if(unpaidTransactions.paymentStatus===TRANSACTION_STATUS.PENDING){
+        },
+        order: [['createdAt', 'DESC']]
+      })
 
-        if(new Date(unpaidTransaction.createdAt) < new Date(new Date() - pendingDisburseRentRetry * 1000)){
-          
+      for(const unpaidTransaction of TransactionModelResult){
+
+        if(unpaidTransaction.paymentStatus===TRANSACTION_STATUS.ABANDONED
+          ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.CANCELLED
+          ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.FAILED
+          ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.REVERSED
+          ||unpaidTransaction.paymentStatus===TRANSACTION_STATUS.EXPIRED
+        ){
+  
           const BuildingModelResult=await this.BuildingModel.findOne({
             where: {
               id:unpaidTransaction.buildingId
@@ -2330,12 +2360,10 @@ calculateDistribution(amount, type, hasAgent, paymentType) {
           this.disburseRent(BuildingModelResult,unpaidTransaction.userId)
     
         }
-      
-      }*/
+       
+      }
+
     }
-
-   
-
 
 
   }

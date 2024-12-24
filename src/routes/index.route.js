@@ -24,7 +24,7 @@ class Routes {
     this.router.get("/").get(`${rootAPI}/`, (req , res) => {
       return res.status(200).json({                                                                                                                                      
         status: 200,
-        message: "Welcome to giggle  App API",
+        message: "Welcome To Lag Property  App API",
         data: {
           service: "LAGProperty",
           version: "1.0.0",
@@ -35,8 +35,6 @@ class Routes {
 
     
     this.router.use(`${rootAPI}/auth`, authRoute)
-
-
 
     this.router.get('*', (req, res, next) => {
       const requestedPath = req.path;

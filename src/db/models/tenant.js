@@ -31,6 +31,13 @@ export function init(connection) {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      rentMoneyStatus: {//THIS ATTRIBUT TELLS YOU THE STATE OF THE MONEY 
+        type: DataTypes.ENUM(
+          'disbursed',// THE MONEY HAS BEEN DISBURSED TO THE HOUSE OWNER
+          'paid',// MONEY HAS BEEN PAID FOR RENT 
+        ),
+        allowNull: true,
+      },
       paymentReference: {
         type: DataTypes.STRING,
         allowNull: false,

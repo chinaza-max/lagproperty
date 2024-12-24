@@ -114,12 +114,11 @@ class Server {
       })*/
 
       // Schedule the cron job to run every 30 minutes
-      cron.schedule('*/2 * * * *', () => {
+      cron.schedule('*/10 * * * *', () => {
         authService.startFirstRentDisbursements();
         authService.rentDisbursements();
         authService.checkRefund();
       });        
-
 
 
     }

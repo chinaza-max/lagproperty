@@ -8,9 +8,6 @@ class ServerConfig {
    NODE_ENV = process.env.NODE_ENV;
    PORT = process.env.PORT;
    DOMAIN = process.env.DOMAIN; 
-
-
-   
    MONNIFY_CLIENT_SECRET  = process.env.MONNIFY_CLIENT_SECRET;
    MONNIFY_IP = process.env.MONNIFY_IP;
    MONNIFY_BASE_URL = process.env.MONNIFY_BASE_URL;

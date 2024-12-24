@@ -37,11 +37,12 @@ export function init(connection) {
       },
       transactionType: {
         type: DataTypes.ENUM(
-            'appointmentAndRent',
-            'firstRent',
-            'commission',
-            'refund',
-            'rent',
+            'appointmentAndRent',//INCOMING RENT FOR APPOINTMENT 
+            'firstRent',//DISBURSED FIRST RENT 
+            'commission',// DISBURSED COMMISSION FROM FIRST RENT
+            'refund',// REFUND 
+            'rent', 
+            'subsequentRent', //PAYMENT SENT TO HOUSE OWNER AS RENT 
           ),
         allowNull: false,
       },

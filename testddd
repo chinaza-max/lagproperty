@@ -1,0 +1,45 @@
+# server config  (development  or production)
+NODE_ENV=development
+PORT=5000
+DOMAIN=http://localhost:3000
+
+
+# authentication config
+SALT_ROUNDS=10
+TOKEN_EXPIRES_IN=2d
+TOKEN_ISSUER=LAG
+TOKEN_SECRET=77E85EE9786D449A813C5D5BC08CAEDE71E71FCA3FB3B9300DDC9B831CC73085
+
+# database config
+DB_USERNAME=lagProperty_bendkeyone
+DB_PASSWORD=f47f5825c8621335e8f32b508c05de35c4c192a2
+DB_HOST=cra.h.filess.io
+DB_PORT=3307
+DB_NAME=lagProperty_bendkeyone
+DB_URI=mysql://lagProperty_bendkeyone:f47f5825c8621335e8f32b508c05de35c4c192a2@cra.h.filess.io:3307/lagProperty_bendkeyone
+
+
+
+
+
+
+#host.fbyteamschedule.com
+# mail config
+EMAIL_HOST=smtp.gmail.com
+# EMAIL_PORT=587
+EMAIL_PORT=465
+EMAIL_USER=mosesogbonna68@gmail.com
+EMAIL_PASS=ridm mvzu xmcf axct
+EMAIL_SENDER=mosesogbonna68@gmail.com
+
+
+
+MONNIFY_CLIENT_SECRET =KPLU843UCRRPKWA2JB5KF3MR4LAZQ0T2
+MONNIFY_IP =35.242.133.146
+MONNIFY_BASE_URL=https://sandbox.monnify.com
+MONNIFY_API_KEY=MK_TEST_XLLJWNZ1HW
+MONNIFY_ACC=5948568393
+
+
+SMS_USER_NAME=
+SMS_PASSWORD=
