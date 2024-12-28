@@ -13,7 +13,9 @@ class General {
   constructor() {
 
       //this.domain="https://lagproperty.onrender.com/api/v1/"
-      this.domain="http://209.38.236.66:8080/api/v1/"
+      //this.domain="http://209.38.236.66:8080/api/v1/"
+      this.domain="http://localhost:5000/api/v1/"
+
       this.token=localStorage.getItem("token")
       this.restrictedPathsNoLogin = ["login"];
       this.navigateM=this.navigateM.bind(this)
@@ -726,7 +728,6 @@ const myGeneral = new General();
 
        const tableBody = document.getElementById("landlordID"); // Ensure your table body has this ID
         if (tableBody) {
-
           // Attach event listeners to the "View" buttons
           const viewButtons = tableBody.querySelectorAll(".view-landlord-btn");
           viewButtons.forEach((button) => {
@@ -735,6 +736,7 @@ const myGeneral = new General();
               viewLandlordDetails(landlordId); 
             });
           });
+
         }
  
     } 
@@ -768,6 +770,64 @@ const myGeneral = new General();
 
         const htmlContent=myGeneral.generateTenantTable(data)
         myGeneral.appendHtmlToDiv(htmlContent, "tenantTableID")
+
+       //initiatilize the datatable 
+       $("#basic-datatables").DataTable({})
+
+       $("#multi-filter-select").DataTable({
+         pageLength: 5,
+         initComplete: function () {
+           this.api()
+             .columns()
+             .every(function () {
+               var column = this;
+               var select = $(
+                 '<select class="form-select"><option value=""></option></select>'
+               )
+                 .appendTo($(column.footer()).empty())
+                 .on("change", function () {
+                   var val = $.fn.dataTable.util.escapeRegex($(this).val());
+ 
+                   column
+                     .search(val ? "^" + val + "$" : "", true, false)
+                     .draw();
+                 });
+ 
+               column
+                 .data()
+                 .unique()
+                 .sort()
+                 .each(function (d, j) {
+                   select.append(
+                     '<option value="' + d + '">' + d + "</option>"
+                   );
+                 });
+             });
+         },
+       });
+ 
+       // Add Row
+       $("#add-row").DataTable({
+         pageLength: 5,
+       });
+ 
+       var action =
+         '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+ 
+       $("#addRowButton").click(function () {
+         $("#add-row")
+           .dataTable()
+           .fnAddData([
+             $("#addName").val(),
+             $("#addPosition").val(),
+             $("#addOffice").val(),
+             action,
+           ]);
+         $("#addRowModal").modal("hide");
+       });
+
+
+
       }
 
     }
@@ -842,189 +902,194 @@ const myGeneral = new General();
 
 
 
-  function callback(data){
-  
+    function callback(data){
+      
+        if (typeof data === 'string') {
+          try {
+              const parsedData = JSON.parse(data); // Safely parse the JSON string
+              data = parsedData|| [];
+          } catch (error) {
+              console.error("Invalid JSON string", error);
+          }
+        } 
 
+      let preferences = data.buildingPreferences.map((item, index) => ({
+          id: index + 1,
+          name: item
+      }));
 
-    let preferences = data.buildingPreferences.map((item, index) => ({
-        id: index + 1,
-        name: item
-    }));
+      // Pagination settings
+      const itemsPerPage = 20;
+      let currentPage = 1;
+      let filteredPreferences = [...preferences];
 
-    // Pagination settings
-    const itemsPerPage = 20;
-    let currentPage = 1;
-    let filteredPreferences = [...preferences];
+      function showLoading(show = true) {
+          $('#loading').toggle(show);
+      }
 
-    function showLoading(show = true) {
-        $('#loading').toggle(show);
-    }
+      function renderPreferences() {
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const currentPreferences = filteredPreferences.slice(startIndex, endIndex);
 
-    function renderPreferences() {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const currentPreferences = filteredPreferences.slice(startIndex, endIndex);
+          const list = $('#preferenceList');
+          list.empty();
 
-        const list = $('#preferenceList');
-        list.empty();
+          currentPreferences.forEach(pref => {
+              list.append(`
+                  <div class="preference-item p-2 border-bottom d-flex justify-content-between align-items-center" data-id="${pref.id}">
+                      <span>${pref.name}</span>
+                      <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </div>
+              `);
+          });
 
-        currentPreferences.forEach(pref => {
-            list.append(`
-                <div class="preference-item p-2 border-bottom d-flex justify-content-between align-items-center" data-id="${pref.id}">
-                    <span>${pref.name}</span>
-                    <button class="btn btn-danger btn-sm delete-btn">Delete</button>
-                </div>
-            `);
-        });
+          updatePagination();
+          updateItemCount();
+      }
 
-        updatePagination();
-        updateItemCount();
-    }
+      function updatePagination() {
+          const totalPages = Math.ceil(filteredPreferences.length / itemsPerPage);
+          const pagination = $('#pagination');
+          pagination.empty();
 
-    function updatePagination() {
-        const totalPages = Math.ceil(filteredPreferences.length / itemsPerPage);
-        const pagination = $('#pagination');
-        pagination.empty();
+          // Previous button
+          pagination.append(`
+              <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                  <a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>
+              </li>
+          `);
 
-        // Previous button
-        pagination.append(`
-            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>
-            </li>
-        `);
+          // Page numbers
+          for (let i = 1; i <= totalPages; i++) {
+              if (
+                  i === 1 || 
+                  i === totalPages || 
+                  (i >= currentPage - 2 && i <= currentPage + 2)
+              ) {
+                  pagination.append(`
+                      <li class="page-item ${i === currentPage ? 'active' : ''}">
+                          <a class="page-link" href="#" data-page="${i}">${i}</a>
+                      </li>
+                  `);
+              } else if (
+                  i === currentPage - 3 || 
+                  i === currentPage + 3
+              ) {
+                  pagination.append(`
+                      <li class="page-item disabled">
+                          <a class="page-link" href="#">...</a>
+                      </li>
+                  `);
+              }
+          }
 
-        // Page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            if (
-                i === 1 || 
-                i === totalPages || 
-                (i >= currentPage - 2 && i <= currentPage + 2)
-            ) {
-                pagination.append(`
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `);
-            } else if (
-                i === currentPage - 3 || 
-                i === currentPage + 3
-            ) {
-                pagination.append(`
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#">...</a>
-                    </li>
-                `);
-            }
-        }
+          // Next button
+          pagination.append(`
+              <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                  <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
+              </li>
+          `);
+      }
 
-        // Next button
-        pagination.append(`
-            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
-            </li>
-        `);
-    }
+      function updateItemCount() {
+          $('#itemsShown').text(Math.min(currentPage * itemsPerPage, filteredPreferences.length));
+          $('#totalItems').text(filteredPreferences.length);
+      }
 
-    function updateItemCount() {
-        $('#itemsShown').text(Math.min(currentPage * itemsPerPage, filteredPreferences.length));
-        $('#totalItems').text(filteredPreferences.length);
-    }
+      // Event Handlers
+      $(document).ready(function() {
+          renderPreferences();
 
-    // Event Handlers
-    $(document).ready(function() {
-        renderPreferences();
+          // Pagination click handler
+          $('#pagination').on('click', '.page-link', function(e) {
+              e.preventDefault();
+              const newPage = parseInt($(this).data('page'));
+              if (!isNaN(newPage) && newPage !== currentPage) {
+                  currentPage = newPage;
+                  renderPreferences();
+              }
+          });
 
-        // Pagination click handler
-        $('#pagination').on('click', '.page-link', function(e) {
-            e.preventDefault();
-            const newPage = parseInt($(this).data('page'));
-            if (!isNaN(newPage) && newPage !== currentPage) {
-                currentPage = newPage;
-                renderPreferences();
-            }
-        });
-
-        // Search handler
-        $('#searchBox').on('input', function() {
-            const searchTerm = $(this).val().toLowerCase();
-            filteredPreferences = preferences.filter(pref => 
-                pref.name.toLowerCase().includes(searchTerm)
-            );
-            currentPage = 1;
-            renderPreferences();
-        });
-
-        // Delete handler
-        $('#preferenceList').on('click', '.delete-btn', function() {
-            const id = $(this).parent().data('id');
-            showLoading();
-
-            console.log(id)
-            const combination=[...preferences , ...filteredPreferences]
-            const uniqueBuildingPreferences = [...new Set(combination) ];
-            console.log(uniqueBuildingPreferences)
-            const result = myGeneral.getById(id, uniqueBuildingPreferences); 
-
-            const mydata={
-              type:"deleted",
-              preferenceName:result.name
-            }
-
-            function callback3(){
-              preferences = preferences.filter(pref => pref.id !== id);
-              filteredPreferences = filteredPreferences.filter(pref => pref.id !== id);
+          // Search handler
+          $('#searchBox').on('input', function() {
+              const searchTerm = $(this).val().toLowerCase();
+              filteredPreferences = preferences.filter(pref => 
+                  pref.name.toLowerCase().includes(searchTerm)
+              );
+              currentPage = 1;
               renderPreferences();
-              showLoading(false);
-            
-            }
-            myGeneral.postData("user/BuildingPreferenceAction",mydata,'','', callback3)
+          });
 
-        });
+          // Delete handler
+          $('#preferenceList').on('click', '.delete-btn', function() {
+              const id = $(this).parent().data('id');
+              showLoading();
 
-        // Add new preference
-        $('#savePreference').click(function() {
-            const newPrefName = $('#newPreference').val().trim();
-            if (newPrefName) {
-                showLoading();
+              console.log(id)
+              const combination=[...preferences , ...filteredPreferences]
+              const uniqueBuildingPreferences = [...new Set(combination) ];
+              console.log(uniqueBuildingPreferences)
+              const result = myGeneral.getById(id, uniqueBuildingPreferences); 
+
+              const mydata={
+                type:"deleted",
+                preferenceName:result.name
+              }
+
+              function callback3(){
+                preferences = preferences.filter(pref => pref.id !== id);
+                filteredPreferences = filteredPreferences.filter(pref => pref.id !== id);
+                renderPreferences();
+                showLoading(false);
+              
+              }
+              myGeneral.postData("user/BuildingPreferenceAction",mydata,'','', callback3)
+
+          });
+
+          // Add new preference
+          $('#savePreference').click(function() {
+              const newPrefName = $('#newPreference').val().trim();
+              if (newPrefName) {
+                  showLoading();
 
 
-                  const data={
-                    type:"add",
-                    preferenceName:newPrefName
-                  }
-                  function callback2(){
-                    const newPref = {
-                      id: preferences.length + 1,
-                      name: newPrefName
-                    };
+                    const data={
+                      type:"add",
+                      preferenceName:newPrefName
+                    }
+                    function callback2(){
+                      const newPref = {
+                        id: preferences.length + 1,
+                        name: newPrefName
+                      };
 
-                    preferences.unshift(newPref);
-                    filteredPreferences = [...preferences];
+                      preferences.unshift(newPref);
+                      filteredPreferences = [...preferences];
 
-                    $('#newPreference').val('');
-                    $('#addPreferenceModal').modal('hide');
-                    currentPage = 1;
-                    renderPreferences();
+                      $('#newPreference').val('');
+                      $('#addPreferenceModal').modal('hide');
+                      currentPage = 1;
+                      renderPreferences();
 
-                    showLoading(false);
+                      showLoading(false);
 
-                  }
+                    }
 
-                  myGeneral.postData("user/BuildingPreferenceAction",data,'','', callback2)
+                    myGeneral.postData("user/BuildingPreferenceAction",data,'','', callback2)
+                    
+
+
                   
+              }
+          });
+      });
 
 
-                
-            }
-        });
-    });
+    }
 
-
-  }
-
-
-
-  myGeneral.getData("user/getBuildingPreference",callback, {} ,"loader")
+    myGeneral.getData("user/getBuildingPreference",callback, {} ,"loader")
 
 
   }

@@ -1705,11 +1705,25 @@ class UserService {
         throw new NotFoundError('NotFoundError', 'Settings not found');
       }
 
-      let buildingPreferences =typeof setting.preferences === 'string' ?  JSON.parse(setting.preferences)?.buildingPreferences||[] : setting.preferences?.buildingPreferences||[]
+      //let buildingPreferences =typeof setting.preferences === 'string' ?  JSON.parse(setting.preferences)?.buildingPreferences||[] : setting.preferences?.buildingPreferences||[]
+
+      let buildingPreferences = [];
+
+        if (typeof setting?.preferences === 'string') {
+            try {
+                const parsedPreferences = JSON.parse(setting.preferences); // Safely parse JSON
+                buildingPreferences = parsedPreferences?.buildingPreferences || [];
+            } catch (error) {
+                console.error("Invalid JSON string in setting.preferences", error);
+            }
+        } else if (setting?.preferences && typeof setting.preferences === 'object') {
+            buildingPreferences = setting.preferences?.buildingPreferences || [];
+        }
 
       if (type === 'add') {
 
         if (!buildingPreferences.includes(preferenceName)) {
+
           buildingPreferences.push(preferenceName);
 
         }
@@ -1728,6 +1742,7 @@ class UserService {
       buildingPreferences = [...new Set(buildingPreferences)];
 
       console.log(buildingPreferences)
+
       await setting.update({
         preferences: { buildingPreferences }
       });
