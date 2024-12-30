@@ -202,3 +202,9 @@ class Server {
   
   const server = new Server(serverConfig.PORT , serverConfig.NODE_ENV );
   server.start();
+
+  /**
+   * path where the app is in digital ocean 
+   * 
+   * /var/www/lag-property-server/lagproperty
+   */

@@ -16,6 +16,9 @@ class MailService {
       auth: {
         user: serverConfig.EMAIL_USER,
         pass: serverConfig.EMAIL_PASS
+      },
+      tls: {
+          rejectUnauthorized: false 
       }
     });
   }
