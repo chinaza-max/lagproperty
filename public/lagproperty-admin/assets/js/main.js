@@ -388,27 +388,26 @@ const myGeneral = new General();
         }*/
 
         // Proceed with the submission (you can send the data to the server here)
-        const data = {
+        /*const data = {
             emailAddress: email,
             password: password,       
             type:"admin"
-        };
+        };*/
 
           
-/*
         const data ={
           firstName:"chinaza",
           lastName:"ogbonna",
-          emailAddress:"mosesogbonna68@gmail.com",
+          emailAddress:"admin@gmail.com",
           password:"admin100",
           image:"sssss",
           privilege:"admin",
           type:"admin"
-        }*/
+        }
 
         console.log('Form submitted:', data);
 
-        myGeneral.postData('auth/loginUser', data, "loginButton", "loginButtonL");
+        myGeneral.postData('auth/registerUser', data, "loginButton", "loginButtonL");
     });
 
 
