@@ -1716,13 +1716,16 @@ class UserService {
             } catch (error) {
                 console.error("Invalid JSON string in setting.preferences", error);
             }
-        } else if (setting?.preferences && typeof setting.preferences === 'object') {
+        } 
+        else if (setting?.preferences && typeof setting.preferences === 'object') {
             buildingPreferences = setting.preferences?.buildingPreferences || [];
         }
 
+        console.log("buildingPreferences", buildingPreferences)
+
       if (type === 'add') {
 
-        if (!buildingPreferences.includes(preferenceName)) {
+        if (!(buildingPreferences.includes(preferenceName))) {
 
           buildingPreferences.push(preferenceName);
 

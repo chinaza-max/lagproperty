@@ -13,8 +13,8 @@ class General {
   constructor() {
 
       //this.domain="https://lagproperty.onrender.com/api/v1/"
-      this.domain="http://209.38.236.66:8080/api/v1/"
-      //this.domain="http://localhost:5000/api/v1/"
+      //this.domain="http://209.38.236.66:8080/api/v1/"
+      this.domain="http://localhost:5000/api/v1/"
 
       this.token=localStorage.getItem("token")
       this.restrictedPathsNoLogin = ["login"];
@@ -388,13 +388,13 @@ const myGeneral = new General();
         }*/
 
         // Proceed with the submission (you can send the data to the server here)
-        /*const data = {
+        const data = {
             emailAddress: email,
             password: password,       
             type:"admin"
-        };*/
+        };
 
-          
+         /* 
         const data ={
           firstName:"chinaza",
           lastName:"ogbonna",
@@ -405,9 +405,9 @@ const myGeneral = new General();
           type:"admin"
         }
 
-        console.log('Form submitted:', data);
+        console.log('Form submitted:', data);*/
 
-        myGeneral.postData('auth/registerUser', data, "loginButton", "loginButtonL");
+        myGeneral.postData('auth/loginUser', data, "loginButton", "loginButtonL");
     });
 
 
