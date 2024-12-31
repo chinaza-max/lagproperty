@@ -1722,6 +1722,7 @@ class UserService {
         }
 
         console.log("buildingPreferences", buildingPreferences)
+        console.log("type", type)
 
       if (type === 'add') {
 
@@ -1742,14 +1743,20 @@ class UserService {
       }
   
       //remove duplicate 
-      buildingPreferences = [...new Set(buildingPreferences)];
+      const buildingPreferencesNew = [...new Set(buildingPreferences)];
 
-      console.log(buildingPreferences)
+      console.log("last")
+      console.log(buildingPreferencesNew)
+      console.log("last")
 
-      await setting.update({
-        preferences: { buildingPreferences }
-      });
-       
+      if (typeof setting.preferences === 'string') {
+        // If preferences is a string (JSON), parse it into an object
+        setting.preferences = JSON.parse(setting.preferences);
+      }
+      setting.preferences.buildingPreferences = buildingPreferencesNew;
+
+      await setting.save();
+
   
     } catch (error) {
       console.log(error)
