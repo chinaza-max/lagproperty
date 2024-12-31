@@ -1726,6 +1726,10 @@ class UserService {
 
       if (type === 'add') {
 
+        console.log("ran ran ran")
+        console.log("ran ran ran")
+        console.log("ran ran ran")
+
         if (!(buildingPreferences.includes(preferenceName))) {
 
           buildingPreferences.push(preferenceName);
