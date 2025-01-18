@@ -210,4 +210,41 @@ class Server {
    * /var/www/api/lagproperty/
    *
    * /etc/nginx/sites-available
+   * 
+   * 
+   * 
+   * 
+
+  erver {
+    listen 80;
+    server_name 178.62.5.186 www.178.62.5.186;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name 178.62.5.186 www.178.62.5.186;
+
+    ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;
+    ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
+
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    error_page 404 /404.html;
+    location = /404.html {
+        root /var/www/html;
+    }
+}
+
    */
+
