@@ -206,7 +206,7 @@ class Server {
   /**
    * path where the app is in digital ocean 
    * 
-   * /var/www/lag-property-server/lagproperty
+   *  older /var/www/lag-property-server/lagproperty
    * /var/www/api/lagproperty/
    *
    * /etc/nginx/sites-available
