@@ -209,5 +209,5 @@ class Server {
    * /var/www/lag-property-server/lagproperty
    * /var/www/api/lagproperty/
    *
-   * /var/www/
+   * /etc/nginx/sites-available
    */
