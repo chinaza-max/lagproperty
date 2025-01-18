@@ -26,7 +26,7 @@ class Routes {
         status: 200,
         message: "Welcome To Lag Property  App API",
         data: {
-          service: "LAGProperty",
+          service: "Lag-Property",
           version: "1.0.0",
         },
       });
