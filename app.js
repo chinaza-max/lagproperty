@@ -12,8 +12,8 @@ import cron from "node-cron"
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import AdminJS from 'adminjs';
-import AdminJSExpress from '@adminjs/express';
-import AdminJSSequelize from '@adminjs/sequelize';
+//import AdminJSExpress from '@adminjs/express';
+//import AdminJSSequelize from '@adminjs/sequelize';
 import {Setting} from './src/db/models/index.js';
 
 //import initializeAdminJS from './src/config/adminjs.config.js';
@@ -207,4 +207,7 @@ class Server {
    * path where the app is in digital ocean 
    * 
    * /var/www/lag-property-server/lagproperty
+   * /var/www/api/lagproperty/
+   *
+   * /var/www/
    */

@@ -14,12 +14,9 @@
     "nodemon": "^3.0.3"
   },
   "dependencies": {
-    "@adminjs/express": "^5.1.0",
-    "@adminjs/sequelize": "^3.0.0",
     "@tiptap/core": "^2.8.0",
     "@tiptap/extension-text-style": "^2.8.0",
     "@tiptap/starter-kit": "^2.8.0",
-    "adminjs": "^6.8.7",
     "axios": "^1.6.7",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
