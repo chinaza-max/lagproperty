@@ -398,7 +398,7 @@ const myGeneral = new General();
         const data ={
           firstName:"chinaza",
           lastName:"ogbonna",
-          emailAddress:"admin@gmail.com",
+          emailAddress:"admin@gmail.com", 
           password:"admin100",
           image:"sssss",
           privilege:"admin",
