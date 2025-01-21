@@ -1,10 +1,10 @@
-  {
+{
   "name": "lagproperty",
   "version": "1.0.0",
   "description": "for lagos property ",
   "main": "app.js",
   "type": "module",
-    "scripts": {
+  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js"
   },
@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "express-formidable": "^1.2.0",
+    "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "firebase-admin": "^12.0.0",
     "handlebars": "^4.7.8",
