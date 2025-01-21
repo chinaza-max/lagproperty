@@ -1,0 +1,29 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the 'main' branch (change if you're using a different branch)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Runs on a GitHub-hosted Ubuntu environment
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}  # Your SSH private key stored as a secret
+
+      - name: Deploy Code to DigitalOcean
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.DIGITALOCEAN_IP }} << 'EOF'
+          cd /var/www/api/lagproperty
+          git pull origin main  # Pull the latest code from the 'main' branch
+          npm install            # Install dependencies
+          npm run build          # Build the app (if needed)
+          pm2 restart all        # Restart the app (if using PM2)
+          EOF
