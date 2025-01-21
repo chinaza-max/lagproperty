@@ -3,7 +3,7 @@ name: Deploy to DigitalOcean
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the 'main' branch (change if you're using a different branch)
+      - master  # Trigger on pushes to the 'master' branch (change if you're using a different branch)
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.DIGITALOCEAN_IP }} << 'EOF'
           cd /var/www/api/lagproperty
-          git pull origin main  # Pull the latest code from the 'main' branch
+          git pull origin master  # Pull the latest code from the 'master' branch
           npm install            # Install dependencies
           npm run build          # Build the app (if needed)
           pm2 restart all        # Restart the app (if using PM2)
