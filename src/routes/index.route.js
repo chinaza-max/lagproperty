@@ -25,7 +25,7 @@ class Routes {
       return res.status(200).json({                                                                                                                                      
         status: 200,
         message: "Welcome To Lag Property  App API",
-        data: {
+        data: { 
           service: "Lag-Property u",
           version: "1.0.0",
         },
