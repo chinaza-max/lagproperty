@@ -1087,19 +1087,54 @@ class UserService {
 
 
   
-  async handleGetBuildingPreference(data) {
-
+  async handleGetBuildingPreference() {
     try {
-      const SettingModelResult = await this.SettingModel.findByPk(1);
-      
-      return SettingModelResult.preferences
-      
-    } 
-    catch (error) {   
-      throw new SystemError(error.name, error.parent);
+      const setting = await this.SettingModel.findByPk(1);
+  
+      if (!setting) {
+        throw new Error("Settings record not found.");
+      }
+  
+      let preferences = {};
+      if (typeof setting.preferences === 'string') {
+        // Safely parse JSON if preferences is stored as a string
+        try {
+          preferences = JSON.parse(setting.preferences);
+        } catch (error) {
+          console.error("Failed to parse preferences JSON", error);
+          throw new Error("Invalid preferences format in the database.");
+        }
+      } else if (typeof setting.preferences === 'object') {
+        preferences = setting.preferences;
+      } else {
+        throw new Error("Unexpected preferences data type.");
+      }
+  
+      // Extract the desired fields and ensure non-existent ones default to an empty array
+      const {
+        buildingPreferences = [],
+        region = [],
+        maritalStatus = [],
+        religion = [],
+        gender = [],
+      } = preferences;
+  
+      // Validate that each field is an array; if not, return an empty array
+      const response = {
+        buildingPreferences: Array.isArray(buildingPreferences) ? buildingPreferences : [],
+        region: Array.isArray(region) ? region : [],
+        maritalStatus: Array.isArray(maritalStatus) ? maritalStatus : [],
+        religion: Array.isArray(religion) ? religion : [],
+        gender: Array.isArray(gender) ? gender : [],
+      };
+  
+      return response;
+    } catch (error) {
+      console.error("Error fetching building preferences:", error);
+      throw new SystemError(error.name, error.message);
     }
   }
-
+  
   
   async handleGetNotification(data) {
 
@@ -1726,10 +1761,6 @@ class UserService {
 
       if (type === 'add') {
 
-        console.log("ran ran ran")
-        console.log("ran ran ran")
-        console.log("ran ran ran")
-
         if (!(buildingPreferences.includes(preferenceName))) {
 
           buildingPreferences.push(preferenceName);
@@ -1748,10 +1779,6 @@ class UserService {
   
       //remove duplicate 
       const buildingPreferencesNew = [...new Set(buildingPreferences)];
-
-      console.log("last")
-      console.log(buildingPreferencesNew)
-      console.log("last")
 
       if (typeof setting.preferences === 'string') {
         // If preferences is a string (JSON), parse it into an object

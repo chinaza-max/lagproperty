@@ -11,17 +11,14 @@ import { dirname } from 'path';
 import cron from "node-cron"
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
-import AdminJS from 'adminjs';
-//import AdminJSExpress from '@adminjs/express';
-//import AdminJSSequelize from '@adminjs/sequelize';
+
 import {Setting} from './src/db/models/index.js';
 
-//import initializeAdminJS from './src/config/adminjs.config.js';
+ 
 
-
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url); 
 const __dirname = dirname(__filename);
-
+ 
 
 
 const swaggerOptions = {
@@ -195,11 +192,12 @@ class Server {
       
 
       this.app.listen(this.port, () => {
+
           console.log(`Server is running on http://localhost:${this.port}`);
       });  
     }
   }
-  
+  console.log(serverConfig.PORT)
   const server = new Server(serverConfig.PORT , serverConfig.NODE_ENV );
   server.start();
 
