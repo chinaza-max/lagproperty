@@ -663,7 +663,18 @@ class UserUtil {
           width: Joi.number().integer().required(),
           length: Joi.number().integer().required(),
           size: Joi.number().max(5000000).required(),
-          meta: Joi.object().optional(),
+          meta: Joi.string()
+            .custom((value, helpers) => {
+              try {
+                JSON.parse(value); // Ensure it's a valid JSON string
+                return value;
+              } catch (error) {
+                return helpers.error("any.invalid", {
+                  message: "Invalid JSON string",
+                });
+              }
+            })
+            .optional(),
         })
       )
       .required(),
