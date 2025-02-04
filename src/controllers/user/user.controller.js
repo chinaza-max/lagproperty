@@ -237,7 +237,7 @@ export default class UserController {
       const lengths = Array.isArray(data.lengths)
         ? data.lengths
         : [data.lengths];
-      const meta = Array.isArray(data.meta) ? data.meta : [data.meta];
+      const meta = Array.isArray(data.meta) ? data?.meta : [data?.meta];
 
       // Prepare propertyImages array with associated data
       const propertyImages = (files.propertyImages || []).map(
@@ -247,7 +247,7 @@ export default class UserController {
               ? process.env.DOMAIN + file.path.replace("/home", "")
               : process.env.DOMAIN + file.path.replace("public", ""),
           title: titles[`${index}`] || "Default Title",
-          meta: meta[`${index}`] || "",
+          // meta: meta[`${index}`] || "",
           width: parseFloat(widths[`${index}`]) || 0,
           length: parseFloat(lengths[`${index}`]) || 0,
           length: parseFloat(lengths[`${index}`]) || 0,
