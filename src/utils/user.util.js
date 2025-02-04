@@ -663,7 +663,7 @@ class UserUtil {
           width: Joi.number().integer().required(),
           length: Joi.number().integer().required(),
           size: Joi.number().max(5000000).required(),
-          meta: Joi.string()
+          /*meta: Joi.string()
             .custom((value, helpers) => {
               try {
                 JSON.parse(value); // Ensure it's a valid JSON string
@@ -674,7 +674,7 @@ class UserUtil {
                 });
               }
             })
-            .optional(),
+            .optional(),*/
         })
       )
       .required(),
