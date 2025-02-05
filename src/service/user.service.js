@@ -606,6 +606,7 @@ class UserService {
       "propertyDescription",
       "propertyTerms",
       "buildingOccupantPreference",
+      "propertyImages",
     ];
 
     try {
