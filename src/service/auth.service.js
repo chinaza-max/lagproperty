@@ -323,23 +323,31 @@ class AuthenticationService {
         where: { transactionReference },
       });
 
-      await RefundLogModelResult.update({
-        paymentStatus: transactionStatus.refundStatus,
-        transactionReference: transactionReference,
-      });
+      if (RefundLogModelResult) {
+        await RefundLogModelResult.update({
+          paymentStatus: transactionStatus.refundStatus,
+          transactionReference: transactionReference,
+        });
+      }
 
       if (transactionStatus.refundStatus === "COMPLETED") {
-        await InspectionModelResult.update({
-          inspectionStatus: "refunded",
-        });
+        if (InspectionModelResult) {
+          await InspectionModelResult.update({
+            inspectionStatus: "refunded",
+          });
+        }
 
-        const BuildingModelResult = await this.BuildingModel.findOne({
-          where: { id: RefundLogModelResult.buildingId },
-        });
+        if (RefundLogModelResult) {
+          const BuildingModelResult = await this.BuildingModel.findOne({
+            where: { id: RefundLogModelResult.buildingId },
+          });
 
-        await BuildingModelResult.update({
-          availability: "vacant",
-        });
+          if (BuildingModelResult) {
+            await BuildingModelResult.update({
+              availability: "vacant",
+            });
+          }
+        }
       }
     }
   }
@@ -565,7 +573,9 @@ class AuthenticationService {
             where: {
               buildingId,
               prospectiveTenantId: userId,
-              inspectionStatus: "pending",
+              inspectionStatus: {
+                [Op.or]: ["pending", "accepted", "declined", "notCreated"], // Checking for these three statuses
+              },
             },
           });
 
