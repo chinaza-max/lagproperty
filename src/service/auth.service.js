@@ -523,7 +523,6 @@ class AuthenticationService {
 
   async handlePaymentCollection(transactionStatus) {
     try {
-      console.log(transactionStatus);
       if (transactionStatus.paymentReference.startsWith("appointmentAndRent")) {
         const { amountPaid, metaData, paymentReference, transactionReference } =
           transactionStatus;
@@ -554,17 +553,10 @@ class AuthenticationService {
         }
 
         if (transactionStatus.paymentStatus == "PAID") {
-          console.log("buildingId");
-
-          console.log(buildingId);
-          console.log("buildingId");
           const BuildingModelResponse = await this.BuildingModel.findByPk(
             buildingId
           );
 
-          console.log("BuildingModelResponseBuildingModelResponse");
-          console.log(BuildingModelResponse);
-          console.log("BuildingModelResponseBuildingModelResponse");
           BuildingModelResponse.update({
             availability: "booked",
           });
@@ -580,18 +572,18 @@ class AuthenticationService {
           if (!existingInspection) {
             console.log("existingInspection existingInspection");
             console.log("existingInspection existingInspection");
-            await this.InspectionModel.create({
+            /* await this.InspectionModel.create({
               transactionReference,
               buildingId,
               prospectiveTenantId: userId,
-            });
+            });*/
 
             console.log("NotificationModel NotificationModel");
             console.log("NotificationModel NotificationModel");
 
             await this.NotificationModel.create({
               notificationFor: "rent",
-              userId: existingInspection.prospectiveTenantId,
+              userId,
               type: "inspection",
               message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
               buildingId: BuildingModelResponse.id,
