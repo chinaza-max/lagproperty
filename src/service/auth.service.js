@@ -527,6 +527,7 @@ class AuthenticationService {
       if (transactionStatus.paymentReference.startsWith("appointmentAndRent")) {
         const { amountPaid, metaData, paymentReference, transactionReference } =
           transactionStatus;
+
         const { userId, buildingId, transactionType } = metaData;
         console.log(metaData);
 
@@ -553,9 +554,14 @@ class AuthenticationService {
         }
 
         if (transactionStatus.paymentStatus == "PAID") {
+          console.log(buildingId);
           const BuildingModelResponse = await this.BuildingModel.findByPk(
             buildingId
           );
+
+          console.log("BuildingModelResponseBuildingModelResponse");
+          console.log(BuildingModelResponse);
+          console.log("BuildingModelResponseBuildingModelResponse");
           BuildingModelResponse.update({
             availability: "booked",
           });
@@ -569,11 +575,16 @@ class AuthenticationService {
           });
 
           if (!existingInspection) {
+            console.log("existingInspection existingInspection");
+            console.log("existingInspection existingInspection");
             await this.InspectionModel.create({
               transactionReference,
               buildingId,
               prospectiveTenantId: userId,
             });
+
+            console.log("NotificationModel NotificationModel");
+            console.log("NotificationModel NotificationModel");
 
             await this.NotificationModel.create({
               notificationFor: "rent",
