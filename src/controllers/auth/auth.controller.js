@@ -530,11 +530,6 @@ export default class AuthenticationController {
       return res.status(403).send("Unauthorized IP");
     }
 
-    console.log("move to the next stage ");
-    console.log("move to the next stage ");
-    console.log("move to the next stage ");
-    console.log("move to the next stage ");
-
     next();
   };
 

@@ -577,24 +577,12 @@ class AuthenticationService {
             },
           });
 
-          await this.NotificationModel.create({
-            notificationFor: "rent",
-            userId,
-            type: "inspection",
-            message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
-            buildingId: BuildingModelResponse.id,
-          });
           if (!existingInspection) {
-            console.log("existingInspection existingInspection");
-            console.log("existingInspection existingInspection");
             await this.InspectionModel.create({
               transactionReference,
               buildingId,
               prospectiveTenantId: userId,
             });
-
-            console.log("NotificationModel NotificationModel");
-            console.log("NotificationModel NotificationModel");
 
             await this.NotificationModel.create({
               notificationFor: "rent",
@@ -603,12 +591,6 @@ class AuthenticationService {
               message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
               buildingId: BuildingModelResponse.id,
             });
-          } else {
-            console.log("no no no  inspection ");
-            console.log("no no no  inspection ");
-            console.log("no no no  inspection ");
-            console.log("no no no  inspection ");
-            console.log("no no no  inspection ");
           }
         }
       } else if (transactionStatus.paymentReference.startsWith("rentInvoice")) {
