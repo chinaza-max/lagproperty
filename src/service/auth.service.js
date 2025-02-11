@@ -554,7 +554,10 @@ class AuthenticationService {
         }
 
         if (transactionStatus.paymentStatus == "PAID") {
+          console.log("buildingId");
+
           console.log(buildingId);
+          console.log("buildingId");
           const BuildingModelResponse = await this.BuildingModel.findByPk(
             buildingId
           );
