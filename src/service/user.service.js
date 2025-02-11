@@ -3022,7 +3022,7 @@ class UserService {
             notificationFor: "rent",
             userId: inspection.prospectiveTenantId,
             type: "inspection",
-            message: `Good news! Your inspection for ${building.propertyTitle} at ${building.address}, ${building.city} has been accepted. We are excited to help you proceed with the next steps, and you will receive further details soon.Thank you for trusting us with your property needs!`,
+            message: `Good news! Your inspection for ${building.propertyPreference} at ${building.address}, ${building.city} has been accepted. We are excited to help you proceed with the next steps, and you will receive further details soon.Thank you for trusting us with your property needs!`,
             buildingId: building.id,
           });
 
