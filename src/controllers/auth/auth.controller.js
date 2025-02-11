@@ -597,6 +597,12 @@ export default class AuthenticationController {
 
   validateTransactionHash = (req, res, next) => {
     try {
+      console.log("am here herre");
+      console.log("am here herre");
+      console.log("am here herre");
+      console.log("am here herre");
+      console.log("am here herre");
+
       const monnifySignature = req.headers["monnify-signature"];
 
       console.log("monnifySignature");
