@@ -514,13 +514,11 @@ class AuthenticationService {
     const { transactionReference } = eventData;
 
     try {
-      // console.log(transactionReference)
+      console.log(transactionReference);
 
       const transactionStatus = await this.getTransactionStatus(
         transactionReference
       );
-
-      console.log(transactionStatus);
 
       this.handlePaymentCollection(transactionStatus);
     } catch (error) {
