@@ -1375,7 +1375,7 @@ class UserService {
           inspectionStatus: ["pending", "accepted", "declined", "notCreated"],
           isDeleted: false,
         },
-        attributes: ["id"],
+        attributes: ["transactionReference"],
       });
 
       // If no inspections are found, return 0
@@ -1383,11 +1383,13 @@ class UserService {
         return { totalEscrowBalance: 0 };
       }
 
-      const inspectionIds = inspections.map((inspection) => inspection.id);
+      const transactionReferences = inspections.map(
+        (inspection) => inspection.transactionReference
+      );
 
       const transactions = await this.TransactionModel.findAll({
         where: {
-          inspectionId: inspectionIds,
+          transactionReference: transactionReferences,
           isDeleted: false,
         },
         attributes: ["amount"],
