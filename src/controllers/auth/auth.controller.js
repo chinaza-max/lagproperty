@@ -527,6 +527,12 @@ export default class AuthenticationController {
     if (clientIP !== serverConfig.MONNIFY_IP) {
       return res.status(403).send("Unauthorized IP");
     }
+
+    console.log("move to the next stage ");
+    console.log("move to the next stage ");
+    console.log("move to the next stage ");
+    console.log("move to the next stage ");
+
     next();
   };
 
