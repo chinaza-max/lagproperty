@@ -8,7 +8,6 @@ const storageA = multer.diskStorage({
     
     if(serverConfig.NODE_ENV == "production"){
       cb(null, '/public/images');
-
     }
     else if(serverConfig.NODE_ENV == "development"){
       cb(null, 'public/images')
