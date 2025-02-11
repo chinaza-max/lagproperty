@@ -596,6 +596,12 @@ class AuthenticationService {
               message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
               buildingId: BuildingModelResponse.id,
             });
+          } else {
+            console.log("no no no  inspection ");
+            console.log("no no no  inspection ");
+            console.log("no no no  inspection ");
+            console.log("no no no  inspection ");
+            console.log("no no no  inspection ");
           }
         }
       } else if (transactionStatus.paymentReference.startsWith("rentInvoice")) {
