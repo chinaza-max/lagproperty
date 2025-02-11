@@ -514,7 +514,9 @@ export default class AuthenticationController {
     if (clientIP.includes(",")) {
       clientIP = clientIP.split(",")[0].trim();
     }
-
+    if (clientIP.startsWith("::ffff:")) {
+      clientIP = clientIP.split(":").pop(); // Extracts the IPv4 address from "::ffff:"
+    }
     console.log("clientIP");
 
     console.log(clientIP !== serverConfig.MONNIFY_IP);
