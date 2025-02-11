@@ -1,182 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
 
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="../lagproperty-admin/assets/css/demo.css" />
-    <link rel="stylesheet" href="../lagproperty-admin/assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="../lagproperty-admin/assets/css/plugins.min.css" />
-    <link rel="stylesheet" href="../lagproperty-admin/assets/css/kaiadmin.min.css" />
+    <link
+      rel="stylesheet"
+      href="../lagproperty-admin/assets/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../lagproperty-admin/assets/css/plugins.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../lagproperty-admin/assets/css/kaiadmin.min.css"
+    />
 
-    
     <style>
-        body {
-            background-color: #f8f9fa;
-            height: 100vh;
-        }
-        .login-container {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+      body {
+        background-color: #f8f9fa;
+        height: 100vh;
+      }
+      .login-container {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 3px;
+        width: 100%;
+        max-width: 960px;
+        display: flex;
+        height: 99%;
+      }
+      .login-form,
+      .login-image {
+        flex: 1;
+        padding: 2rem;
+      }
+      .login-image {
+        background-image: url("../lagproperty-admin/assets/building.gif");
+        background-size: cover;
+        background-position: center;
+        border-radius: 15px 0 0 15px;
+      }
+      .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .login-header img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+      }
+      .form-floating {
+        margin-bottom: 1rem;
+        position: relative;
+      }
+      .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        cursor: pointer;
+        color: #6c757d;
+      }
+      .password-toggle:hover {
+        color: #495057;
+      }
+      .btn-login {
+        width: 100%;
+        padding: 7px;
+      }
+      .login-footer {
+        text-align: center;
+        margin-top: 2px;
+      }
+
+      @media (max-width: 767px) {
         .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 3px;
-            width: 100%;
-            max-width: 960px;
-            display: flex;
-            height: 99%;
-        }
-        .login-form,
-        .login-image {
-            flex: 1;
-            padding: 2rem;
+          flex-direction: column;
         }
         .login-image {
-            background-image: url('../lagproperty-admin/assets/building.gif');
-            background-size: cover;
-            background-position: center;
-            border-radius: 15px 0 0 15px;
+          display: none;
         }
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
+        .login-form {
+          flex: auto;
+          padding: 1rem;
         }
-        .login-header img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 1rem;
-        }
-        .form-floating {
-            margin-bottom: 1rem;
-            position: relative;
-        }
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            cursor: pointer;
-            color: #6c757d;
-        }
-        .password-toggle:hover {
-            color: #495057;
-        }
-        .btn-login {
-            width: 100%;
-            padding: 7px;
-        }
-        .login-footer {
-            text-align: center;
-            margin-top: 2px;
-        }
-
-        @media (max-width: 767px) {
-            .login-card {
-                flex-direction: column;
-            }
-            .login-image {
-                display: none;
-            }
-            .login-form {
-                flex: auto;
-                padding: 1rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="login-container">
-        <div class="login-card">
-            <div class="login-image"></div>
-            <div class="login-form">
-                <div class="login-header">
-                    <img src="https://res.cloudinary.com/dvznn9s4g/image/upload/v1725747368/jyielixjv0ozmolwpuca.png" alt="Logo">
-                    <h1 class="h3">Welcome Back</h1>
-                    <p class="text-muted">Please sign in to continue</p>
-                </div>
-                
-                <form id="loginForm">
-                    <div class="form-floating">
-                        <input type="email" class="form-control" id="emailInput" placeholder="name@example.com" required>
-                        <label for="emailInput">Email address</label>
-                    </div>
-                    
-                    <div class="form-floating">
-                        <input type="password" class="form-control" id="passwordInput" placeholder="Password" required>
-                        <label for="passwordInput">Password</label>
-                        <i class="bi bi-eye-slash password-toggle" id="togglePassword"></i>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">Remember me</label>
-                        </div>
-                    </div>
+      <div class="login-card">
+        <div class="login-image"></div>
+        <div class="login-form">
+          <div class="login-header">
+            <img
+              src="https://res.cloudinary.com/dvznn9s4g/image/upload/v1725747368/jyielixjv0ozmolwpuca.png"
+              alt="Logo"
+            />
+            <h1 class="h3">Welcome Back</h1>
+            <p class="text-muted">Please sign in to continue</p>
+          </div>
 
-                    <div style="color: red; " id="errorMessage"></div>
-                    
-                    <button id="loginButton" type="submit" class="btn btn-primary btn-login">Sign In</button>
-
-                    <button id="loginButtonL" class="btn btn-primary w-100" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Loading...   
-                    </button>
-                </form>
+          <form id="loginForm">
+            <div class="form-floating">
+              <input
+                type="email"
+                class="form-control"
+                id="emailInput"
+                placeholder="name@example.com"
+                required
+              />
+              <label for="emailInput">Email address</label>
             </div>
+
+            <div class="form-floating">
+              <input
+                type="password"
+                class="form-control"
+                id="passwordInput"
+                placeholder="Password"
+                required
+              />
+              <label for="passwordInput">Password</label>
+              <i
+                class="bi bi-eye-slash password-toggle"
+                id="togglePassword"
+              ></i>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="rememberMe"
+                />
+                <label class="form-check-label" for="rememberMe"
+                  >Remember me</label
+                >
+              </div>
+            </div>
+
+            <div style="color: red" id="errorMessage"></div>
+
+            <button
+              id="loginButton"
+              type="submit"
+              class="btn btn-primary btn-login"
+            >
+              Sign In
+            </button>
+
+            <button
+              id="loginButtonL"
+              class="btn btn-primary w-100"
+              type="button"
+              disabled
+            >
+              <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              Loading...
+            </button>
+          </form>
         </div>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="../lagproperty-admin/assets/js/core/jquery-3.7.1.min.js"></script>
 
     <script>
-        // Background rotation logic
-        const backgrounds = [
-            'url("../lagproperty-admin/assets/building.gif")',
-            'url("../lagproperty-admin/assets/building2.gif")',
-            'url("../lagproperty-admin/assets/building3.gif")',
-            'url("../lagproperty-admin/assets/building4.gif")',
-        ];
+      $(`#loginButtonL`).hide();
+      // Background rotation logic
+      const backgrounds = [
+        'url("../lagproperty-admin/assets/building.gif")',
+        'url("../lagproperty-admin/assets/building2.gif")',
+        'url("../lagproperty-admin/assets/building3.gif")',
+        'url("../lagproperty-admin/assets/building4.gif")',
+      ];
 
-        let currentIndex = 0;
-        const loginImageContainer = document.querySelector(".login-image");
+      let currentIndex = 0;
+      const loginImageContainer = document.querySelector(".login-image");
 
-        function changeBackground() {
-            currentIndex = (currentIndex + 1) % backgrounds.length;
-            loginImageContainer.style.backgroundImage = backgrounds[currentIndex];
-        }
-
+      function changeBackground() {
+        currentIndex = (currentIndex + 1) % backgrounds.length;
         loginImageContainer.style.backgroundImage = backgrounds[currentIndex];
-        setInterval(changeBackground, 30000);
+      }
 
-        // Password toggle functionality
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#passwordInput');
+      loginImageContainer.style.backgroundImage = backgrounds[currentIndex];
+      setInterval(changeBackground, 30000);
 
-        togglePassword.addEventListener('click', function() {
-            // Toggle the password visibility
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            
-            // Toggle the eye icon
-            this.classList.toggle('bi-eye');
-            this.classList.toggle('bi-eye-slash');
-        });
+      // Password toggle functionality
+      const togglePassword = document.querySelector("#togglePassword");
+      const password = document.querySelector("#passwordInput");
+
+      togglePassword.addEventListener("click", function () {
+        // Toggle the password visibility
+        const type =
+          password.getAttribute("type") === "password" ? "text" : "password";
+        password.setAttribute("type", type);
+
+        // Toggle the eye icon
+        this.classList.toggle("bi-eye");
+        this.classList.toggle("bi-eye-slash");
+      });
     </script>
     <script src="../lagproperty-admin/assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
 
     <script src="../lagproperty-admin/assets/js/main.js"></script>
-    
-</body>
+  </body>
 </html>
