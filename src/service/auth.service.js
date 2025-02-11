@@ -572,11 +572,11 @@ class AuthenticationService {
           if (!existingInspection) {
             console.log("existingInspection existingInspection");
             console.log("existingInspection existingInspection");
-            /* await this.InspectionModel.create({
+            await this.InspectionModel.create({
               transactionReference,
               buildingId,
               prospectiveTenantId: userId,
-            });*/
+            });
 
             console.log("NotificationModel NotificationModel");
             console.log("NotificationModel NotificationModel");
