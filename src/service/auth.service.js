@@ -569,6 +569,13 @@ class AuthenticationService {
             },
           });
 
+          await this.NotificationModel.create({
+            notificationFor: "rent",
+            userId,
+            type: "inspection",
+            message: `Your inspection for ${BuildingModelResponse.propertyPreference} at ${BuildingModelResponse.address}, ${BuildingModelResponse.city} has been created. Please provide your preferred date to proceed.`,
+            buildingId: BuildingModelResponse.id,
+          });
           if (!existingInspection) {
             console.log("existingInspection existingInspection");
             console.log("existingInspection existingInspection");
