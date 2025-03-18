@@ -565,391 +565,430 @@ class UserService {
   }
 
   async handleGetBuildings(data) {
-    const {
-      userId,
-      page,
-      pageSize,
-      type,
-      propertyLocation,
-      propertyPreference,
-      furnishingStatus,
-      bedrooms,
-      amenities,
-      budgetMin,
-      budgetMax,
-      propertyRating,
-    } = await userUtil.verifyHandleGetBuildings.validateAsync(data);
+    // Add debounce wrapper
+    const debouncedGetBuildings = this.debounce(async () => {
+      const {
+        userId,
+        page,
+        pageSize,
+        type,
+        propertyLocation,
+        propertyPreference,
+        furnishingStatus,
+        bedrooms,
+        amenities,
+        budgetMin,
+        budgetMax,
+        propertyRating,
+      } = await userUtil.verifyHandleGetBuildings.validateAsync(data);
 
-    const offset = (page - 1) * pageSize;
-    const limit = pageSize;
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
 
-    const buildingAttributes = [
-      "id",
-      "propertyManagerId",
-      "propertyPreference",
-      "propertyLocation",
-      "city",
-      "address",
-      "lat",
-      "lng",
-      "numberOfFloors",
-      "numberOfRooms",
-      "amenity",
-      "availability",
-      "furnishingStatus",
-      "rentalDuration",
-      "price",
-      "electricityBillArreas",
-      "waterBillArreas",
-      "electricityBillArreasType",
-      "commissionBill",
-      "propertyDescription",
-      "propertyTerms",
-      "buildingOccupantPreference",
-      "propertyImages",
-    ];
+      const buildingAttributes = [
+        "id",
+        "propertyManagerId",
+        "propertyPreference",
+        "propertyLocation",
+        "city",
+        "address",
+        "lat",
+        "lng",
+        "numberOfFloors",
+        "numberOfRooms",
+        "amenity",
+        "availability",
+        "furnishingStatus",
+        "rentalDuration",
+        "price",
+        "electricityBillArreas",
+        "waterBillArreas",
+        "electricityBillArreasType",
+        "commissionBill",
+        "propertyDescription",
+        "propertyTerms",
+        "buildingOccupantPreference",
+        "propertyImages",
+      ];
 
-    try {
-      let whereClause = {};
-      let orderClause = [];
-      let buildings = [];
-      let totalCount = 0;
+      try {
+        let whereClause = {};
+        let orderClause = [];
+        let buildings = [];
+        let totalCount = 0;
 
-      const user = await this.ProspectiveTenantModel.findByPk(userId);
+        const user = await this.ProspectiveTenantModel.findByPk(userId);
 
-      if (type === "all") {
-        if (propertyLocation) whereClause.propertyLocation = propertyLocation;
-        if (propertyPreference)
-          whereClause.propertyPreference = propertyPreference;
-        if (furnishingStatus) whereClause.furnishingStatus = furnishingStatus;
-        if (bedrooms) whereClause.numberOfRooms = bedrooms;
+        if (type === "all") {
+          if (propertyLocation) whereClause.propertyLocation = propertyLocation;
+          if (propertyPreference)
+            whereClause.propertyPreference = propertyPreference;
+          if (furnishingStatus) whereClause.furnishingStatus = furnishingStatus;
+          if (bedrooms) whereClause.numberOfRooms = bedrooms;
 
-        if (amenities && amenities.length > 0) {
-          whereClause.amenity = {
-            [Op.and]: amenities.map((amenity) =>
-              Sequelize.where(
-                Sequelize.fn(
-                  "JSON_CONTAINS",
-                  Sequelize.col("amenity"),
-                  Sequelize.literal(`'"${amenity}"'`)
-                ),
-                true
-              )
-            ),
-          };
-        }
+          if (amenities && amenities.length > 0) {
+            whereClause.amenity = {
+              [Op.and]: amenities.map((amenity) =>
+                Sequelize.where(
+                  Sequelize.fn(
+                    "JSON_CONTAINS",
+                    Sequelize.col("amenity"),
+                    Sequelize.literal(`'"${amenity}"'`)
+                  ),
+                  true
+                )
+              ),
+            };
+          }
 
-        if (budgetMin || budgetMax) {
-          whereClause.price = {};
-          if (budgetMin) whereClause.price[Op.gte] = budgetMin;
-          if (budgetMax) whereClause.price[Op.lte] = budgetMax;
-        }
+          if (budgetMin || budgetMax) {
+            whereClause.price = {};
+            if (budgetMin) whereClause.price[Op.gte] = budgetMin;
+            if (budgetMax) whereClause.price[Op.lte] = budgetMax;
+          }
 
-        if (propertyRating) {
-          try {
-            const { count, rows } = await this.BuildingModel.findAndCountAll({
-              attributes: {
-                include: [
-                  [
-                    fn("ROUND", fn("AVG", col("BuildingReview.rating"))),
-                    "averageRating",
+          if (propertyRating) {
+            try {
+              const { count, rows } = await this.BuildingModel.findAndCountAll({
+                attributes: {
+                  include: [
+                    [
+                      fn("ROUND", fn("AVG", col("BuildingReview.rating"))),
+                      "averageRating",
+                    ],
+                    [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
                   ],
-                  [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
-                ],
-              },
-              include: [
-                {
-                  model: this.TenantReviewModel,
-                  as: "BuildingReview",
-                  attributes: [],
-                  required: false,
                 },
-              ],
+                include: [
+                  {
+                    model: this.TenantReviewModel,
+                    as: "BuildingReview",
+                    attributes: [],
+                    required: false,
+                  },
+                ],
+                where: {
+                  availability: "vacant",
+                  isDeleted: false,
+                  ...whereClause,
+                },
+                group: ["Building.id"],
+                having: where(
+                  fn("ROUND", fn("AVG", col("BuildingReview.rating"))),
+                  "=",
+                  propertyRating
+                ),
+                //offset,
+                //limit,
+                subQuery: false, // Important for proper pagination with aggregates
+              });
+
+              buildings = rows ? rows : [];
+              totalCount = count;
+            } catch (error) {
+              console.error(
+                "Error fetching buildings with average rating:",
+                error
+              );
+              throw error;
+            }
+          } else {
+            const { count, rows } = await this.BuildingModel.findAndCountAll({
               where: {
                 availability: "vacant",
-                isDeleted: false,
                 ...whereClause,
+                isDeleted: false,
               },
-              group: ["Building.id"],
-              having: where(
-                fn("ROUND", fn("AVG", col("BuildingReview.rating"))),
-                "=",
-                propertyRating
-              ),
               //offset,
-              //limit,
-              subQuery: false, // Important for proper pagination with aggregates
+              //limit
             });
 
             buildings = rows ? rows : [];
             totalCount = count;
-          } catch (error) {
-            console.error(
-              "Error fetching buildings with average rating:",
-              error
-            );
-            throw error;
           }
-        } else {
+        } else if (type === "topRated") {
           const { count, rows } = await this.BuildingModel.findAndCountAll({
             where: {
               availability: "vacant",
-              ...whereClause,
               isDeleted: false,
             },
-            //offset,
-            //limit
+            attributes: [
+              ...buildingAttributes,
+              // Calculate average rating, default to 0 if no reviews
+              [
+                //fn('COALESCE', fn('AVG', col('BuildingReview.rating')), 0), 'averageRating'
+                fn(
+                  "ROUND",
+                  fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0)
+                ),
+                "averageRating",
+              ],
+              // Count number of reviews
+              [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
+            ],
+            include: [
+              {
+                model: TenantReview,
+                as: "BuildingReview",
+                attributes: [],
+                required: false,
+              },
+            ],
+            group: ["Building.id"],
+            order: [[literal("averageRating"), "DESC"]],
+            //  offset,
+            //  limit,
+            subQuery: false,
+          });
+
+          buildings = rows
+            ? rows.map((building) => ({
+                ...building.toJSON(),
+                averageRating:
+                  parseFloat(building.getDataValue("averageRating")) || 0,
+                reviewCount:
+                  parseInt(building.getDataValue("reviewCount"), 10) || 0,
+              }))
+            : [];
+
+          totalCount = count.length;
+        } else if (type === "popular") {
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+            where: {
+              availability: "vacant",
+              isDeleted: false,
+            },
+            attributes: [
+              ...buildingAttributes,
+              [
+                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
+                "averageRating",
+              ],
+              [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
+              [fn("COUNT", col("BuildingTenant.id")), "tenantCount"],
+            ],
+            include: [
+              {
+                model: this.TenantReviewModel,
+                as: "BuildingReview",
+                attributes: [],
+                required: false,
+              },
+              {
+                model: this.TenantModel,
+                as: "BuildingTenant",
+                attributes: [],
+                required: false,
+              },
+            ],
+            /*  group: ['Building.id', 'Building.propertyPreference'],*/
+            group: ["Building.id"],
+            order: [[literal("tenantCount"), "DESC"]],
+            // offset,
+            // limit,
+            distinct: true,
+            subQuery: false,
+          });
+
+          buildings = rows
+            ? rows.map((building) => ({
+                ...building.toJSON(),
+                averageRating: parseFloat(building.get("averageRating")) || 0,
+                reviewCount: parseInt(building.get("reviewCount"), 10) || 0,
+                tenantCount: parseInt(building.get("tenantCount"), 10) || 0,
+              }))
+            : [];
+
+          totalCount = count.length;
+        } else if (type == "recommended") {
+          const user = await this.ProspectiveTenantModel.findByPk(userId);
+          if (!user) {
+            throw new NotFoundError("User not found");
+          }
+
+          const { propertyPreference, rentalDuration } = user;
+
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+            where: {
+              availability: "vacant",
+              isDeleted: false,
+              [Op.or]: [
+                { rentalDuration: rentalDuration },
+                {
+                  propertyPreference: {
+                    [Op.in]: propertyPreference,
+                  },
+                },
+              ],
+            },
+            attributes: [
+              ...buildingAttributes,
+              // Calculate average rating, default to 0 if no reviews
+              [
+                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
+                "averageRating",
+              ],
+              // Count number of reviews
+              [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
+            ],
+            include: [
+              {
+                model: TenantReview,
+                as: "BuildingReview",
+                attributes: [],
+                required: false,
+              },
+            ],
+            /* group: ['Building.id'],*/
+            group: ["Building.id"],
+            order: [[literal("averageRating"), "DESC"]],
+            // offset,
+            // limit,
+            subQuery: false,
+          });
+
+          buildings = rows
+            ? rows.map((building) => ({
+                ...building.toJSON(),
+                averageRating:
+                  parseFloat(building.getDataValue("averageRating")) || 0,
+                reviewCount:
+                  parseInt(building.getDataValue("reviewCount"), 10) || 0,
+              }))
+            : [];
+
+          totalCount = count.length;
+        } else if (type === "bestOffer") {
+          const user = await this.ProspectiveTenantModel.findByPk(userId);
+          if (!user) {
+            throw new NotFoundError("User not found");
+          }
+
+          const { budgetMin, budgetMax } = user;
+
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+            where: {
+              availability: "vacant",
+              price: {
+                [Op.between]: [budgetMin, budgetMax],
+              },
+              isDeleted: false,
+            },
+            attributes: [
+              ...buildingAttributes,
+              // Calculate average rating, default to 0 if no reviews
+              [
+                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
+                "averageRating",
+              ],
+              // Count number of reviews
+              [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
+            ],
+            include: [
+              {
+                model: TenantReview,
+                as: "BuildingReview",
+                attributes: [],
+                required: false,
+              },
+            ],
+            /* group: ['Building.id'],*/
+            group: ["Building.id"],
+            order: [["price", "ASC"]],
+            // offset,
+            // limit,
+            subQuery: false,
+          });
+
+          buildings = rows
+            ? rows.map((building) => ({
+                ...building.toJSON(),
+                averageRating:
+                  parseFloat(building.getDataValue("averageRating")) || 0,
+                reviewCount:
+                  parseInt(building.getDataValue("reviewCount"), 10) || 0,
+              }))
+            : [];
+
+          totalCount = count.length;
+        } else {
+          const { count, rows } = await this.BuildingModel.findAndCountAll({
+            where: {
+              propertyPreference: type,
+              availability: "vacant",
+              isDeleted: false,
+            },
+            // offset,
+            // limit
           });
 
           buildings = rows ? rows : [];
           totalCount = count;
         }
-      } else if (type === "topRated") {
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where: {
-            availability: "vacant",
-            isDeleted: false,
+
+        const filteredBuildings = this.filterBuildingsByUserPreferences(
+          buildings,
+          user
+        );
+        totalCount = filteredBuildings.length;
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        //const totalPages = Math.ceil(totalCount / pageSize);
+        const paginatedBuildings = filteredBuildings.slice(
+          (page - 1) * pageSize,
+          page * pageSize
+        );
+
+        return {
+          pagination: {
+            totalCount,
+            totalPages,
+            currentPage: page,
+            pageSize,
           },
-          attributes: [
-            ...buildingAttributes,
-            // Calculate average rating, default to 0 if no reviews
-            [
-              //fn('COALESCE', fn('AVG', col('BuildingReview.rating')), 0), 'averageRating'
-              fn(
-                "ROUND",
-                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0)
-              ),
-              "averageRating",
-            ],
-            // Count number of reviews
-            [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
-          ],
-          include: [
-            {
-              model: TenantReview,
-              as: "BuildingReview",
-              attributes: [],
-              required: false,
-            },
-          ],
-          group: ["Building.id"],
-          order: [[literal("averageRating"), "DESC"]],
-          //  offset,
-          //  limit,
-          subQuery: false,
-        });
-
-        buildings = rows
-          ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
-          : [];
-
-        totalCount = count.length;
-      } else if (type === "popular") {
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where: {
-            availability: "vacant",
-            isDeleted: false,
-          },
-          attributes: [
-            ...buildingAttributes,
-            [
-              fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
-              "averageRating",
-            ],
-            [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
-            [fn("COUNT", col("BuildingTenant.id")), "tenantCount"],
-          ],
-          include: [
-            {
-              model: this.TenantReviewModel,
-              as: "BuildingReview",
-              attributes: [],
-              required: false,
-            },
-            {
-              model: this.TenantModel,
-              as: "BuildingTenant",
-              attributes: [],
-              required: false,
-            },
-          ],
-          /*  group: ['Building.id', 'Building.propertyPreference'],*/
-          group: ["Building.id"],
-          order: [[literal("tenantCount"), "DESC"]],
-          // offset,
-          // limit,
-          distinct: true,
-          subQuery: false,
-        });
-
-        buildings = rows
-          ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating: parseFloat(building.get("averageRating")) || 0,
-              reviewCount: parseInt(building.get("reviewCount"), 10) || 0,
-              tenantCount: parseInt(building.get("tenantCount"), 10) || 0,
-            }))
-          : [];
-
-        totalCount = count.length;
-      } else if (type == "recommended") {
-        const user = await this.ProspectiveTenantModel.findByPk(userId);
-        if (!user) {
-          throw new NotFoundError("User not found");
-        }
-
-        const { propertyPreference, rentalDuration } = user;
-
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where: {
-            availability: "vacant",
-            isDeleted: false,
-            [Op.or]: [
-              { rentalDuration: rentalDuration },
-              {
-                propertyPreference: {
-                  [Op.in]: propertyPreference,
-                },
-              },
-            ],
-          },
-          attributes: [
-            ...buildingAttributes,
-            // Calculate average rating, default to 0 if no reviews
-            [
-              fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
-              "averageRating",
-            ],
-            // Count number of reviews
-            [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
-          ],
-          include: [
-            {
-              model: TenantReview,
-              as: "BuildingReview",
-              attributes: [],
-              required: false,
-            },
-          ],
-          /* group: ['Building.id'],*/
-          group: ["Building.id"],
-          order: [[literal("averageRating"), "DESC"]],
-          // offset,
-          // limit,
-          subQuery: false,
-        });
-
-        buildings = rows
-          ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
-          : [];
-
-        totalCount = count.length;
-      } else if (type === "bestOffer") {
-        const user = await this.ProspectiveTenantModel.findByPk(userId);
-        if (!user) {
-          throw new NotFoundError("User not found");
-        }
-
-        const { budgetMin, budgetMax } = user;
-
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where: {
-            availability: "vacant",
-            price: {
-              [Op.between]: [budgetMin, budgetMax],
-            },
-            isDeleted: false,
-          },
-          attributes: [
-            ...buildingAttributes,
-            // Calculate average rating, default to 0 if no reviews
-            [
-              fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
-              "averageRating",
-            ],
-            // Count number of reviews
-            [fn("COUNT", col("BuildingReview.id")), "reviewCount"],
-          ],
-          include: [
-            {
-              model: TenantReview,
-              as: "BuildingReview",
-              attributes: [],
-              required: false,
-            },
-          ],
-          /* group: ['Building.id'],*/
-          group: ["Building.id"],
-          order: [["price", "ASC"]],
-          // offset,
-          // limit,
-          subQuery: false,
-        });
-
-        buildings = rows
-          ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
-          : [];
-
-        totalCount = count.length;
-      } else {
-        const { count, rows } = await this.BuildingModel.findAndCountAll({
-          where: {
-            propertyPreference: type,
-            availability: "vacant",
-            isDeleted: false,
-          },
-          // offset,
-          // limit
-        });
-
-        buildings = rows ? rows : [];
-        totalCount = count;
+          buildings: paginatedBuildings,
+        };
+      } catch (error) {
+        console.log(error);
+        throw new SystemError(error.name, error.parent);
       }
+    }, 300); // 300ms delay
 
-      const filteredBuildings = this.filterBuildingsByUserPreferences(
-        buildings,
-        user
-      );
-      totalCount = filteredBuildings.length;
-      const totalPages = Math.ceil(totalCount / pageSize);
+    return debouncedGetBuildings();
+  }
 
-      //const totalPages = Math.ceil(totalCount / pageSize);
-      const paginatedBuildings = filteredBuildings.slice(
-        (page - 1) * pageSize,
-        page * pageSize
-      );
+  // Add debounce helper method to the class
+  debounce(func, wait) {
+    let timeout;
+    let previousPromise;
 
-      return {
-        pagination: {
-          totalCount,
-          totalPages,
-          currentPage: page,
-          pageSize,
-        },
-        buildings: paginatedBuildings,
-      };
-    } catch (error) {
-      console.log(error);
-      throw new SystemError(error.name, error.parent);
-    }
+    return async function executedFunction(...args) {
+      const context = this;
+
+      return new Promise((resolve, reject) => {
+        const later = async () => {
+          timeout = null;
+          try {
+            const result = await func.apply(context, args);
+            previousPromise = result;
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        // If there's a pending timeout, return the previous promise
+        if (timeout) {
+          clearTimeout(timeout);
+          if (previousPromise) {
+            resolve(previousPromise);
+            return;
+          }
+        }
+
+        timeout = setTimeout(later, wait);
+      });
+    };
   }
 
   async handleGetUpcomingInspection(data) {
