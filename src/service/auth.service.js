@@ -1417,6 +1417,18 @@ class AuthenticationService {
           isDeleted: false,
         },
       });
+
+      if (!user) {
+        user = await this.PropertyManagerModel.findOne({
+          where: {
+            emailAddress,
+            isEmailValid: false,
+            isDeleted: false,
+          },
+        });
+
+        if (user) return "inValidEmail";
+      }
     } else if (type == "rent") {
       user = await this.ProspectiveTenantModel.findOne({
         where: {
@@ -1425,6 +1437,19 @@ class AuthenticationService {
           isDeleted: false,
         },
       });
+
+      if (!user) {
+        user = await this.ProspectiveTenantModel.findOne({
+          where: {
+            emailAddress,
+            isEmailValid: false,
+            isDeleted: false,
+          },
+        });
+
+        // if (user) throw new NotFoundError("inValidEmail");
+        if (user) return "inValidEmail";
+      }
     } else {
       user = await this.AdminModel.findOne({
         where: {
@@ -1433,6 +1458,19 @@ class AuthenticationService {
           isDeleted: false,
         },
       });
+
+      if (!user) {
+        user = await this.AdminModel.findOne({
+          where: {
+            emailAddress,
+            isEmailValid: false,
+            isDeleted: false,
+          },
+        });
+
+        if (user) return "inValidEmail";
+        // if (user) throw new NotFoundError("inValidEmail");
+      }
     }
 
     if (!user) throw new NotFoundError("User not found.");

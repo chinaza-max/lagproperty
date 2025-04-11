@@ -4,20 +4,15 @@ import { init as initModels } from "./models/index.js";
 
 import fs from "fs";
 
-
-
 class DB {
-   constructor() {
-    this.sequelize 
+  constructor() {
+    this.sequelize;
     this.models = null;
   }
 
   async connectDB() {
-   
-
-
-    const options= { 
-      logging: console.log,
+    const options = {
+      //logging: console.log,
       //logging: false,
       dialect: "mysql",
       host: serverConfig.DB_HOST,
@@ -27,22 +22,22 @@ class DB {
       database: serverConfig.DB_NAME,
       logQueryParameters: true,
     };
-    
+
     this.sequelize = new Sequelize(
       serverConfig.DB_NAME,
       serverConfig.DB_USERNAME,
       serverConfig.DB_PASSWORD,
       options
     );
-       
-    this.models =initModels(this.sequelize);
+
+    this.models = initModels(this.sequelize);
 
     if (serverConfig.NODE_ENV === "development") {
-      //await this.sequelize.sync({ alter: true });   
-      //await this.sequelize.sync({ force: true }); 
-    }          
-                    
-/*     
+      // await this.sequelize.sync({ alter: true });
+      //await this.sequelize.sync({ force: true });
+    }
+
+    /*     
         (async () => {
           try {  
             const [results] = await this.sequelize.query('SHOW TABLES;');
@@ -55,7 +50,7 @@ class DB {
           }
         })();
 */
-/*
+    /*
         const disableForeignKeyChecks = 'SET foreign_key_checks = 0;';
 const dropTable = 'DROP TABLE IF EXISTS WishList;';
 const enableForeignKeyChecks = 'SET foreign_key_checks = 1;';
@@ -77,13 +72,7 @@ this.sequelize.query(disableForeignKeyChecks)
     console.error('Error dropping table:', error);
   });
 */
-
-
-
-
-       
   }
-
 }
 
 export default new DB();

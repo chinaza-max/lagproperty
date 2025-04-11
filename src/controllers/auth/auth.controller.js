@@ -162,6 +162,11 @@ export default class AuthenticationController {
           status: 400,
           message: "Your account has been disabled",
         });
+      } else if (user == "inValidEmail") {
+        return res.status(400).json({
+          status: 400,
+          message: "Your email has not been verified",
+        });
       }
 
       let generateTokenFrom = {
