@@ -183,7 +183,7 @@ class Server {
     });
   }
 }
-console.log(serverConfig.PORT);
+
 const server = new Server(serverConfig.PORT, serverConfig.NODE_ENV);
 server.start();
 
