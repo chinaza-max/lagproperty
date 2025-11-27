@@ -49,7 +49,7 @@ class UserUtil {
     image: Joi.object({
       size: Joi.number().positive().less(3000000).optional(),
     }).optional(),
-    tel: Joi.string().integer().optional(),
+    tel: Joi.string().optional(),
     telCode: Joi.string().optional(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
