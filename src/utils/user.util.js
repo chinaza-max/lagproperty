@@ -407,7 +407,7 @@ class UserUtil {
   validateHandleValidateNIN2 = Joi.object().keys({
     role: Joi.string().valid("list", "rent", "admin").required(),
     userId: Joi.number().integer().required(),
-    nin: Joi.string().label("NIN"),
+    nin: Joi.string().label("nin"),
   });
 
   verifyHandleDisableAccount = Joi.object({

@@ -3137,10 +3137,10 @@
  * @swagger
  * /user/validateNIN:
  *   post:
- *     summary: Validate NIN (National Identification Number)
+ *     summary: Validate nin (National Identification Number)
  *     description: Validates the user's National Identification Number (NIN) for verification purposes.
  *     tags:
- *       - NIN Verification
+ *       - nin Verification
  *     requestBody:
  *       required: true
  *       content:
@@ -3148,9 +3148,9 @@
  *           schema:
  *             type: object
  *             required:
- *               - NIN
+ *               - nin
  *             properties:
- *               NIN:
+ *               nin:
  *                 type: string
  *                 description: The user's National Identification Number (NIN).
  *                 example: "12345678901"
@@ -3171,10 +3171,13 @@
  *                     userId:
  *                       type: string
  *                       example: "12345"
- *                     NIN:
+ *                     nin:
  *                       type: string
  *                       example: "12345678901"
  *                     role:
+ *                       type: string
+ *                       example: "rent"
+ *                     userId:
  *                       type: string
  *                       example: "rent"
  *       400:
