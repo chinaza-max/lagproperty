@@ -6,7 +6,7 @@ class UserUtil {
     role: Joi.string().required().valid("rent", "list"),
     firstName: Joi.string().required().label("First Name"),
     lastName: Joi.string().required().label("Last Name"),
-    tel: Joi.number().required().label("Telephone Number"),
+    tel: Joi.string().required().label("Telephone Number"),
     telCode: Joi.string().required().label("Telephone Code"),
     lasrraId: Joi.string().required().label("LASRRA ID"),
     nin: Joi.string().label("NIN"),
@@ -49,7 +49,7 @@ class UserUtil {
     image: Joi.object({
       size: Joi.number().positive().less(3000000).optional(),
     }).optional(),
-    tel: Joi.number().integer().optional(),
+    tel: Joi.string().integer().optional(),
     telCode: Joi.string().optional(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
@@ -255,7 +255,7 @@ class UserUtil {
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
-    tel: Joi.number().when("type", {
+    tel: Joi.string().when("type", {
       is: "createInspection",
       then: Joi.required(),
       otherwise: Joi.forbidden(),
@@ -402,6 +402,12 @@ class UserUtil {
       then: Joi.required(),
       otherwise: Joi.forbidden(),
     }),
+  });
+
+  validateHandleValidateNIN2 = Joi.object().keys({
+    role: Joi.string().valid("list", "rent", "admin").required(),
+    userId: Joi.number().integer().required(),
+    nin: Joi.string().label("NIN"),
   });
 
   verifyHandleDisableAccount = Joi.object({

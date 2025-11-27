@@ -11,7 +11,6 @@
  *   - BearerAuth: []
  */
 
-
 /**
  * @swagger
  * /user/updateProfile:
@@ -123,8 +122,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
 
 /**
  * @swagger
@@ -303,13 +300,11 @@
  *         description: Internal server error
  */
 
-
-
 /**
  * @swagger
  * user/inspectionAction1:
  *   post:
- *     summary: Get NotCreatedInspection 
+ *     summary: Get NotCreatedInspection
  *     description: This endpoint handles various inspection-related actions such as creating, accepting, declining inspections, and more. Different types of actions can be performed based on the 'type' parameter.
  *     tags:
  *       - Inspection Actions
@@ -441,7 +436,6 @@
  *                 type: number
  *                 description: Page number for pagination
  */
-
 
 /**
  * @swagger
@@ -605,9 +599,7 @@
  *                 description: The ID of the inspection to accept the tenant
  */
 
-
-
- /**
+/**
  * @swagger
  * user/inspectionAction10:
  *   post:
@@ -636,11 +628,7 @@
  *                 description: The ID of the inspection record to release funds for
  */
 
-
-
-
-
- /**
+/**
  * @swagger
  * user/inspectionAction11:
  *   post:
@@ -664,9 +652,6 @@
  *                 enum: [getEscrowBalance]
  *                 description: Action type
  */
-
-
-
 
 /**
  * @swagger
@@ -732,8 +717,6 @@
  *                   type: string
  *                   example: "Internal Server Error."
  */
-
-
 
 /**
  * @swagger
@@ -811,7 +794,6 @@
  *                   type: string
  *                   example: "Internal Server Error."
  */
-
 
 /**
  * @swagger
@@ -899,9 +881,7 @@
  *                   type: string
  *                   example: "Internal Server Error"
  */
-  
 
-                           
 /**
  * @swagger
  * /user/getMyProperty2:
@@ -995,7 +975,6 @@
  *                   type: string
  *                   example: "Internal Server Error"
  */
-
 
 /**
  * @swagger
@@ -1139,7 +1118,7 @@
  *                 example: "Breach of contract"
  *               buildingId:
  *                 type: integer
- *                 description: building id 
+ *                 description: building id
  *                 example: "1"
  *     responses:
  *       200:
@@ -1149,7 +1128,6 @@
  *       500:
  *         description: Internal server error.
  */
-
 
 /**
  * @swagger
@@ -1212,10 +1190,6 @@
  *                   example: "Internal Server Error"
  */
 
-
-
-
-
 /**
  * @swagger
  * /user/getALLreviewTenant:
@@ -1236,7 +1210,7 @@
  *         example: 456
  *       - in: query
  *         name: page
- *         schema: 
+ *         schema:
  *           type: integer
  *           default: 1
  *         required: true
@@ -1331,8 +1305,6 @@
  *                   type: string
  *                   example: "Internal Server Error"
  */
-
-
 
 /**
  * @swagger
@@ -1459,8 +1431,6 @@
  *                   example: "Internal Server Error."
  */
 
-
-
 /**
  * @swagger
  * /user/getUpcomingInspection:
@@ -1573,8 +1543,6 @@
  *                   type: string
  *                   example: "Internal Server Error"
  */
-
-
 
 /**
  * @swagger
@@ -1703,9 +1671,6 @@
  *                   example: An error occurred while processing the request.
  */
 
-
-
-
 /**
  * @swagger
  * /user/getBuildings2:
@@ -1829,8 +1794,6 @@
  *       500:
  *         description: Internal server error.
  */
-
-
 
 /**
  * @swagger
@@ -1959,8 +1922,6 @@
  *                   example: "Internal Server Error."
  */
 
-
-
 /**
  * @swagger
  * /user/getChat:
@@ -2080,8 +2041,6 @@
  *                   example: "Internal Server Error."
  */
 
-
-
 /**
  * @swagger
  * /user/getTransaction:
@@ -2197,7 +2156,6 @@
  *                   example: An error occurred while processing the request.
  */
 
-
 /**
  * @swagger
  * /user/getTransactionRefund:
@@ -2305,11 +2263,6 @@
  *                   description: Error message.
  *                   example: An error occurred while processing the request.
  */
-
-
-
-
-
 
 /**
  * @swagger
@@ -2434,9 +2387,6 @@
  *                   example: An error occurred while processing the request.
  */
 
-
-
-
 /**
  * @swagger
  * /user/getInspectionDetails:
@@ -2550,9 +2500,6 @@
  *                   example: An error occurred while processing the request.
  */
 
-
-
-
 /**
  * @swagger
  * /user/updateProfile2:
@@ -2597,7 +2544,7 @@
  *               budgetMin:
  *                 type: integer
  *                 description: Minimum budget for rent.
- *               budgetMax:   
+ *               budgetMax:
  *                 type: integer
  *                 description: Maximum budget for rent.
  *               occupation:
@@ -2638,8 +2585,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
 
 /**
  * @swagger
@@ -2727,8 +2672,6 @@
  *         description: Internal Server Error. An error occurred while processing the request.
  */
 
-
-
 /**
  * @swagger
  * user/reviewBuilding:
@@ -2805,8 +2748,6 @@
  *                   description: Error message
  *                   example: "Internal server error"
  */
-
-
 
 /**
  * @swagger
@@ -2889,8 +2830,6 @@
  *                   example: "Internal server error"
  */
 
-
-
 /**
  * @swagger
  * user/reviewBuildingAction2:
@@ -2963,7 +2902,6 @@
  *                   description: Error message
  *                   example: "Internal server error"
  */
-
 
 /**
  * @swagger
@@ -3066,19 +3004,19 @@
  *                     example: 'All'
  *           encoding:
  *             bedroomSizeImage:
- *               contentType: 
+ *               contentType:
  *                 - image/png
  *                 - image/jpeg
  *             kitchenSizeImage:
- *               contentType: 
+ *               contentType:
  *                 - image/png
  *                 - image/jpeg
  *             livingRoomSizeImage:
- *               contentType: 
+ *               contentType:
  *                 - image/png
  *                 - image/jpeg
  *             diningAreaSizeImage:
- *               contentType: 
+ *               contentType:
  *                 - image/png
  *                 - image/jpeg
  *     responses:
@@ -3122,10 +3060,6 @@
  *                   type: string
  *                   example: "Internal server error"
  */
-
-
-
-
 
 /**
  * @swagger
@@ -3199,7 +3133,6 @@
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
  * /user/validateNIN:
@@ -3241,6 +3174,9 @@
  *                     NIN:
  *                       type: string
  *                       example: "12345678901"
+ *                     role:
+ *                       type: string
+ *                       example: "rent"
  *       400:
  *         description: Bad request, invalid or missing NIN.
  *         content:
@@ -3262,8 +3198,6 @@
  *                   type: string
  *                   example: "An error occurred during validation"
  */
-
-
 
 /**
  * @swagger
@@ -3304,15 +3238,11 @@
  *                   example: "Internal server error."
  */
 
-
-
-
 import { Router } from "express";
-import UserController from"../controllers/user/user.controller.js";
+import UserController from "../controllers/user/user.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
 
 class UserRoutes extends UserController {
-
   constructor() {
     super();
     this.router = Router();
@@ -3320,9 +3250,12 @@ class UserRoutes extends UserController {
   }
 
   routes() {
-
-    this.router.post("/updateProfile",uploadHandler.image.single('image'), this.updateProfile);
-   /* this.router.post("/listBuilding",uploadHandler.image.fields([
+    this.router.post(
+      "/updateProfile",
+      uploadHandler.image.single("image"),
+      this.updateProfile
+    );
+    /* this.router.post("/listBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 
       { name: 'kitchenSizeImage', maxCount: 1 },  
       { name: 'livingRoomSizeImage', maxCount: 1 }, 
@@ -3334,12 +3267,12 @@ class UserRoutes extends UserController {
     this.router.post(
       "/listBuilding",
       uploadHandler.image.fields([
-        { name: 'propertyTerms', maxCount: 1 }, // License uploaded independently
-        { name: 'propertyImages', maxCount: 20 }, // Allow multiple property images
+        { name: "propertyTerms", maxCount: 1 }, // License uploaded independently
+        { name: "propertyImages", maxCount: 20 }, // Allow multiple property images
       ]),
       this.listBuilding
-    )
-/*
+    );
+    /*
     this.router.post("/updatelistedBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 
       { name: 'kitchenSizeImage', maxCount: 1 },  
@@ -3351,16 +3284,15 @@ class UserRoutes extends UserController {
     this.router.post(
       "/updatelistedBuilding",
       uploadHandler.image.fields([
-        { name: 'propertyTerms', maxCount: 1 },
-        { name: 'propertyImages', maxCount: 20 },
+        { name: "propertyTerms", maxCount: 1 },
+        { name: "propertyImages", maxCount: 20 },
       ]),
       this.updatelistedBuilding
-    )
-
+    );
 
     this.router.post("/inspectionAction", this.inspectionAction);
     this.router.post("/sendInvoce", this.sendInvoce);
-    this.router.post("/chat",uploadHandler.image.single('image'), this.chat);
+    this.router.post("/chat", uploadHandler.image.single("image"), this.chat);
     this.router.get("/getMyProperty", this.getMyProperty);
     this.router.post("/quitNoticeAction", this.quitNoticeAction);
     this.router.post("/reviewTenant", this.reviewTenant);
@@ -3380,12 +3312,17 @@ class UserRoutes extends UserController {
     this.router.get("/getInspectionDetails", this.getInspectionDetails);
     this.router.get("/rentAction", this.rentAction);
     this.router.get("/tenant", this.tenant);
-    this.router.get("/prospectiveTenantInformation", this.ProspectiveTenantInformation);
+    this.router.get(
+      "/prospectiveTenantInformation",
+      this.ProspectiveTenantInformation
+    );
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
     this.router.post("/reviewTenant", this.reviewTenant);
     this.router.post("/validateNIN", this.validateNIN);
-    this.router.post("/BuildingPreferenceAction", this.BuildingPreferenceAction);
-
+    this.router.post(
+      "/BuildingPreferenceAction",
+      this.BuildingPreferenceAction
+    );
 
     //API FOR ADMIN
     this.router.post("/disableAccount", this.disableAccount);
@@ -3397,9 +3334,7 @@ class UserRoutes extends UserController {
     this.router.get("/getAllTrasaction", this.getAllTrasaction);
 
     this.router.get("/whoIAm", this.whoIAm);
-    
-  } 
-
+  }
 }
 
 export default new UserRoutes().router;

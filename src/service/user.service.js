@@ -1689,7 +1689,7 @@ class UserService {
 
   async handleValidateNIN(data) {
     var { NIN, userId, role } =
-      await userUtil.validateHandleValidateNIN.validateAsync(data);
+      await userUtil.validateHandleValidateNIN2.validateAsync(data);
 
     const accessToken = await authService.getAuthTokenMonify();
     const body = {
