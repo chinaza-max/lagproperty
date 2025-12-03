@@ -3177,9 +3177,6 @@
  *                     role:
  *                       type: string
  *                       example: "rent"
- *                     userId:
- *                       type: string
- *                       example: "rent"
  *       400:
  *         description: Bad request, invalid or missing NIN.
  *         content:

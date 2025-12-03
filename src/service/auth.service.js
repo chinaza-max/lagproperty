@@ -1721,20 +1721,35 @@ class AuthenticationService {
         }
       );
 
-      const apiUrl = `http://smslive247.com.ng/components/com_smsreseller/smsapi.php?username=${serverConfig.SMS_USER_NAME}&password=${serverConfig.SMS_PASSWORD}&sender=YourSenderID&recipient=${phone}&message=Your NIN verification code is ${verificationCode}`;
+      const username = serverConfig.SMS_USER_NAME;
+      const password = serverConfig.SMS_PASSWORD;
+      const sender = serverConfig.SMS_ID;
+      const message = `${verificationCode}`;
+
+      const apiUrl = `https://kullsms.com/customer/api/?username=${username}&password=${password}&message=${encodeURIComponent(
+        message
+      )}&sender=${sender}&mobiles=${phone}`;
+
+      //const apiUrl = `http://smslive247.com.ng/components/com_smsreseller/smsapi.php?username=${serverConfig.SMS_USER_NAME}&password=${serverConfig.SMS_PASSWORD}&sender=YourSenderID&recipient=${phone}&message=Your NIN verification code is ${verificationCode}`;
 
       try {
         const response = await axios.get(apiUrl);
 
         if (response.status === 200) {
           console.log("SMS sent successfully");
+          console.log(phone);
+          console.log(verificationCode);
         } else {
           console.log("Failed to send SMS:", response.data);
         }
       } catch (error) {
+        console.log("error sending SMS:");
+
         console.log(error);
       }
     } catch (error) {
+      console.log("error sending SMS:2");
+
       console.log(error);
     }
   }

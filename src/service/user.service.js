@@ -1691,12 +1691,17 @@ class UserService {
     var { nin, userId, role } =
       await userUtil.validateHandleValidateNIN2.validateAsync(data);
 
+    let user = await this.ProspectiveTenantModel.findByPk(userId);
+
+    let phone = user ? user.telCode + user.tel : null;
+
     const accessToken = await authService.getAuthTokenMonify();
     const body = {
       nin: nin,
     };
 
     try {
+      /*
       const response = await axios.post(
         `${serverConfig.MONNIFY_BASE_URL}/api/v1/vas/nin-details`,
         body,
@@ -1706,11 +1711,15 @@ class UserService {
           },
         }
       );
-
-      const phone = response.data.responseBody.mobileNumber;
+*/
+      //  const phone = response.data.responseBody.mobileNumber;
 
       authService.sendNINVerificationCode(phone, userId, role);
     } catch (error) {
+      console.log("error monify");
+
+      console.log(error);
+
       console.log(error?.response?.data);
       throw new SystemError(error.name, error?.response?.data?.error);
     }
