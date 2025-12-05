@@ -1717,6 +1717,9 @@ class AuthenticationService {
 
   async sendNINVerificationCode(phone, userId, validateFor) {
     try {
+      console.log("phone number:", phone);
+      console.log("userId:", userId);
+      console.log("validateFor:", validateFor);
       var keyExpirationMillisecondsFromEpoch =
         new Date().getTime() + 30 * 60 * 1000;
       const verificationCode = Math.floor(Math.random() * 900000) + 100000;
