@@ -1427,7 +1427,15 @@ class AuthenticationService {
           },
         });
 
-        if (user) return "inValidEmail";
+        if (user) {
+          await this.sendEmailVerificationCode(
+            user.emailAddress,
+            user.id,
+            type
+          );
+
+          return "inValidEmail";
+        }
       }
     } else if (type == "rent") {
       user = await this.ProspectiveTenantModel.findOne({
@@ -1448,7 +1456,15 @@ class AuthenticationService {
         });
 
         // if (user) throw new NotFoundError("inValidEmail");
-        if (user) return "inValidEmail";
+        if (user) {
+          await this.sendEmailVerificationCode(
+            user.emailAddress,
+            user.id,
+            type
+          );
+
+          return "inValidEmail";
+        }
       }
     } else {
       user = await this.AdminModel.findOne({
@@ -1568,8 +1584,8 @@ class AuthenticationService {
     let relatedEmailoRTelValidationCode =
       await this.EmailandTelValidationModel.findOne({
         where: {
-          userId: userId,
-          validateFor,
+          //userId: userId,
+          // validateFor,
           verificationCode: verificationCode,
           type,
         },

@@ -165,7 +165,8 @@ export default class AuthenticationController {
       } else if (user == "inValidEmail") {
         return res.status(400).json({
           status: 400,
-          message: "Your email has not been verified",
+          message:
+            "Your email has not been verified we just sent you a verification code",
         });
       }
 

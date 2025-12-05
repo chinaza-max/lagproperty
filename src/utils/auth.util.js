@@ -16,7 +16,7 @@ class authUtil {
   });
 
   verifyHandleVerifyEmailorTel = Joi.object({
-    userId: Joi.number().required(),
+    //userId: Joi.number().required(),
     validateFor: Joi.string().valid("rent", "list", "admin").required(),
     verificationCode: Joi.number().required(),
     type: Joi.string().valid("email", "tel", "nin").required(),
