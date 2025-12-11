@@ -84,6 +84,7 @@ class UserService {
   NotificationModel = Notification;
   SettingModel = Setting;
 
+  /*
   async handleUpdateProfile(data, file) {
     if (data.role == "list") {
       let { userId, role, image, ...updateData } =
@@ -135,6 +136,96 @@ class UserService {
         }
       } catch (error) {
         throw new SystemError(error.name, error.parent);
+      }
+    }
+  }
+  */
+  async handleUpdateProfile(data, file) {
+    if (data.role === "list") {
+      let { userId, role, image, nin, ...updateData } =
+        await userUtil.verifyHandleUpdateProfileList.validateAsync(data);
+
+      try {
+        // Handle NIN validation
+        if (nin) {
+          const existingUser = await this.PropertyManagerModel.findOne({
+            where: { nin },
+          });
+
+          if (existingUser) {
+            if (existingUser.isNINValid && existingUser.id !== userId) {
+              throw new SystemError(
+                "NINAlreadyVerified",
+                "This NIN is already verified by another user"
+              );
+            }
+            // if not verified, allow update
+          }
+          updateData.nin = nin;
+        }
+
+        let imageUrl = "";
+        if (file) {
+          if (serverConfig.NODE_ENV === "production") {
+            imageUrl = serverConfig.DOMAIN + file.path.replace("/home", "");
+          } else if (serverConfig.NODE_ENV === "development") {
+            imageUrl = serverConfig.DOMAIN + file.path.replace("public", "");
+          }
+        }
+
+        updateData.isProfileCompleted = true;
+
+        if (file) {
+          await this.PropertyManagerModel.update(
+            { image: imageUrl, ...updateData },
+            { where: { id: userId } }
+          );
+        } else {
+          await this.PropertyManagerModel.update(updateData, {
+            where: { id: userId },
+          });
+        }
+      } catch (error) {
+        throw new SystemError(error.name, error.parent || error.message);
+      }
+    } else {
+      let { userId, role, image, lasrraId, nin, ...updateData } =
+        await userUtil.verifyHandleUpdateProfileRent.validateAsync(data);
+
+      try {
+        // Handle NIN validation for tenants
+        if (nin) {
+          const existingTenant = await this.ProspectiveTenantModel.findOne({
+            where: { nin },
+          });
+
+          if (existingTenant) {
+            if (existingTenant.isNINValid && existingTenant.id !== userId) {
+              throw new SystemError(
+                "NINAlreadyVerified",
+                "This NIN is already verified by another user"
+              );
+            }
+            // if not verified, allow update
+          }
+          updateData.nin = nin;
+        }
+
+        if (lasrraId) {
+          updateData.isProfileCompleted = true;
+          await this.ProspectiveTenantModel.update(
+            { lasrraId, ...updateData },
+            { where: { id: userId } }
+          );
+        } else {
+          updateData.isProfileCompleted = true;
+          await this.ProspectiveTenantModel.update(
+            { lasrraId: uuidv4(), ...updateData },
+            { where: { id: userId } }
+          );
+        }
+      } catch (error) {
+        throw new SystemError(error.name, error.parent || error.message);
       }
     }
   }
@@ -1690,8 +1781,12 @@ class UserService {
   async handleValidateNIN(data) {
     var { nin, userId, role } =
       await userUtil.validateHandleValidateNIN2.validateAsync(data);
-
-    let user = await this.ProspectiveTenantModel.findByPk(userId);
+    let user;
+    if (role == "rent") {
+      user = await this.ProspectiveTenantModel.findByPk(userId);
+    } else {
+      user = await this.PropertyManagerModel.findByPk(userId);
+    }
 
     let phone = user ? user.telCode + user.tel : null;
 
