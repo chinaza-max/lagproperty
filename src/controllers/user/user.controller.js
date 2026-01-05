@@ -948,6 +948,29 @@ export default class UserController {
     }
   }
 
+  async getAllProperty(req, res, next) {
+    try {
+      const data = req.query;
+
+      let my_bj = {
+        ...data,
+        userId: req.user.id,
+        role: req.user.role,
+      };
+
+      const response = await userService.handleGetAllProperty(my_bj);
+
+      return res.status(200).json({
+        status: 200,
+        message: "successfull",
+        data: response,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
   async sendInvoce(req, res, next) {
     try {
       const data = req.body;

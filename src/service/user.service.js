@@ -2476,6 +2476,98 @@ class UserService {
     }
   }
 
+  async handleGetAllProperty(data) {
+    const {
+      userId,
+      role,
+      type,
+      page,
+      pageSize,
+      availability,
+      furnishingStatus,
+      sortBy,
+      sortOrder,
+      propertyManagerId,
+    } = await userUtil.verifyHandleGetAllProperty.validateAsync(data);
+
+    try {
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
+
+      let whereCondition = { isDeleted: false };
+
+      // role-specific filters
+      if (role === "list") {
+        whereCondition.propertyManagerId = userId;
+      } else if (role === "rent" && type === "listing") {
+        whereCondition.propertyManagerId = propertyManagerId;
+      }
+
+      // type-based filters
+      if (type === "vacant") whereCondition.availability = "vacant";
+      if (type === "occupied") whereCondition.availability = "occupied";
+      if (type === "booked") whereCondition.availability = "booked";
+      if (type === "cancelled") {
+        const refundedInspections = await this.InspectionModel.findAll({
+          where: { inspectionStatus: "refunded" },
+          include: [
+            {
+              model: this.BuildingModel,
+              attributes: ["id"],
+              include:
+                role === "list"
+                  ? [
+                      {
+                        model: this.PropertyManagerModel,
+                        where: { id: userId },
+                        attributes: [],
+                      },
+                    ]
+                  : [],
+            },
+            ...(role === "rent"
+              ? [
+                  {
+                    model: this.ProspectiveTenantModel,
+                    where: { id: userId },
+                    attributes: [],
+                  },
+                ]
+              : []),
+          ],
+        });
+
+        const buildingIds = refundedInspections.map(
+          (inspection) => inspection.Building.id
+        );
+        whereCondition.id = buildingIds;
+      }
+
+      // additional filters
+      if (availability) whereCondition.availability = availability;
+      if (furnishingStatus) whereCondition.furnishingStatus = furnishingStatus;
+
+      const buildings = await this.BuildingModel.findAndCountAll({
+        where: whereCondition,
+        limit,
+        offset,
+        order: [[sortBy, sortOrder]],
+      });
+
+      return {
+        response: buildings.rows,
+        pagination: {
+          totalItems: buildings.count,
+          currentPage: page,
+          totalPages: Math.ceil(buildings.count / pageSize),
+        },
+      };
+    } catch (error) {
+      console.error(error);
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+
   async handleSendInvoce(data) {
     let { userIdList } = await userUtil.verifyHandleSendInvoce.validateAsync(
       data

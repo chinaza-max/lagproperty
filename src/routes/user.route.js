@@ -3238,6 +3238,162 @@
  *                   example: "Internal server error."
  */
 
+/**
+ * @swagger
+ * /user/getAllProperty:
+ *   get:
+ *     summary: Fetch all buildings with filters, sorting, and pagination
+ *     description: >
+ *       Retrieves a paginated list of buildings.
+ *       Supports filtering by availability and furnishing status, sorting,
+ *       and role-based access for property managers (list) and renters (rent).
+ *     tags:
+ *       - Building
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the logged-in user.
+ *
+ *       - in: query
+ *         name: role
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [list, rent]
+ *         description: User role (property manager or renter).
+ *
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [vacant, occupied, booked, cancelled, listing]
+ *         description: Type of property list to fetch.
+ *
+ *       - in: query
+ *         name: availability
+ *         schema:
+ *           type: string
+ *           enum: [vacant, occupied, booked]
+ *         description: Filter buildings by availability status.
+ *
+ *       - in: query
+ *         name: furnishingStatus
+ *         schema:
+ *           type: string
+ *           enum: [furnished, unfurnished, partly furnished, unset]
+ *         description: Filter buildings by furnishing status.
+ *
+ *       - in: query
+ *         name: propertyManagerId
+ *         schema:
+ *           type: integer
+ *         description: Required when role is "rent" and type is "listing".
+ *
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [price, createdAt, numberOfRooms, numberOfFloors]
+ *           default: createdAt
+ *         description: Field to sort the result by.
+ *
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order.
+ *
+ *       - in: query
+ *         name: page
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: The page number to retrieve.
+ *
+ *       - in: query
+ *         name: pageSize
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of items per page.
+ *
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved buildings.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 response:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Building ID.
+ *                       propertyManagerId:
+ *                         type: integer
+ *                         description: Property manager ID.
+ *                       propertyPreference:
+ *                         type: string
+ *                         description: Property type (e.g. self-contain).
+ *                       availability:
+ *                         type: string
+ *                         enum: [vacant, occupied, booked]
+ *                       furnishingStatus:
+ *                         type: string
+ *                         enum: [furnished, unfurnished, partly furnished, unset]
+ *                       price:
+ *                         type: integer
+ *                         description: Rental price.
+ *                       numberOfRooms:
+ *                         type: integer
+ *                       numberOfFloors:
+ *                         type: integer
+ *                       propertyImages:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       buildingOccupantPreference:
+ *                         type: object
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Creation date.
+ *
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Total number of buildings available.
+ *                     currentPage:
+ *                       type: integer
+ *                       description: The current page number.
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Total number of pages.
+ *                     pageSize:
+ *                       type: integer
+ *                       description: Number of items per page.
+ *
+ *       400:
+ *         description: Bad request if query parameters are invalid.
+ *
+ *       500:
+ *         description: Internal server error.
+ */
+
 import { Router } from "express";
 import UserController from "../controllers/user/user.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -3294,6 +3450,7 @@ class UserRoutes extends UserController {
     this.router.post("/sendInvoce", this.sendInvoce);
     this.router.post("/chat", uploadHandler.image.single("image"), this.chat);
     this.router.get("/getMyProperty", this.getMyProperty);
+    this.router.get("/getAllProperty", this.getAllProperty);
     this.router.post("/quitNoticeAction", this.quitNoticeAction);
     this.router.post("/reviewTenant", this.reviewTenant);
     this.router.post("/reviewBuilding", this.reviewBuilding);

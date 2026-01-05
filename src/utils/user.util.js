@@ -92,6 +92,34 @@ class UserUtil {
     }),
   });
 
+  verifyHandleGetAllProperty = Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid("list", "rent").required(),
+    type: Joi.string()
+      .valid("vacant", "cancelled", "occupied", "listing", "booked")
+      .required()
+      .label("type"),
+    availability: Joi.string().valid("vacant", "occupied", "booked").optional(),
+    furnishingStatus: Joi.string()
+      .valid("furnished", "unfurnished", "partly furnished", "unset")
+      .optional(),
+    pageSize: Joi.number().integer().min(1).required(),
+    page: Joi.number().integer().min(1).required(),
+    sortBy: Joi.string()
+      .valid("price", "createdAt", "numberOfRooms", "numberOfFloors")
+      .default("createdAt"),
+    sortOrder: Joi.string().valid("asc", "desc").default("desc"),
+    propertyManagerId: Joi.number().when("role", {
+      is: "rent",
+      then: Joi.when("type", {
+        is: "listing",
+        then: Joi.required(),
+        otherwise: Joi.forbidden(),
+      }),
+      otherwise: Joi.forbidden(),
+    }),
+  });
+
   verifyHandleGetMyProperty = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid("list", "rent").required(),
