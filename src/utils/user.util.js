@@ -43,6 +43,12 @@ class UserUtil {
     }),
   });
 
+  verifyUpdateNotifyBuilding = Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid("rent").required(),
+    notifyBuildingUpdate: Joi.boolean().required(),
+  });
+
   verifyHandleUpdateProfileRent = Joi.object({
     userId: Joi.number().required().label("user Id"),
     role: Joi.string().required().valid("rent", "list"),
@@ -124,7 +130,7 @@ class UserUtil {
     userId: Joi.number().required(),
     role: Joi.string().valid("list", "rent").required(),
     type: Joi.string()
-      .valid("vacant", "cancelled", "occupied", "listing", "booked")
+      .valid("vacant", "cancelled", "occupied", "listing", "booked", "all")
       .required()
       .label("type"),
     pageSize: Joi.number().integer().required(),
@@ -206,6 +212,13 @@ class UserUtil {
       otherwise: Joi.forbidden(),
     }),
   });
+
+  verifyHandleGetReceipt = Joi.object({
+    userId: Joi.string().required(),
+    role: Joi.string().valid("rent", "list").required(),
+    transactionId: Joi.string().optional(),
+    transactionReference: Joi.string().optional(),
+  }).or("transactionId", "transactionReference");
 
   verifyHandleInspectionAction = Joi.object({
     userId: Joi.number().required(),

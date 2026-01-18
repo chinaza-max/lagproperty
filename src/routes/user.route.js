@@ -3394,6 +3394,146 @@
  *         description: Internal server error.
  */
 
+/**
+ * @swagger
+ * /user/updateNotifyBuilding:
+ *   put:
+ *     summary: Update building notification preference
+ *     description: Enable or disable building update notifications for a tenant.
+ *     tags:
+ *       - Notification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notifyBuildingUpdate
+ *             properties:
+ *               notifyBuildingUpdate:
+ *                 type: boolean
+ *                 description: Enable or disable building update notifications.
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Notification preference updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Notification preference updated successfully
+ *       400:
+ *         description: Bad request if parameters are invalid.
+ *       401:
+ *         description: Unauthorized access.
+ *       404:
+ *         description: Tenant not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /user/getReceipt:
+ *   get:
+ *     summary: Get receipt details
+ *     description: Retrieve detailed receipt information for a specific transaction by ID or reference.
+ *     tags:
+ *       - Receipt
+ *     parameters:
+ *       - in: query
+ *         name: transactionId
+ *         schema:
+ *           type: string
+ *         description: The ID of the transaction (either transactionId or transactionReference is required)
+ *         example: "64f8a9b2c1234567890abcde"
+ *       - in: query
+ *         name: transactionReference
+ *         schema:
+ *           type: string
+ *         description: The reference code of the transaction (either transactionId or transactionReference is required)
+ *         example: "rentInvoice-1705234567890-userId123"
+ *     responses:
+ *       200:
+ *         description: Receipt details fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Receipt fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     transaction:
+ *                       type: object
+ *                     building:
+ *                       type: object
+ *                     propertyManager:
+ *                       type: object
+ *                     tenant:
+ *                       type: object
+ *       400:
+ *         description: Bad request - Transaction ID or reference is required.
+ *       401:
+ *         description: Unauthorized access.
+ *       404:
+ *         description: Transaction not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /user/downloadReceipt:
+ *   get:
+ *     summary: Download receipt as PDF
+ *     description: Generate and download a PDF receipt for a specific transaction by ID or reference.
+ *     tags:
+ *       - Receipt
+ *     parameters:
+ *       - in: query
+ *         name: transactionId
+ *         schema:
+ *           type: string
+ *         description: The ID of the transaction (either transactionId or transactionReference is required)
+ *         example: "64f8a9b2c1234567890abcde"
+ *       - in: query
+ *         name: transactionReference
+ *         schema:
+ *           type: string
+ *         description: The reference code of the transaction (either transactionId or transactionReference is required)
+ *         example: "rentInvoice-1705234567890-userId123"
+ *     responses:
+ *       200:
+ *         description: PDF receipt generated successfully.
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Bad request.
+ *       401:
+ *         description: Unauthorized access.
+ *       404:
+ *         description: Transaction not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
 import { Router } from "express";
 import UserController from "../controllers/user/user.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -3411,6 +3551,9 @@ class UserRoutes extends UserController {
       uploadHandler.image.single("image"),
       this.updateProfile
     );
+
+    this.router.post("/updateNotifyBuilding", this.updateNotifyBuilding);
+
     /* this.router.post("/listBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 
       { name: 'kitchenSizeImage', maxCount: 1 },  
@@ -3445,7 +3588,8 @@ class UserRoutes extends UserController {
       ]),
       this.updatelistedBuilding
     );
-
+    this.router.get("/getReceipt", this.getReceipt);
+    this.router.get("/downloadReceipt", this.downloadReceipt);
     this.router.post("/inspectionAction", this.inspectionAction);
     this.router.post("/sendInvoce", this.sendInvoce);
     this.router.post("/chat", uploadHandler.image.single("image"), this.chat);

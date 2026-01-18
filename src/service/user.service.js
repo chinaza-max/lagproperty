@@ -24,9 +24,9 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { addMonths, format } from "date-fns";
 import { fn, col, literal } from "sequelize";
-
+import PDFDocument from "pdfkit";
 import axios from "axios";
-
+//import { addMonths } from "date-fns";
 import {
   NotFoundError,
   ConflictError,
@@ -353,6 +353,35 @@ class UserService {
       } catch (error) {
         throw new SystemError(error.name, error.parent || error.message);
       }
+    }
+  }
+
+  async handleUpdateNotifyBuilding(data) {
+    const { userId, role, notifyBuildingUpdate } =
+      await userUtil.verifyUpdateNotifyBuilding.validateAsync(data);
+
+    try {
+      if (role !== "rent") {
+        throw new SystemError(
+          "UnauthorizedAction",
+          "Only tenants can update this preference"
+        );
+      }
+
+      const currentTenant = await this.ProspectiveTenantModel.findOne({
+        where: { id: userId },
+      });
+
+      if (!currentTenant) {
+        throw new SystemError("UserNotFound", "Tenant not found");
+      }
+
+      await this.ProspectiveTenantModel.update(
+        { notifyBuildingUpdate },
+        { where: { id: userId } }
+      );
+    } catch (error) {
+      throw new SystemError(error.name, error.parent || error.message);
     }
   }
 
@@ -2250,16 +2279,120 @@ class UserService {
       await userUtil.verifyHandleListBuilding.validateAsync(data);
 
     try {
-      await this.BuildingModel.create({
+      const building = await this.BuildingModel.create({
         propertyManagerId: userId,
         propertyImages,
         propertyTerms: propertyTerms.url,
         ...updateData,
       });
+
+      await this.checkAndNotifyTenants(building);
     } catch (error) {
       console.error(error);
       throw new SystemError(error.name, error.parent);
     }
+  }
+
+  async checkAndNotifyTenants(building) {
+    // Only tenants who opted in
+    const tenants = await this.ProspectiveTenantModel.findAll({
+      where: {
+        notifyBuildingUpdate: true,
+        notificationAllowed: true,
+        isDeleted: false,
+      },
+    });
+
+    for (const tenant of tenants) {
+      const score = this.calculateMatchScore(building, tenant);
+
+      if (score >= 50) {
+        await this.sendBuildingMatchEmail(tenant, building, score);
+      }
+    }
+  }
+
+  calculateMatchScore(building, tenant) {
+    let totalChecks = 0;
+    let matched = 0;
+
+    // 1️⃣ Property type
+    totalChecks++;
+    if (
+      Array.isArray(tenant.propertyPreference) &&
+      tenant.propertyPreference.includes(building.propertyPreference)
+    ) {
+      matched++;
+    }
+
+    // 2️⃣ Location
+    totalChecks++;
+    if (tenant.propertyLocation && tenant.propertyLocation === building.city) {
+      matched++;
+    }
+
+    // 3️⃣ Budget
+    totalChecks++;
+    if (
+      tenant.budgetMin !== null &&
+      tenant.budgetMax !== null &&
+      building.price >= tenant.budgetMin &&
+      building.price <= tenant.budgetMax
+    ) {
+      matched++;
+    }
+
+    // 4️⃣ Rental duration
+    totalChecks++;
+    if (
+      tenant.rentalDuration &&
+      tenant.rentalDuration === building.rentalDuration
+    ) {
+      matched++;
+    }
+
+    // 5️⃣ Marital status (optional)
+    totalChecks++;
+    if (
+      !building.buildingOccupantPreference?.maritalStatus ||
+      building.buildingOccupantPreference.maritalStatus === tenant.maritalStatus
+    ) {
+      matched++;
+    }
+
+    // 6️⃣ Gender / Religion (optional)
+    totalChecks++;
+    if (
+      !building.buildingOccupantPreference?.gender ||
+      building.buildingOccupantPreference.gender === tenant.gender
+    ) {
+      matched++;
+    }
+
+    return Math.round((matched / totalChecks) * 100);
+  }
+
+  async sendBuildingMatchEmail(tenant, building, score) {
+    // Example payload – plug into your mail service
+    const payload = {
+      to: tenant.emailAddress,
+      subject: "A new building matches your preference 🎯",
+      data: {
+        firstName: tenant.firstName,
+        location: building.city,
+        price: building.price,
+        matchScore: score,
+      },
+    };
+
+    //await emailService.sendBuildingMatch(payload);
+
+    await mailService.sendMail({
+      to: tenant.emailAddress,
+      subject: "A new building matches your preference 🎯",
+      templateName: "buildingPreference",
+      variables: payload,
+    });
   }
 
   async handleGetMyProperty(data) {
@@ -2771,6 +2904,456 @@ class UserService {
     } catch (error) {
       console.error("Error sending invoice email:", error);
     }
+  }
+
+  async handleGetReceipt(data) {
+    const { userId, role, transactionId, transactionReference } =
+      await userUtil.verifyHandleGetReceipt.validateAsync(data);
+
+    try {
+      let whereClause = { isDeleted: false };
+
+      if (transactionId) {
+        whereClause.id = transactionId;
+      } else if (transactionReference) {
+        whereClause.transactionReference = transactionReference;
+      } else {
+        throw new BadRequestError("Transaction ID or reference is required");
+      }
+
+      const transaction = await this.TransactionModel.findOne({
+        where: whereClause,
+        include: [
+          {
+            model: this.BuildingModel,
+            attributes: [
+              "id",
+              "propertyPreference",
+              "address",
+              "city",
+              "price",
+              "rentalDuration", // <-- include rentalDuration
+            ],
+            include: [
+              {
+                model: this.PropertyManagerModel,
+                attributes: [
+                  "id",
+                  "firstName",
+                  "lastName",
+                  "emailAddress",
+                  "tel",
+                  "companyName",
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      if (!transaction) {
+        throw new NotFoundError("Transaction not found");
+      }
+
+      // Get tenant/user details
+      let user;
+      if (role === "rent") {
+        user = await this.ProspectiveTenantModel.findByPk(userId, {
+          attributes: ["id", "firstName", "lastName", "emailAddress", "tel"],
+        });
+      } else {
+        user = await this.PropertyManagerModel.findByPk(userId, {
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "emailAddress",
+            "tel",
+            "companyName",
+          ],
+        });
+      }
+
+      // Verify user has access
+      if (role === "rent" && transaction.userId !== userId) {
+        throw new BadRequestError("Unauthorized access to this receipt");
+      }
+      if (
+        role === "list" &&
+        transaction.Building?.propertyManagerId !== userId
+      ) {
+        throw new BadRequestError("Unauthorized access to this receipt");
+      }
+
+      // Compute renewal date
+      const rentalDuration = transaction.Building?.rentalDuration || 0;
+      const renewalDate = addMonths(
+        new Date(transaction.createdAt),
+        rentalDuration
+      );
+
+      return {
+        transaction: {
+          id: transaction.id,
+          paymentReference: transaction.paymentReference,
+          transactionReference: transaction.transactionReference,
+          amount: transaction.amount,
+          transactionType: transaction.transactionType,
+          paymentStatus: transaction.paymentStatus,
+          createdAt: transaction.createdAt,
+          renewalDate, // <-- added
+        },
+        building: transaction.Building,
+        propertyManager: transaction.Building?.PropertyManager,
+        tenant: user,
+      };
+    } catch (error) {
+      throw new SystemError(error.name, error.parent || error.message);
+    }
+  }
+
+  /* async handleGetReceipt() {
+    const createdAt = new Date();
+    const rentalDuration = 12; // months
+    const renewalDate = addMonths(createdAt, rentalDuration);
+
+    return {
+      transaction: {
+        paymentReference: "PAY-20260118-001",
+        transactionReference: "TXN-ABC123456",
+        transactionType: "Rent Payment",
+        paymentStatus: "successful",
+        amount: 750000,
+        createdAt,
+        renewalDate, // <-- added
+      },
+
+      tenant: {
+        firstName: "John",
+        lastName: "Doe",
+        emailAddress: "johndoe@example.com",
+        tel: "+2348012345678",
+      },
+
+      building: {
+        propertyPreference: "Self Contain",
+        address: "12 Admiralty Way",
+        city: "Lekki",
+        rentalDuration, // useful for calculations
+      },
+
+      propertyManager: {
+        companyName: "LagProperty Ltd",
+        firstName: "Jane",
+        lastName: "Smith",
+        tel: "+2348098765432",
+      },
+    };
+  }
+  */
+
+  /*
+  async generateReceiptPDF(receiptData) {
+    // You'll need to install: npm install pdfkit
+
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ margin: 50 });
+        const chunks = [];
+
+        doc.on("data", (chunk) => chunks.push(chunk));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+        doc.on("error", reject);
+
+        // Header
+        doc.fontSize(20).text("PAYMENT RECEIPT", { align: "center" });
+        doc.moveDown();
+        doc.fontSize(10).text("www.lagproperty.com", { align: "center" });
+        doc.moveDown(2);
+
+        // Receipt Details
+        doc.fontSize(12).text("Receipt Details", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10);
+        doc.text(`Receipt No: ${receiptData.transaction.paymentReference}`);
+        doc.text(
+          `Transaction Ref: ${receiptData.transaction.transactionReference}`
+        );
+        doc.text(
+          `Date: ${format(
+            new Date(receiptData.transaction.createdAt),
+            "MMMM dd, yyyy HH:mm:ss"
+          )}`
+        );
+        doc.text(`Status: ${receiptData.transaction.paymentStatus}`);
+        doc.moveDown(1.5);
+
+        // Tenant/User Information
+        doc.fontSize(12).text("Paid By", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10);
+        doc.text(
+          `Name: ${receiptData.tenant.firstName} ${receiptData.tenant.lastName}`
+        );
+        doc.text(`Email: ${receiptData.tenant.emailAddress}`);
+        doc.text(`Phone: ${receiptData.tenant.tel}`);
+        doc.moveDown(1.5);
+
+        // Property Information
+        if (receiptData.building) {
+          doc.fontSize(12).text("Property Details", { underline: true });
+          doc.moveDown(0.5);
+          doc.fontSize(10);
+          doc.text(`Type: ${receiptData.building.propertyPreference}`);
+          doc.text(
+            `Address: ${receiptData.building.address}, ${receiptData.building.city}`
+          );
+          doc.moveDown(1.5);
+        }
+
+        // Property Manager Information
+        if (receiptData.propertyManager) {
+          doc.fontSize(12).text("Property Manager", { underline: true });
+          doc.moveDown(0.5);
+          doc.fontSize(10);
+          doc.text(
+            `Company: ${receiptData.propertyManager.companyName || "N/A"}`
+          );
+          doc.text(
+            `Name: ${receiptData.propertyManager.firstName} ${receiptData.propertyManager.lastName}`
+          );
+          doc.text(`Contact: ${receiptData.propertyManager.tel}`);
+          doc.moveDown(1.5);
+        }
+
+        // Payment Information
+        doc.fontSize(12).text("Payment Information", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10);
+        doc.text(
+          `Transaction Type: ${receiptData.transaction.transactionType}`
+        );
+        doc.moveDown(0.5);
+
+        // Amount box
+        doc.rect(50, doc.y, 500, 40).stroke();
+        doc
+          .fontSize(14)
+          .text(
+            `Total Amount Paid: ₦${receiptData.transaction.amount.toLocaleString()}`,
+            60,
+            doc.y + 10,
+            { width: 480 }
+          );
+
+        doc.moveDown(3);
+
+        // Footer
+        doc
+          .fontSize(8)
+          .text(
+            "This is a computer-generated receipt and does not require a signature.",
+            { align: "center", color: "gray" }
+          );
+        doc.text(
+          `Generated on ${format(new Date(), "MMMM dd, yyyy HH:mm:ss")}`,
+          { align: "center", color: "gray" }
+        );
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+  */
+
+  async generateReceiptPDF(receiptData) {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ margin: 50 });
+        const chunks = [];
+
+        doc.on("data", (chunk) => chunks.push(chunk));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+        doc.on("error", reject);
+
+        // Header
+        doc
+          .fontSize(24)
+          .fillColor("#1e40af")
+          .text("PAYMENT RECEIPT", { align: "center" });
+        doc.moveDown(0.3);
+        doc
+          .fontSize(11)
+          .fillColor("#64748b")
+          .text("www.lagproperty.com", { align: "center" });
+        doc.moveDown(2);
+
+        // Divider line
+        doc
+          .strokeColor("#cbd5e1")
+          .lineWidth(1)
+          .moveTo(50, doc.y)
+          .lineTo(545, doc.y)
+          .stroke();
+        doc.moveDown(1.5);
+
+        // Receipt Details
+        doc
+          .fontSize(13)
+          .fillColor("#1e293b")
+          .text("Receipt Details", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10).fillColor("#000000");
+        doc.text(`Receipt No: ${receiptData.transaction.paymentReference}`);
+        doc.text(
+          `Transaction Ref: ${receiptData.transaction.transactionReference}`
+        );
+        doc.text(
+          `Date: ${format(
+            new Date(receiptData.transaction.createdAt),
+            "MMMM dd, yyyy HH:mm:ss"
+          )}`
+        );
+
+        // Status with color
+        const statusColor =
+          receiptData.transaction.paymentStatus.toLowerCase() === "successful"
+            ? "#16a34a"
+            : "#dc2626";
+        doc
+          .fillColor("#000000")
+          .text("Status: ", { continued: true })
+          .fillColor(statusColor)
+          .text(receiptData.transaction.paymentStatus.toUpperCase());
+
+        doc.fillColor("#000000");
+        doc.moveDown(1.5);
+
+        // Tenant/User Information
+        doc
+          .fontSize(13)
+          .fillColor("#1e293b")
+          .text("Paid By", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10).fillColor("#000000");
+        doc.text(
+          `Name: ${receiptData.tenant.firstName} ${receiptData.tenant.lastName}`
+        );
+        doc.text(`Email: ${receiptData.tenant.emailAddress}`);
+        doc.text(`Phone: ${receiptData.tenant.tel}`);
+        doc.moveDown(1.5);
+
+        // Property Information
+        if (receiptData.building) {
+          doc
+            .fontSize(13)
+            .fillColor("#1e293b")
+            .text("Property Details", { underline: true });
+          doc.moveDown(0.5);
+          doc.fontSize(10).fillColor("#000000");
+          doc.text(`Type: ${receiptData.building.propertyPreference}`);
+          doc.text(
+            `Address: ${receiptData.building.address}, ${receiptData.building.city}`
+          );
+          doc.text(
+            `Rental Duration: ${receiptData.building.rentalDuration} months`
+          );
+          doc.text(
+            `Renewal Date: ${format(
+              new Date(receiptData.transaction.renewalDate),
+              "MMMM dd, yyyy"
+            )}`
+          );
+          doc.moveDown(1.5);
+        }
+
+        // Property Manager Information
+        if (receiptData.propertyManager) {
+          doc
+            .fontSize(13)
+            .fillColor("#1e293b")
+            .text("Property Manager", { underline: true });
+          doc.moveDown(0.5);
+          doc.fontSize(10).fillColor("#000000");
+          doc.text(
+            `Company: ${receiptData.propertyManager.companyName || "N/A"}`
+          );
+          doc.text(
+            `Name: ${receiptData.propertyManager.firstName} ${receiptData.propertyManager.lastName}`
+          );
+          doc.text(`Contact: ${receiptData.propertyManager.tel}`);
+          doc.moveDown(1.5);
+        }
+
+        // Payment Information
+        doc
+          .fontSize(13)
+          .fillColor("#1e293b")
+          .text("Payment Information", { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10).fillColor("#000000");
+        doc.text(
+          `Transaction Type: ${receiptData.transaction.transactionType}`
+        );
+        doc.moveDown(0.5);
+
+        // Amount box - Enhanced with color
+        const boxY = doc.y;
+        doc.fillColor("#eff6ff").rect(50, boxY, 495, 50).fill();
+
+        doc
+          .strokeColor("#2563eb")
+          .lineWidth(2)
+          .rect(50, boxY, 495, 50)
+          .stroke();
+
+        doc
+          .fontSize(11)
+          .fillColor("#64748b")
+          .text("Total Amount Paid", 65, boxY + 12);
+
+        doc
+          .fontSize(18)
+          .fillColor("#1e40af")
+          .font("Helvetica-Bold")
+          .text(
+            `₦${receiptData.transaction.amount.toLocaleString()}`,
+            65,
+            boxY + 28
+          );
+
+        doc.font("Helvetica");
+        doc.moveDown(4);
+
+        // Footer divider
+        doc
+          .strokeColor("#cbd5e1")
+          .lineWidth(1)
+          .moveTo(50, doc.y)
+          .lineTo(545, doc.y)
+          .stroke();
+        doc.moveDown(1);
+
+        // Footer
+        doc
+          .fontSize(8)
+          .fillColor("#94a3b8")
+          .text(
+            "This is a computer-generated receipt and does not require a signature.",
+            { align: "center" }
+          );
+        doc.text(
+          `Generated on ${format(new Date(), "MMMM dd, yyyy HH:mm:ss")}`,
+          { align: "center" }
+        );
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   async handleInspectionAction(data) {

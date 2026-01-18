@@ -1,6 +1,5 @@
 import { Model, DataTypes } from "sequelize";
 
-
 class ProspectiveTenant extends Model {}
 
 export function init(connection) {
@@ -11,13 +10,13 @@ export function init(connection) {
         primaryKey: true,
         autoIncrement: true,
       },
-      emailAddress: {    
+      emailAddress: {
         type: DataTypes.STRING,
         allowNull: false,
       },
       isEmailValid: {
         type: DataTypes.BOOLEAN,
-        defaultValue:false,
+        defaultValue: false,
         allowNull: false,
       },
       tel: {
@@ -39,7 +38,7 @@ export function init(connection) {
       lastName: {
         type: DataTypes.STRING,
         allowNull: false,
-      }, 
+      },
       religion: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -47,22 +46,19 @@ export function init(connection) {
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-      }, 
+      },
       maritalStatus: {
         type: DataTypes.STRING,
         allowNull: true,
       },
       gender: {
-        type: DataTypes.ENUM(
-          'Male',
-          'Female'
-        ),
+        type: DataTypes.ENUM("Male", "Female"),
         allowNull: true,
-      },  
+      },
       dateOfBirth: {
-       type: DataTypes.DATE,
+        type: DataTypes.DATE,
         allowNull: true,
-      }, 
+      },
       lasrraId: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -86,22 +82,22 @@ export function init(connection) {
       occupation: {
         type: DataTypes.STRING,
         allowNull: true,
-      }, 
+      },
       country: {
         type: DataTypes.STRING,
         allowNull: true,
-      }, 
+      },
       stateOfOrigin: {
         type: DataTypes.STRING,
         allowNull: true,
-      }, 
+      },
       nin: {
         type: DataTypes.STRING,
         allowNull: true,
-      }, 
+      },
       isNINValid: {
         type: DataTypes.BOOLEAN,
-        allowNull: true
+        allowNull: true,
       },
       lasrraId: {
         type: DataTypes.STRING,
@@ -121,16 +117,16 @@ export function init(connection) {
       },
       propertyPreference: {
         type: DataTypes.TEXT,
-        defaultValue: '[]',
+        defaultValue: "[]",
         get() {
-          const rawValue = this.getDataValue('propertyPreference');
+          const rawValue = this.getDataValue("propertyPreference");
           return rawValue ? JSON.parse(rawValue) : [];
         },
         set(value) {
           if (Array.isArray(value)) {
-            this.setDataValue('propertyPreference', JSON.stringify(value));
+            this.setDataValue("propertyPreference", JSON.stringify(value));
           } else {
-            this.setDataValue('propertyPreference', JSON.stringify([]));
+            this.setDataValue("propertyPreference", JSON.stringify([]));
           }
         },
         validate: {
@@ -138,10 +134,10 @@ export function init(connection) {
             try {
               JSON.parse(value);
             } catch (e) {
-              throw new Error('Invalid JSON string for propertyPreference');
+              throw new Error("Invalid JSON string for propertyPreference");
             }
-          }
-        }
+          },
+        },
       },
       propertyLocation: {
         type: DataTypes.STRING,
@@ -149,40 +145,41 @@ export function init(connection) {
       },
       role: {
         type: DataTypes.STRING,
-        defaultValue: 'rent',
+        defaultValue: "rent",
       },
       disableAccount: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue:false
+        defaultValue: false,
       },
       isProfileCompleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue:false
+        defaultValue: false,
       },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue:true
-      },   
+        defaultValue: true,
+      },
       isDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue:false ,
-      }
-    }, {
-      tableName: 'ProspectiveTenant',
+        defaultValue: false,
+      },
+      notifyBuildingUpdate: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+    },
+    {
+      tableName: "ProspectiveTenant",
       sequelize: connection,
       timestamps: true,
-      underscored:false
-  });
-  }
+      underscored: false,
+    }
+  );
+}
 
-export default ProspectiveTenant ;
-
-
-
-  
-
-  
+export default ProspectiveTenant;

@@ -28,6 +28,26 @@ export default class UserController {
     }
   }
 
+  async updateNotifyBuilding(req, res, next) {
+    try {
+      const data = {
+        ...req.body,
+        userId: req.user.id,
+        role: req.user.role,
+      };
+
+      await userService.handleUpdateNotifyBuilding(data);
+
+      return res.status(200).json({
+        status: 200,
+        message: "Notification preference updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
   /*
   
   async updatelistedBuilding(req, res, next) {
@@ -208,6 +228,7 @@ export default class UserController {
   }
 */
 
+  /*
   async listBuilding(req, res, next) {
     try {
       const data = req.body;
@@ -285,6 +306,107 @@ export default class UserController {
       });
     } catch (error) {
       console.error(error);
+      next(error);
+    }
+  }
+  */
+
+  async listBuilding(req, res, next) {
+    try {
+      const data = req.body;
+      const { files } = req;
+      console.log("buildingData");
+      console.log("buildingData");
+      console.log("buildingData");
+      console.log("buildingData");
+
+      /* ---------------- SAFE JSON PARSING ---------------- */
+
+      if (data.buildingOccupantPreference) {
+        try {
+          data.buildingOccupantPreference = JSON.parse(
+            data.buildingOccupantPreference
+          );
+        } catch (err) {
+          console.error("Invalid buildingOccupantPreference JSON:", err);
+          return res.status(400).json({
+            status: "bad-request",
+            message: "Invalid buildingOccupantPreference format",
+          });
+        }
+      }
+
+      /* ---------------- AMENITIES ---------------- */
+
+      let amenities;
+      if (typeof data.amenity === "string") {
+        try {
+          amenities = JSON.parse(data.amenity);
+        } catch (err) {
+          console.error("Invalid amenity JSON:", err);
+          amenities = data.amenity;
+        }
+      } else {
+        amenities = data.amenity;
+      }
+
+      /* ---------------- IMAGE META DATA ---------------- */
+
+      const titles = Array.isArray(data.titles) ? data.titles : [data.titles];
+      const widths = Array.isArray(data.widths) ? data.widths : [data.widths];
+      const lengths = Array.isArray(data.lengths)
+        ? data.lengths
+        : [data.lengths];
+      const meta = Array.isArray(data.meta) ? data.meta : [data.meta];
+
+      /* ---------------- PROPERTY IMAGES ---------------- */
+
+      const propertyImages = (files?.propertyImages || []).map(
+        (file, index) => ({
+          url:
+            process.env.NODE_ENV === "production"
+              ? process.env.DOMAIN + file.path.replace("/home", "")
+              : process.env.DOMAIN + file.path.replace("public", ""),
+          title: titles[index] || "Default Title",
+          width: Number(widths[index]) || 0,
+          length: Number(lengths[index]) || 0,
+          size: file.size,
+        })
+      );
+
+      /* ---------------- PROPERTY TERMS ---------------- */
+
+      const propertyTerms = files?.propertyTerms?.[0]
+        ? {
+            url:
+              process.env.NODE_ENV === "production"
+                ? process.env.DOMAIN +
+                  files.propertyTerms[0].path.replace("/home", "")
+                : process.env.DOMAIN +
+                  files.propertyTerms[0].path.replace("public", ""),
+            size: files.propertyTerms[0].size,
+          }
+        : null;
+
+      /* ---------------- FINAL PAYLOAD ---------------- */
+
+      const buildingData = {
+        ...data,
+        role: req.user.role,
+        propertyImages,
+        propertyTerms,
+        amenity: amenities,
+        userId: req.user.id,
+      };
+      console.log(buildingData);
+      await userService.handleListBuilding(buildingData);
+
+      return res.status(200).json({
+        status: "success",
+        message: "Building listed successfully",
+      });
+    } catch (error) {
+      console.error("LIST BUILDING CONTROLLER ERROR:", error);
       next(error);
     }
   }
@@ -988,6 +1110,59 @@ export default class UserController {
         message: "successfull",
         data: response,
       });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
+  async getReceipt(req, res, next) {
+    try {
+      const { transactionId, transactionReference } = req.query;
+
+      const data = {
+        userId: req.user.id,
+        role: req.user.role,
+        transactionId,
+        transactionReference,
+      };
+
+      const response = await userService.handleGetReceipt(data);
+
+      return res.status(200).json({
+        status: 200,
+        message: "Receipt fetched successfully",
+        data: response,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
+  async downloadReceipt(req, res, next) {
+    try {
+      const { transactionId, transactionReference } = req.query;
+
+      const data = {
+        userId: req.user.id,
+        role: req.user.role,
+        transactionId,
+        transactionReference,
+      };
+
+      const receiptData = await userService.handleGetReceipt(data);
+
+      // Generate PDF receipt
+      const pdfBuffer = await userService.generateReceiptPDF(receiptData);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=receipt-${receiptData.transaction.paymentReference}.pdf`
+      );
+
+      return res.send(pdfBuffer);
     } catch (error) {
       console.log(error);
       next(error);
