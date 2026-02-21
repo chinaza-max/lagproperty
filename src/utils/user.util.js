@@ -214,11 +214,11 @@ class UserUtil {
   });
 
   verifyHandleGetReceipt = Joi.object({
-    userId: Joi.string().required(),
+    userId: Joi.number().required(),
     role: Joi.string().valid("rent", "list").required(),
     transactionId: Joi.string().optional(),
-    transactionReference: Joi.string().optional(),
-  }).or("transactionId", "transactionReference");
+    paymentReference: Joi.string().optional(),
+  }).or("transactionId", "paymentReference");
 
   verifyHandleInspectionAction = Joi.object({
     userId: Joi.number().required(),
@@ -237,7 +237,7 @@ class UserUtil {
         "rejectTenant",
         "releaseFund",
         "rejectBuilding",
-        "escrowBalance"
+        "escrowBalance",
       )
       .required()
       .label("Type"),
@@ -251,7 +251,7 @@ class UserUtil {
           "getNotCreatedInspection",
           "getPendingInspection",
           "getDeclineInspection",
-          "getAcceptedInspection"
+          "getAcceptedInspection",
         ),
         then: Joi.required(),
         otherwise: Joi.forbidden(),
@@ -265,7 +265,7 @@ class UserUtil {
           "getNotCreatedInspection",
           "getPendingInspection",
           "getDeclineInspection",
-          "getAcceptedInspection"
+          "getAcceptedInspection",
         ),
         then: Joi.required(),
         otherwise: Joi.forbidden(),
@@ -322,7 +322,7 @@ class UserUtil {
         "declineInspection",
         "createInspection",
         "acceptTenant",
-        "releaseFund"
+        "releaseFund",
       ),
       then: Joi.required(),
       otherwise: Joi.forbidden(),
@@ -602,7 +602,7 @@ class UserUtil {
           width: Joi.number().integer().required(),
           length: Joi.number().integer().required(),
           size: Joi.number().max(5000000).required(),
-        })
+        }),
       )
       .optional(),
     titles: Joi.alternatives()
@@ -722,7 +722,7 @@ class UserUtil {
               }
             })
             .optional(),*/
-        })
+        }),
       )
       .required(),
     titles: Joi.alternatives()

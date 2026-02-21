@@ -1,6 +1,5 @@
 import { Model, DataTypes } from "sequelize";
 
-
 class Transaction extends Model {}
 
 export function init(connection) {
@@ -25,8 +24,8 @@ export function init(connection) {
       },
       inspectionId: {
         type: DataTypes.INTEGER,
-        allowNull: true
-      }, 
+        allowNull: true,
+      },
       transactionReference: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -37,37 +36,33 @@ export function init(connection) {
       },
       transactionType: {
         type: DataTypes.ENUM(
-            'appointmentAndRent',//INCOMING RENT FOR APPOINTMENT 
-            'firstRent',//DISBURSED FIRST RENT 
-            'commission',// DISBURSED COMMISSION FROM FIRST RENT
-            'refund',// REFUND 
-            'rent', 
-            'subsequentRent', //PAYMENT SENT TO HOUSE OWNER AS RENT 
-          ),
+          "appointmentAndRent", //INCOMING RENT FOR APPOINTMENT
+          "firstRent", //DISBURSED FIRST RENT
+          "commission", // DISBURSED COMMISSION FROM FIRST RENT
+          "refund", // REFUND
+          "rent",
+          "subsequentRent", //PAYMENT SENT TO HOUSE OWNER AS RENT
+        ),
         allowNull: false,
       },
       paymentStatus: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue:'unverified',
+        defaultValue: "unverified",
       },
       isDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue:false ,
-      }
-    }, {
-      tableName: 'Transaction',
+        defaultValue: false,
+      },
+    },
+    {
+      tableName: "Transaction",
       sequelize: connection,
       timestamps: true,
-      underscored:false
-    });
-  }
+      underscored: false,
+    },
+  );
+}
 
-export default Transaction ;
-
-
-
-  
-
-  
+export default Transaction;

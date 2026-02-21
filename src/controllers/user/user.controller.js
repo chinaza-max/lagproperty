@@ -325,7 +325,7 @@ export default class UserController {
       if (data.buildingOccupantPreference) {
         try {
           data.buildingOccupantPreference = JSON.parse(
-            data.buildingOccupantPreference
+            data.buildingOccupantPreference,
           );
         } catch (err) {
           console.error("Invalid buildingOccupantPreference JSON:", err);
@@ -371,7 +371,7 @@ export default class UserController {
           width: Number(widths[index]) || 0,
           length: Number(lengths[index]) || 0,
           size: file.size,
-        })
+        }),
       );
 
       /* ---------------- PROPERTY TERMS ---------------- */
@@ -421,9 +421,8 @@ export default class UserController {
         userId: req.user.id,
       };
 
-      const response = await userService.handleProspectiveTenantInformation(
-        my_bj
-      );
+      const response =
+        await userService.handleProspectiveTenantInformation(my_bj);
 
       return res.status(200).json({
         status: 200,
@@ -1118,13 +1117,13 @@ export default class UserController {
 
   async getReceipt(req, res, next) {
     try {
-      const { transactionId, transactionReference } = req.query;
+      const { transactionId, paymentReference } = req.query;
 
       const data = {
         userId: req.user.id,
         role: req.user.role,
         transactionId,
-        transactionReference,
+        paymentReference,
       };
 
       const response = await userService.handleGetReceipt(data);
@@ -1142,24 +1141,39 @@ export default class UserController {
 
   async downloadReceipt(req, res, next) {
     try {
-      const { transactionId, transactionReference } = req.query;
+      const { transactionId, paymentReference } = req.query;
 
       const data = {
         userId: req.user.id,
         role: req.user.role,
         transactionId,
-        transactionReference,
+        paymentReference,
       };
 
-      const receiptData = await userService.handleGetReceipt(data);
+      const response = await userService.handleGetReceipt(data);
+      // console.log(response);
 
-      // Generate PDF receipt
-      const pdfBuffer = await userService.generateReceiptPDF(receiptData);
+      // Normalize Sequelize model instances to plain objects
+      const normalizedResponse = {
+        transaction: response.transaction, // already a plain object
+        tenant: response.tenant?.dataValues || response.tenant,
+        building: response.building?.dataValues
+          ? {
+              ...response.building.dataValues,
+              PropertyManager: undefined, // strip nested association
+            }
+          : response.building,
+        propertyManager:
+          response.propertyManager?.dataValues || response.propertyManager,
+      };
+
+      const pdfBuffer =
+        await userService.generateReceiptPDF(normalizedResponse);
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=receipt-${receiptData.transaction.paymentReference}.pdf`
+        `attachment; filename=receipt-${response.transaction.paymentReference}.pdf`,
       );
 
       return res.send(pdfBuffer);

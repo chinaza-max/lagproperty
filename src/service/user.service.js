@@ -259,7 +259,7 @@ class UserService {
             if (existingUser.isNINValid && existingUser.id !== userId) {
               throw new SystemError(
                 "NINAlreadyVerified",
-                "This NIN is already verified by another user"
+                "This NIN is already verified by another user",
               );
             }
             // if not verified, allow update
@@ -286,7 +286,7 @@ class UserService {
         if (file) {
           await this.PropertyManagerModel.update(
             { image: imageUrl, ...updateData },
-            { where: { id: userId } }
+            { where: { id: userId } },
           );
         } else {
           await this.PropertyManagerModel.update(updateData, {
@@ -323,7 +323,7 @@ class UserService {
             if (existingTenant.isNINValid && existingTenant.id !== userId) {
               throw new SystemError(
                 "NINAlreadyVerified",
-                "This NIN is already verified by another user"
+                "This NIN is already verified by another user",
               );
             }
             // if not verified, allow update
@@ -341,13 +341,13 @@ class UserService {
           updateData.isProfileCompleted = true;
           await this.ProspectiveTenantModel.update(
             { lasrraId, ...updateData },
-            { where: { id: userId } }
+            { where: { id: userId } },
           );
         } else {
           updateData.isProfileCompleted = true;
           await this.ProspectiveTenantModel.update(
             { lasrraId: uuidv4(), ...updateData },
-            { where: { id: userId } }
+            { where: { id: userId } },
           );
         }
       } catch (error) {
@@ -364,7 +364,7 @@ class UserService {
       if (role !== "rent") {
         throw new SystemError(
           "UnauthorizedAction",
-          "Only tenants can update this preference"
+          "Only tenants can update this preference",
         );
       }
 
@@ -378,7 +378,7 @@ class UserService {
 
       await this.ProspectiveTenantModel.update(
         { notifyBuildingUpdate },
-        { where: { id: userId } }
+        { where: { id: userId } },
       );
     } catch (error) {
       throw new SystemError(error.name, error.parent || error.message);
@@ -388,7 +388,7 @@ class UserService {
   async handleProspectiveTenantInformation(data) {
     const { userId, inspectionId, role, page, pageSize } =
       await userUtil.verifyHandleProspectiveTenantInformation.validateAsync(
-        data
+        data,
       );
 
     const offset = (page - 1) * pageSize;
@@ -877,10 +877,10 @@ class UserService {
                 Sequelize.fn(
                   "JSON_CONTAINS",
                   Sequelize.col("amenity"),
-                  Sequelize.literal(`'"${amenity}"'`)
+                  Sequelize.literal(`'"${amenity}"'`),
                 ),
-                true
-              )
+                true,
+              ),
             ),
           };
         }
@@ -920,7 +920,7 @@ class UserService {
               having: where(
                 fn("ROUND", fn("AVG", col("BuildingReview.rating"))),
                 "=",
-                propertyRating
+                propertyRating,
               ),
               //offset,
               //limit,
@@ -932,7 +932,7 @@ class UserService {
           } catch (error) {
             console.error(
               "Error fetching buildings with average rating:",
-              error
+              error,
             );
             throw error;
           }
@@ -963,7 +963,7 @@ class UserService {
               //fn('COALESCE', fn('AVG', col('BuildingReview.rating')), 0), 'averageRating'
               fn(
                 "ROUND",
-                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0)
+                fn("COALESCE", fn("AVG", col("BuildingReview.rating")), 0),
               ),
               "averageRating",
             ],
@@ -1172,7 +1172,7 @@ class UserService {
 
       const filteredBuildings = this.filterBuildingsByUserPreferences(
         buildings,
-        user
+        user,
       );
       totalCount = filteredBuildings.length;
       const totalPages = Math.ceil(totalCount / pageSize);
@@ -1180,7 +1180,7 @@ class UserService {
       //const totalPages = Math.ceil(totalCount / pageSize);
       const paginatedBuildings = filteredBuildings.slice(
         (page - 1) * pageSize,
-        page * pageSize
+        page * pageSize,
       );
 
       return {
@@ -1429,7 +1429,7 @@ class UserService {
           });
         } else if (notification.type === "rentPayment") {
           const tenant = await this.ProspectiveTenantModel.findByPk(
-            notification.userId
+            notification.userId,
           );
 
           formattedNotifications.push({
@@ -1564,7 +1564,7 @@ class UserService {
       });
 
       const transactionReferences = inspections.map(
-        (ins) => ins.transactionReference
+        (ins) => ins.transactionReference,
       );
 
       const transactions = await this.TransactionModel.findAll({
@@ -1578,7 +1578,7 @@ class UserService {
 
       const totalEscrowBalance = transactions.reduce(
         (acc, transaction) => acc + transaction.amount,
-        0
+        0,
       );
       const totalBalance = await authService.getAcctBalance(5948568393);
 
@@ -1630,7 +1630,7 @@ class UserService {
       }
 
       const transactionReferences = inspections.map(
-        (inspection) => inspection.transactionReference
+        (inspection) => inspection.transactionReference,
       );
 
       const transactions = await this.TransactionModel.findAll({
@@ -1725,14 +1725,14 @@ class UserService {
               [
                 Sequelize.fn(
                   "COUNT",
-                  Sequelize.col("propertyManagerBuilding.id")
+                  Sequelize.col("propertyManagerBuilding.id"),
                 ),
                 "buildingCount",
               ],
               [
                 Sequelize.fn(
                   "COUNT",
-                  Sequelize.col("propertyManagerBuilding->BuildingTenant.id")
+                  Sequelize.col("propertyManagerBuilding->BuildingTenant.id"),
                 ),
                 "tenantCount",
               ],
@@ -1780,9 +1780,8 @@ class UserService {
       await userUtil.verifyHandleAppointmentAndRent.validateAsync(data);
 
     try {
-      const transactionStatus = await this.getTransactionStatusDisbursement(
-        paymentReference
-      );
+      const transactionStatus =
+        await this.getTransactionStatusDisbursement(paymentReference);
       authService.handleDisbursement(transactionStatus);
     } catch (error) {
       console.log(error);
@@ -1819,7 +1818,7 @@ class UserService {
           },
           {
             where: { id: reviewId },
-          }
+          },
         );
       }
     } catch (error) {
@@ -2033,9 +2032,8 @@ class UserService {
       await quitNoticeToUpdate.save();
       return quitNoticeToUpdate;
     } else if (type === "delete") {
-      const quitNoticeToDelete = await this.QuitNoticeModel.findByPk(
-        quitNoticeId
-      );
+      const quitNoticeToDelete =
+        await this.QuitNoticeModel.findByPk(quitNoticeId);
 
       if (!quitNoticeToDelete) {
         throw new NotFoundError("Quit notice not found");
@@ -2153,7 +2151,7 @@ class UserService {
           (acc, newImage) => {
             // Find if an image with this title already exists
             const existingImageIndex = acc.findIndex(
-              (img) => img.title === newImage.title
+              (img) => img.title === newImage.title,
             );
 
             if (existingImageIndex !== -1) {
@@ -2169,7 +2167,7 @@ class UserService {
 
             return acc;
           },
-          [...currentImages]
+          [...currentImages],
         );
 
         // Set the stringified array directly
@@ -2438,7 +2436,7 @@ class UserService {
           });
 
           const buildingIds = refundedInspections.map(
-            (inspection) => inspection.Building.id
+            (inspection) => inspection.Building.id,
           );
 
           whereCondition.id = buildingIds;
@@ -2501,7 +2499,7 @@ class UserService {
           });
 
           const buildingIds = refundedInspections.map(
-            (inspection) => inspection.Building.id
+            (inspection) => inspection.Building.id,
           );
 
           whereCondition.id = buildingIds;
@@ -2559,7 +2557,7 @@ class UserService {
           });
 
           const buildingIds = Inspections.map(
-            (inspection) => inspection.Building.id
+            (inspection) => inspection.Building.id,
           );
 
           whereCondition.id = buildingIds;
@@ -2671,7 +2669,7 @@ class UserService {
         });
 
         const buildingIds = refundedInspections.map(
-          (inspection) => inspection.Building.id
+          (inspection) => inspection.Building.id,
         );
         whereCondition.id = buildingIds;
       }
@@ -2702,9 +2700,8 @@ class UserService {
   }
 
   async handleSendInvoce(data) {
-    let { userIdList } = await userUtil.verifyHandleSendInvoce.validateAsync(
-      data
-    );
+    let { userIdList } =
+      await userUtil.verifyHandleSendInvoce.validateAsync(data);
 
     try {
       const processInvoices = async (userIdList) => {
@@ -2787,7 +2784,7 @@ class UserService {
             tenant.rentNextDueDate,
             building.rentalDuration,
             PropertyManagerModelResult.companyName,
-            customerName
+            customerName,
           );
         } catch (error) {
           console.error("Error processing invoice:", error);
@@ -2842,7 +2839,7 @@ class UserService {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
-        }
+        },
       );
 
       // Check if the request was successful
@@ -2853,7 +2850,7 @@ class UserService {
         // Log and handle the error
         console.error(
           "Invoice creation failed:",
-          response.data.responseMessage
+          response.data.responseMessage,
         );
         return null;
       }
@@ -2870,7 +2867,7 @@ class UserService {
     rentNextDueDate,
     month,
     companyName,
-    customerName
+    customerName,
   ) {
     try {
       const {
@@ -2907,7 +2904,7 @@ class UserService {
   }
 
   async handleGetReceipt(data) {
-    const { userId, role, transactionId, transactionReference } =
+    const { userId, role, transactionId, paymentReference } =
       await userUtil.verifyHandleGetReceipt.validateAsync(data);
 
     try {
@@ -2915,8 +2912,8 @@ class UserService {
 
       if (transactionId) {
         whereClause.id = transactionId;
-      } else if (transactionReference) {
-        whereClause.transactionReference = transactionReference;
+      } else if (paymentReference) {
+        whereClause.paymentReference = paymentReference;
       } else {
         throw new BadRequestError("Transaction ID or reference is required");
       }
@@ -2989,7 +2986,7 @@ class UserService {
       const rentalDuration = transaction.Building?.rentalDuration || 0;
       const renewalDate = addMonths(
         new Date(transaction.createdAt),
-        rentalDuration
+        rentalDuration,
       );
 
       return {
@@ -3178,7 +3175,16 @@ class UserService {
         doc.on("end", () => resolve(Buffer.concat(chunks)));
         doc.on("error", reject);
 
-        // Header
+        // Normalize data (handle Sequelize dataValues or plain objects)
+        const transaction = receiptData.transaction;
+        const tenant = receiptData.tenant?.dataValues || receiptData.tenant;
+        const building =
+          receiptData.building?.dataValues || receiptData.building;
+        const propertyManager =
+          receiptData.propertyManager?.dataValues ||
+          receiptData.propertyManager;
+
+        // ─── HEADER ───────────────────────────────────────────────
         doc
           .fontSize(24)
           .fillColor("#1e40af")
@@ -3190,7 +3196,7 @@ class UserService {
           .text("www.lagproperty.com", { align: "center" });
         doc.moveDown(2);
 
-        // Divider line
+        // Divider
         doc
           .strokeColor("#cbd5e1")
           .lineWidth(1)
@@ -3199,39 +3205,46 @@ class UserService {
           .stroke();
         doc.moveDown(1.5);
 
-        // Receipt Details
+        // ─── RECEIPT DETAILS ──────────────────────────────────────
         doc
           .fontSize(13)
           .fillColor("#1e293b")
           .text("Receipt Details", { underline: true });
         doc.moveDown(0.5);
         doc.fontSize(10).fillColor("#000000");
-        doc.text(`Receipt No: ${receiptData.transaction.paymentReference}`);
+        doc.text(`Receipt No: ${transaction.paymentReference || "N/A"}`);
         doc.text(
-          `Transaction Ref: ${receiptData.transaction.transactionReference}`
+          `Transaction Ref: ${transaction.transactionReference || "N/A"}`,
         );
         doc.text(
-          `Date: ${format(
-            new Date(receiptData.transaction.createdAt),
-            "MMMM dd, yyyy HH:mm:ss"
-          )}`
+          `Date: ${
+            transaction.createdAt
+              ? format(
+                  new Date(transaction.createdAt),
+                  "MMMM dd, yyyy HH:mm:ss",
+                )
+              : "N/A"
+          }`,
         );
 
         // Status with color
+        const status = transaction.paymentStatus || "UNKNOWN";
         const statusColor =
-          receiptData.transaction.paymentStatus.toLowerCase() === "successful"
+          status.toLowerCase() === "successful" ||
+          status.toLowerCase() === "success"
             ? "#16a34a"
             : "#dc2626";
+
         doc
           .fillColor("#000000")
           .text("Status: ", { continued: true })
           .fillColor(statusColor)
-          .text(receiptData.transaction.paymentStatus.toUpperCase());
+          .text(status.toUpperCase());
 
         doc.fillColor("#000000");
         doc.moveDown(1.5);
 
-        // Tenant/User Information
+        // ─── PAID BY (TENANT) ─────────────────────────────────────
         doc
           .fontSize(13)
           .fillColor("#1e293b")
@@ -3239,95 +3252,104 @@ class UserService {
         doc.moveDown(0.5);
         doc.fontSize(10).fillColor("#000000");
         doc.text(
-          `Name: ${receiptData.tenant.firstName} ${receiptData.tenant.lastName}`
+          `Name: ${tenant?.firstName || "N/A"} ${tenant?.lastName || ""}`,
         );
-        doc.text(`Email: ${receiptData.tenant.emailAddress}`);
-        doc.text(`Phone: ${receiptData.tenant.tel}`);
+        doc.text(`Email: ${tenant?.emailAddress || "N/A"}`);
+        doc.text(`Phone: ${tenant?.tel || "N/A"}`);
         doc.moveDown(1.5);
 
-        // Property Information
-        if (receiptData.building) {
+        // ─── PROPERTY DETAILS ─────────────────────────────────────
+        if (building) {
           doc
             .fontSize(13)
             .fillColor("#1e293b")
             .text("Property Details", { underline: true });
           doc.moveDown(0.5);
           doc.fontSize(10).fillColor("#000000");
-          doc.text(`Type: ${receiptData.building.propertyPreference}`);
+          doc.text(`Type: ${building.propertyPreference || "N/A"}`);
           doc.text(
-            `Address: ${receiptData.building.address}, ${receiptData.building.city}`
+            `Address: ${building.address || "N/A"}, ${building.city || "N/A"}`,
           );
+
+          // Rental duration: 1-11 = months, 12+ = years
+          const duration = building.rentalDuration;
+          let durationText = "N/A";
+          if (duration != null) {
+            if (duration >= 12 && duration % 12 === 0) {
+              durationText = `${duration / 12} year(s)`;
+            } else if (duration >= 12) {
+              durationText = `${Math.floor(duration / 12)} year(s) ${duration % 12} month(s)`;
+            } else {
+              durationText = `${duration} month(s)`;
+            }
+          }
+          doc.text(`Rental Duration: ${durationText}`);
+
           doc.text(
-            `Rental Duration: ${receiptData.building.rentalDuration} months`
-          );
-          doc.text(
-            `Renewal Date: ${format(
-              new Date(receiptData.transaction.renewalDate),
-              "MMMM dd, yyyy"
-            )}`
+            `Renewal Date: ${
+              transaction.renewalDate
+                ? format(new Date(transaction.renewalDate), "MMMM dd, yyyy")
+                : "N/A"
+            }`,
           );
           doc.moveDown(1.5);
         }
 
-        // Property Manager Information
-        if (receiptData.propertyManager) {
+        // ─── PROPERTY MANAGER ─────────────────────────────────────
+        if (propertyManager) {
           doc
             .fontSize(13)
             .fillColor("#1e293b")
             .text("Property Manager", { underline: true });
           doc.moveDown(0.5);
           doc.fontSize(10).fillColor("#000000");
+          doc.text(`Company: ${propertyManager.companyName || "N/A"}`);
           doc.text(
-            `Company: ${receiptData.propertyManager.companyName || "N/A"}`
+            `Name: ${propertyManager.firstName || "N/A"} ${propertyManager.lastName || ""}`,
           );
-          doc.text(
-            `Name: ${receiptData.propertyManager.firstName} ${receiptData.propertyManager.lastName}`
-          );
-          doc.text(`Contact: ${receiptData.propertyManager.tel}`);
+          doc.text(`Contact: ${propertyManager.tel || "N/A"}`);
           doc.moveDown(1.5);
         }
 
-        // Payment Information
+        // ─── PAYMENT INFORMATION ──────────────────────────────────
         doc
           .fontSize(13)
           .fillColor("#1e293b")
           .text("Payment Information", { underline: true });
         doc.moveDown(0.5);
         doc.fontSize(10).fillColor("#000000");
-        doc.text(
-          `Transaction Type: ${receiptData.transaction.transactionType}`
-        );
+        doc.text(`Transaction Type: ${transaction.transactionType || "N/A"}`);
         doc.moveDown(0.5);
 
-        // Amount box - Enhanced with color
+        // Amount box
         const boxY = doc.y;
-        doc.fillColor("#eff6ff").rect(50, boxY, 495, 50).fill();
-
+        doc.fillColor("#eff6ff").rect(50, boxY, 495, 55).fill();
         doc
           .strokeColor("#2563eb")
           .lineWidth(2)
-          .rect(50, boxY, 495, 50)
+          .rect(50, boxY, 495, 55)
           .stroke();
 
         doc
           .fontSize(11)
           .fillColor("#64748b")
-          .text("Total Amount Paid", 65, boxY + 12);
+          .text("Total Amount Paid", 65, boxY + 10);
+
+        const amount =
+          transaction.amount != null
+            ? `₦${Number(transaction.amount).toLocaleString()}`
+            : "N/A";
 
         doc
           .fontSize(18)
           .fillColor("#1e40af")
           .font("Helvetica-Bold")
-          .text(
-            `₦${receiptData.transaction.amount.toLocaleString()}`,
-            65,
-            boxY + 28
-          );
+          .text(amount, 65, boxY + 28);
 
         doc.font("Helvetica");
         doc.moveDown(4);
 
-        // Footer divider
+        // ─── FOOTER ───────────────────────────────────────────────
         doc
           .strokeColor("#cbd5e1")
           .lineWidth(1)
@@ -3336,17 +3358,16 @@ class UserService {
           .stroke();
         doc.moveDown(1);
 
-        // Footer
         doc
           .fontSize(8)
           .fillColor("#94a3b8")
           .text(
             "This is a computer-generated receipt and does not require a signature.",
-            { align: "center" }
+            { align: "center" },
           );
         doc.text(
           `Generated on ${format(new Date(), "MMMM dd, yyyy HH:mm:ss")}`,
-          { align: "center" }
+          { align: "center" },
         );
 
         doc.end();
@@ -3474,7 +3495,7 @@ class UserService {
                   where: { propertyManagerId: userId },
                 },
               ],
-            }
+            },
           );
           return {
             response: pendingInspections.rows,
@@ -3534,7 +3555,7 @@ class UserService {
                 ], */
                 },
               ],
-            }
+            },
           );
           return {
             response: pendingInspections.rows,
@@ -3972,7 +3993,7 @@ class UserService {
         return inspection;
       } else if (type === "acceptTenant") {
         if (role == "rent")
-          throw new BadRequestError("landlord or agent dont have this access");
+          throw new BadRequestError("Prospective tenant dont have this access");
 
         const inspection = await this.InspectionModel.findOne({
           where: {
@@ -3998,19 +4019,23 @@ class UserService {
           const BuildingModelResult = await this.BuildingModel.findOne({
             where: { id: inspection.buildingId, isDeleted: false },
           });
+
           const TransactionModelResult2 = await this.TransactionModel.findOne({
-            where: { id: inspection.transactionReference, isDeleted: false },
+            where: {
+              transactionReference: inspection.transactionReference,
+              isDeleted: false,
+            },
           });
 
           const PropertyManagerModelResult =
             await this.PropertyManagerModel.findByPk(
-              BuildingModelResult.propertyManagerId
+              BuildingModelResult.propertyManagerId,
             );
 
           this.processDisbursement(
             PropertyManagerModelResult,
             inspection,
-            TransactionModelResult2
+            TransactionModelResult2,
           );
         }
       } else if (type === "releaseFund") {
@@ -4084,7 +4109,7 @@ class UserService {
           }
 
           const transactionReferences = inspections.map(
-            (inspection) => inspection.transactionReference
+            (inspection) => inspection.transactionReference,
           );
 
           // Fetch all transactions for the transaction references found
@@ -4098,7 +4123,7 @@ class UserService {
           // Calculate the total balance
           const totalBalance = transactions.reduce(
             (sum, transaction) => sum + transaction.amount,
-            0
+            0,
           );
 
           return { totalBalance: totalBalance };
@@ -4118,7 +4143,7 @@ class UserService {
           }
 
           const transactionReferences = inspections.map(
-            (inspection) => inspection.transactionReference
+            (inspection) => inspection.transactionReference,
           );
 
           // Fetch all transactions for the transaction references found
@@ -4132,117 +4157,137 @@ class UserService {
           // Calculate the total balance
           const totalBalance = transactions.reduce(
             (sum, transaction) => sum + transaction.amount,
-            0
+            0,
           );
           return { totalBalance: totalBalance };
         }
       }
     } catch (error) {
       console.log(error);
+      // If it's already a known error, rethrow it
+      if (error instanceof BadRequestError) {
+        throw error;
+      } else if (error instanceof NotFoundError) {
+        throw error;
+      }
       throw new SystemError(error.name, error.parent);
     }
   }
 
-  /*
-  async processDisbursement(PropertyManagerModelResult, inspection, TransactionModelResult){
-    
-    const TransactionModelResultAmount=TransactionModelResult.amount
+  async processDisbursement(
+    PropertyManagerModelResult,
+    inspection,
+    TransactionModelResult,
+  ) {
+    console.log(TransactionModelResult);
+    const TransactionModelResultAmount = TransactionModelResult.amount;
     try {
-      if(PropertyManagerModelResult=='landLord'){
-
+      if (PropertyManagerModelResult.type == "landLord") {
         const authToken = await authService.getAuthTokenMonify();
-  
-        const paymentReference="firstRent"+"_"+this.generateReference()
-  
-         await this.TransactionModel.create({
-          userId: inspection.prospectiveTenantId,
-          inspectionId:inspection.id,
-          buildingId:inspection.buildingId,
-          amount:TransactionModelResultAmount,
-          paymentReference,
-          transactionType:'firstRent'
-        });
-  
-        const transferDetails = {
-          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', false, 'initial deposit').landlordShare,
-          reference: paymentReference,
-          narration: 'Rent Payment ',
-          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-          destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-          currency: 'NGN',
-          sourceAccountNumber: serverConfig.MONNIFY_ACC,
-          async:true
-        };
-  
-        await this.initiateTransfer(authToken, transferDetails);
-      
-      }
-      else{
 
-        const paymentReference="firstRent"+"_"+this.generateReference()
-  
+        const paymentReference = "firstRent" + "_" + this.generateReference();
+
+        await this.TransactionModel.create({
+          userId: inspection.prospectiveTenantId,
+          inspectionId: inspection.id,
+          buildingId: inspection.buildingId,
+          amount: TransactionModelResultAmount,
+          paymentReference,
+          transactionType: "firstRent",
+        });
+
+        const transferDetails = {
+          amount: this.calculateDistribution(
+            TransactionModelResultAmount,
+            "landlord",
+            false,
+            "initial deposit",
+          ).landlordShare,
+          reference: paymentReference,
+          narration: "Rent Payment ",
+          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
+          destinationAccountNumber:
+            PropertyManagerModelResult.landlordBankAccount,
+          currency: "NGN",
+          sourceAccountNumber: serverConfig.MONNIFY_ACC,
+          async: true,
+        };
+
+        await this.initiateTransfer(authToken, transferDetails);
+      } else {
+        const paymentReference = "firstRent" + "_" + this.generateReference();
+
         const authToken = await authService.getAuthTokenMonify();
 
         await this.TransactionModel.create({
           userId: inspection.prospectiveTenantId,
-          inspectionId:inspection.id,
-          buildingId:inspection.buildingId,
-          amount:TransactionModelResultAmount,
+          inspectionId: inspection.id,
+          buildingId: inspection.buildingId,
+          amount: TransactionModelResultAmount,
           paymentReference,
-          transactionType:'firstRent'
+          transactionType: "firstRent",
         });
 
         const transferDetails = {
-          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'initial deposit').landlordShare,
+          amount: this.calculateDistribution(
+            TransactionModelResultAmount,
+            "landlord",
+            true,
+            "initial deposit",
+          ).landlordShare,
           reference: paymentReference,
-          narration: 'Rent Payment ',
+          narration: "Rent Payment ",
           destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-          destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
-          currency: 'NGN',
-          twoFaEnabled:false,
+          destinationAccountNumber:
+            PropertyManagerModelResult.landlordBankAccount,
+          currency: "NGN",
+          twoFaEnabled: false,
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
-          async:true
+          async: true,
         };
-  
+
         await this.initiateTransfer(authToken, transferDetails);
-    
-        
+
         //BELOW IS FOR AGENT TRANSFER
-  
-        const paymentReference2="commission"+"_"+this.generateReference()
-  
+
+        const paymentReference2 = "commission" + "_" + this.generateReference();
 
         await this.TransactionModel.create({
           userId: inspection.prospectiveTenantId,
-          inspectionId:inspection.id,
-          buildingId:inspection.buildingId,
-          amount:TransactionModelResultAmount,
-          paymentReference:paymentReference2,
-          transactionType:'commission'
+          inspectionId: inspection.id,
+          buildingId: inspection.buildingId,
+          amount: TransactionModelResultAmount,
+          paymentReference: paymentReference2,
+          transactionType: "commission",
         });
         const transferDetails2 = {
-          amount: this.calculateDistribution(TransactionModelResultAmount, 'landlord', true, 'initial deposit').agentShare,
+          amount: this.calculateDistribution(
+            TransactionModelResultAmount,
+            "landlord",
+            true,
+            "initial deposit",
+          ).agentShare,
           reference: paymentReference2,
-          narration: 'commission',
+          narration: "commission",
           destinationBankCode: PropertyManagerModelResult.agentBankCode,
           destinationAccountNumber: PropertyManagerModelResult.agentBankAccount,
-          currency: 'NGN',
-          twoFaEnabled:false,
+          currency: "NGN",
+          twoFaEnabled: false,
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
-          async:true
+          async: true,
         };
-  
+
         await this.initiateTransfer(authToken, transferDetails2);
-       
       }
     } catch (error) {
-        console.log(error)
-        console.error('Error fetching transaction status2:', error.response.data);
-        throw new SystemError(error.name,  error.response.data)
-
+      console.log(error);
+      console.error(
+        "Error fetching transaction status2:",
+        error.response?.data,
+      );
+      throw new SystemError(error.name, error.response?.data);
     }
   }
-  */
 
   async updateTransferTransaction(db, transferData) {
     try {
@@ -4258,7 +4303,7 @@ class UserService {
 
         if (transferData.responseBody.status === "SUCCESS") {
           const BuildingModelResult = await this.BuildingModel.findByPk(
-            TransactionModelResult.buildingId
+            TransactionModelResult.buildingId,
           );
 
           const TenantModelResult = await this.TenantModel.findOne({
@@ -4274,7 +4319,7 @@ class UserService {
               status: "active",
               rentMoneyStatus: "paid",
               rentNextDueDate: this.calculateRentNextDueDate(
-                BuildingModelResult.rentalDuration
+                BuildingModelResult.rentalDuration,
               ),
             });
           }
@@ -4285,7 +4330,7 @@ class UserService {
     } catch (error) {
       console.error(
         "An error occurred while updating the transaction:",
-        error.message
+        error.message,
       );
     }
   }
@@ -4308,9 +4353,10 @@ class UserService {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
+      console.log(response.data);
       return response.data;
     } catch (error) {
       console.log(error);
@@ -4319,9 +4365,8 @@ class UserService {
   }
 
   async handleChat(data, file) {
-    const validationResult = await userUtil.verifyHandleChat.validateAsync(
-      data
-    );
+    const validationResult =
+      await userUtil.verifyHandleChat.validateAsync(data);
 
     const { userId, receiverId, messageType, message, repliedMessageId, role } =
       validationResult;
@@ -4353,9 +4398,8 @@ class UserService {
   }
 
   async handleGetChat(data) {
-    const validationResult = await userUtil.verifyHandleGetChat.validateAsync(
-      data
-    );
+    const validationResult =
+      await userUtil.verifyHandleGetChat.validateAsync(data);
 
     const { userId, type, partnerId, role } = validationResult;
 
@@ -4394,14 +4438,14 @@ class UserService {
             message.role === "rent"
               ? this.ProspectiveTenantModel
               : this.PropertyManagerModel,
-            message.senderId
+            message.senderId,
           );
 
           const receiver = await this.fetchUserDetails(
             message.role === "rent"
               ? this.PropertyManagerModel
               : this.ProspectiveTenantModel,
-            message.receiverId
+            message.receiverId,
           );
 
           // Add sender and receiver details to each message
@@ -4440,13 +4484,13 @@ class UserService {
             message.role === "rent"
               ? this.ProspectiveTenantModel
               : this.PropertyManagerModel,
-            message.receiverId
+            message.receiverId,
           );
           const receiver = await this.fetchUserDetails(
             message.role === "rent"
               ? this.PropertyManagerModel
               : this.ProspectiveTenantModel,
-            message.senderId
+            message.senderId,
           );
 
           if (!chatMap.has(key)) {
@@ -4458,7 +4502,7 @@ class UserService {
             //console.log(existingMessage)
             const messageTimestamp = new Date(message.createdAt).getTime();
             const existingMessageTimestamp = new Date(
-              existingMessage.createdAt
+              existingMessage.createdAt,
             ).getTime();
             if (messageTimestamp > existingMessageTimestamp) {
               chatMap.set(key, { ...message.dataValues, sender, receiver });
@@ -4705,5 +4749,3 @@ class UserService {
 }
 
 export default new UserService();
-
-//

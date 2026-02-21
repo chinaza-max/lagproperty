@@ -622,7 +622,7 @@ export default class AuthenticationController {
       const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
       if (!clientSecret) {
         console.error(
-          "CLIENT_SECRET_MONIFY is not set in the environment variables"
+          "CLIENT_SECRET_MONIFY is not set in the environment variables",
         );
         return res.status(500).send("Server configuration error");
       }

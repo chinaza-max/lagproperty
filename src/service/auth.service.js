@@ -81,7 +81,7 @@ class AuthenticationService {
     try {
       hashedPassword = await bcrypt.hash(
         password,
-        Number(serverConfig.SALT_ROUNDS)
+        Number(serverConfig.SALT_ROUNDS),
       );
     } catch (error) {
       console.log(error);
@@ -91,7 +91,7 @@ class AuthenticationService {
     if (type === "list") {
       let existingUser = await this.isUserEmailExisting(
         emailAddress,
-        this.PropertyManagerModel
+        this.PropertyManagerModel,
       );
 
       if (existingUser != null) throw new ConflictError(existingUser);
@@ -114,7 +114,7 @@ class AuthenticationService {
     } else if (type === "rent") {
       let existingUser = await this.isUserEmailExisting(
         emailAddress,
-        this.ProspectiveTenantModel
+        this.ProspectiveTenantModel,
       );
       if (existingUser != null) throw new ConflictError(existingUser);
 
@@ -136,7 +136,7 @@ class AuthenticationService {
     } else {
       let existingUser = await this.isUserEmailExisting(
         emailAddress,
-        this.AdminModel
+        this.AdminModel,
       );
       if (existingUser != null) throw new ConflictError(existingUser);
 
@@ -163,7 +163,7 @@ class AuthenticationService {
   async handleSendVerificationCodeEmailOrTel(data) {
     let { userId, type, validateFor } =
       await authUtil.verifyHandleSendVerificationCodeEmailOrTel.validateAsync(
-        data
+        data,
       );
 
     let relatedUser;
@@ -187,7 +187,7 @@ class AuthenticationService {
       await this.sendEmailVerificationCode(
         relatedUser.emailAddress,
         relatedUser.id,
-        validateFor
+        validateFor,
       );
     } else {
       await this.sendTelVerificationCode(relatedUser.tel, relatedUser.id);
@@ -288,7 +288,7 @@ class AuthenticationService {
     try {
       const transactionStatus = await this.authorizeSingleTransfer(
         body.reference,
-        body.authorizationCode
+        body.authorizationCode,
       );
     } catch (error) {
       console.log(error);
@@ -301,9 +301,8 @@ class AuthenticationService {
     const { refundReference } = eventData;
 
     try {
-      const transactionStatus = await this.getRefundTransactionStatus(
-        refundReference
-      );
+      const transactionStatus =
+        await this.getRefundTransactionStatus(refundReference);
 
       this.processRefund(transactionStatus);
     } catch (error) {
@@ -356,16 +355,60 @@ class AuthenticationService {
     const { eventData } = data;
 
     const { reference } = eventData;
+    console.log("ddjdjdjdjdjdjdj");
 
     const paymentReference = reference;
 
     try {
-      const transactionStatus = await this.getTransactionStatusDisbursement(
-        paymentReference
-      );
+      const transactionStatus =
+        await this.getTransactionStatusDisbursement(paymentReference);
+      /*
+      const transactionStatus = {
+        transactionReference: "ddkdkdkdkdkd",
+        reference: "firstRent_REF-1771673739110-PJVJUL",
+        amountPaid: "100.00",
+        totalPayable: "100.00",
+        settlementAmount: "90.00",
+        paidOn: "25/07/2022 11:20:20 AM",
+        status: "SUCCESS",
+        paymentDescription: "Trial transaction",
+        currency: "NGN",
+        paymentMethod: "CARD",
+        product: {
+          type: "WEB_SDK",
+          reference: "12-3---03--1kls0a--dkad",
+        },
+        cardDetails: {
+          cardType: "Sandbox Card Scheme",
+          last4: "1111",
+          expMonth: "10",
+          expYear: "22",
+          bin: "411111",
+          bankCode: null,
+          bankName: null,
+          reusable: false,
+          countryCode: null,
+          cardToken: null,
+          supportsTokenization: false,
+          maskedPan: "411111******1111",
+        },
+        accountDetails: null,
+        accountPayments: [],
+        customer: {
+          email: "stephen@ikhane.com",
+          name: "Stephen Ikhane",
+        },
+        metaData: {
+          userId: 4,
+          buildingId: 1,
+          transactionType: "firstRent",
+        },
+      };
+      */
 
       await this.handleDisbursement(transactionStatus);
     } catch (error) {
+      console.log(error);
       throw new SystemError(error.name, error.parent);
     }
   }
@@ -380,6 +423,14 @@ class AuthenticationService {
           paymentReference: paymentReference,
         },
       });
+
+      console.log("==============");
+      console.log(TransactionModelResult);
+      console.log("=======================");
+
+      if (!TransactionModelResult) {
+        throw new NotFoundError(error.response.data.responseMessage);
+      }
 
       if (TransactionModelResult) {
         if (transactionStatus.reference.startsWith("firstRent")) {
@@ -400,13 +451,13 @@ class AuthenticationService {
             });
 
             const BuildingModelResult = await this.BuildingModel.findByPk(
-              TransactionModelResult.buildingId
+              TransactionModelResult.buildingId,
             );
 
             const PropertyManagerModelResult =
               await this.PropertyManagerModel.findOne({
                 where: {
-                  id: PropertyManagerModelResult.propertyManagerId,
+                  id: BuildingModelResult.propertyManagerId,
                 },
               });
 
@@ -446,7 +497,7 @@ class AuthenticationService {
                   rentMoneyStatus: "disbursed",
                   paymentReference: paymentReference,
                   rentNextDueDate: userService.calculateRentNextDueDate(
-                    BuildingModelResult.rentalDuration
+                    BuildingModelResult.rentalDuration,
                   ),
                 });
               }
@@ -502,7 +553,7 @@ class AuthenticationService {
     } catch (error) {
       console.error(
         "An error occurred while updating the transaction:",
-        error.message
+        error.message,
       );
       throw new SystemError(error.name, error.parent);
     }
@@ -514,11 +565,52 @@ class AuthenticationService {
     const { transactionReference } = eventData;
 
     try {
-      console.log(transactionReference);
+      const transactionStatus =
+        await this.getTransactionStatus(transactionReference);
 
-      const transactionStatus = await this.getTransactionStatus(
-        transactionReference
-      );
+      /*
+      const transactionStatus = {
+        transactionReference: "hdhdhdhdhjdi958548rjrj4riu4u4u4",
+        paymentReference: "appointmentAndRent_12345jfjf",
+        amountPaid: "100.00",
+        totalPayable: "100.00",
+        settlementAmount: "90.00",
+        paidOn: "25/07/2022 11:20:20 AM",
+        paymentStatus: "PAID",
+        paymentDescription: "Trial transaction",
+        currency: "NGN",
+        paymentMethod: "CARD",
+        product: {
+          type: "WEB_SDK",
+          reference: "12-3---03--1kls0a--dkad",
+        },
+        cardDetails: {
+          cardType: "Sandbox Card Scheme",
+          last4: "1111",
+          expMonth: "10",
+          expYear: "22",
+          bin: "411111",
+          bankCode: null,
+          bankName: null,
+          reusable: false,
+          countryCode: null,
+          cardToken: null,
+          supportsTokenization: false,
+          maskedPan: "411111******1111",
+        },
+        accountDetails: null,
+        accountPayments: [],
+        customer: {
+          email: "stephen@ikhane.com",
+          name: "Stephen Ikhane",
+        },
+        metaData: {
+          userId: 4,
+          buildingId: 1,
+          transactionType: "appointmentAndRent",
+        },
+      };
+      */
 
       this.handlePaymentCollection(transactionStatus);
     } catch (error) {
@@ -529,6 +621,7 @@ class AuthenticationService {
 
   async handlePaymentCollection(transactionStatus) {
     try {
+      console.log(transactionStatus);
       if (transactionStatus.paymentReference.startsWith("appointmentAndRent")) {
         const { amountPaid, metaData, paymentReference, transactionReference } =
           transactionStatus;
@@ -559,9 +652,8 @@ class AuthenticationService {
         }
 
         if (transactionStatus.paymentStatus == "PAID") {
-          const BuildingModelResponse = await this.BuildingModel.findByPk(
-            buildingId
-          );
+          const BuildingModelResponse =
+            await this.BuildingModel.findByPk(buildingId);
 
           BuildingModelResponse.update({
             availability: "booked",
@@ -630,7 +722,7 @@ class AuthenticationService {
               status: "active",
               rentNextDueDate: userService.calculateRentNextDueDate(
                 BuildingModelResult.rentalDuration,
-                TenantModelResult.rentNextDueDate
+                TenantModelResult.rentNextDueDate,
               ),
               paymentReference: transactionStatus.paymentReference,
               rentMoneyStatus: "paid",
@@ -673,7 +765,7 @@ class AuthenticationService {
         TransactionModelResultAmount,
         "landlord",
         true,
-        "rent"
+        "rent",
       ).landlordShare,
       paymentReference,
       transactionType: "subsequentRent",
@@ -684,7 +776,7 @@ class AuthenticationService {
         TransactionModelResultAmount,
         "landlord",
         true,
-        "rent"
+        "rent",
       ).landlordShare,
       reference: paymentReference,
       narration: "Rent Payment ",
@@ -703,9 +795,8 @@ class AuthenticationService {
       const { transactionReference } =
         await authUtil.verifyHandleIntializePayment.validateAsync(data);
 
-      const transactionStatus = await this.getTransactionStatus(
-        transactionReference
-      );
+      const transactionStatus =
+        await this.getTransactionStatus(transactionReference);
 
       // if(transactionStatus.paymentStatus=="PAID"){
       this.handlePaymentCollection(transactionStatus);
@@ -741,7 +832,7 @@ class AuthenticationService {
             Authorization: `Bearer ${accessToken}`,
             Accept: "application/json",
           },
-        }
+        },
       );
 
       // Check if the request was successful
@@ -873,7 +964,7 @@ class AuthenticationService {
     try {
       var hashedPassword = await bcrypt.hash(
         password,
-        Number(serverConfig.SALT_ROUNDS)
+        Number(serverConfig.SALT_ROUNDS),
       );
 
       relatedUser.update({
@@ -897,7 +988,7 @@ class AuthenticationService {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       return response.data;
@@ -923,7 +1014,7 @@ class AuthenticationService {
           params: {
             accountNumber: accountNumber,
           },
-        }
+        },
       );
 
       return response.data.responseBody;
@@ -938,7 +1029,7 @@ class AuthenticationService {
       const apiKey = serverConfig.MONNIFY_API_KEY;
       const clientSecret = serverConfig.MONNIFY_CLIENT_SECRET;
       const authHeader = `Basic ${Buffer.from(
-        `${apiKey}:${clientSecret}`
+        `${apiKey}:${clientSecret}`,
       ).toString("base64")}`;
 
       const response = await axios.post(
@@ -949,7 +1040,7 @@ class AuthenticationService {
             Authorization: authHeader,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data.responseBody.accessToken;
@@ -972,7 +1063,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data.responseBody;
@@ -996,7 +1087,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       //console.log(response.data.responseBody)
@@ -1021,7 +1112,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data.responseBody;
@@ -1048,7 +1139,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // Handle the response
@@ -1074,7 +1165,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data.responseBody;
@@ -1097,7 +1188,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data.responseBody;
@@ -1117,7 +1208,7 @@ class AuthenticationService {
         transaction.transactionType == "appointmentAndRent"
       ) {
         const BuildingModelResponse = await this.BuildingModel.findByPk(
-          transaction.buildingId
+          transaction.buildingId,
         );
         BuildingModelResponse.update({
           availability: "booked",
@@ -1131,7 +1222,7 @@ class AuthenticationService {
       }
 
       console.log(
-        `Transaction ${transaction.transactionReference} updated to ${status}`
+        `Transaction ${transaction.transactionReference} updated to ${status}`,
       );
     } catch (error) {
       console.error("Error updating transaction:", error.message);
@@ -1159,7 +1250,7 @@ class AuthenticationService {
             prospectiveTenantId: transaction.prospectiveTenantId,
             status: "active",
             rentNextDueDate: userService.calculateRentNextDueDate(
-              BuildingModelResult.rentalDuration
+              BuildingModelResult.rentalDuration,
             ),
           });
         }
@@ -1186,13 +1277,13 @@ class AuthenticationService {
         // Check and update each transaction
         for (const transaction of transactions) {
           const transactionStatus = await this.getTransactionStatus(
-            transaction.transactionReference
+            transaction.transactionReference,
           );
 
           if (transactionStatus) {
             await this.updateTransactionStatusCronJobWebHook(
               transaction,
-              transactionStatus.paymentStatus
+              transactionStatus.paymentStatus,
             );
           }
         }
@@ -1223,13 +1314,13 @@ class AuthenticationService {
           const transactionStatus =
             await this.getTransactionStatusSingleTransfer(
               transaction.transactionReference,
-              authToken
+              authToken,
             );
 
           if (transactionStatus) {
             await this.updateTransactionStatusCronJobSingleTransfer(
               transaction,
-              transactionStatus.paymentStatus
+              transactionStatus.paymentStatus,
             );
           }
         }
@@ -1245,7 +1336,7 @@ class AuthenticationService {
     try {
       if (responseBody.refundStatus == "COMPLETED") {
         const RefundLogModelResult = await this.RefundLogModel.findByPk(
-          responseBody.refundReference
+          responseBody.refundReference,
         );
         await RefundLogModelResult.update({
           refundStatus: "COMPLETED",
@@ -1322,7 +1413,7 @@ class AuthenticationService {
         // Check and update each refund
         for (const refund of refunds) {
           const refundStatus = await this.getRefundTransactionStatus(
-            refund.refundTransactionReference
+            refund.refundTransactionReference,
           );
 
           if (refundStatus) {
@@ -1336,9 +1427,8 @@ class AuthenticationService {
   }
 
   async handleUploadPicture(data, file) {
-    const { userId } = await authUtil.verifyHandleUploadPicture.validateAsync(
-      data
-    );
+    const { userId } =
+      await authUtil.verifyHandleUploadPicture.validateAsync(data);
 
     const user = await this.UserModel.findByPk(userId);
 
@@ -1388,9 +1478,8 @@ class AuthenticationService {
   }
 
   async handleUpdateTel(data) {
-    let { userId, tel } = await authUtil.verifyHandleUpdateTel.validateAsync(
-      data
-    );
+    let { userId, tel } =
+      await authUtil.verifyHandleUpdateTel.validateAsync(data);
 
     try {
       let result = await this.UserModel.findByPk(userId);
@@ -1431,7 +1520,7 @@ class AuthenticationService {
           await this.sendEmailVerificationCode(
             user.emailAddress,
             user.id,
-            type
+            type,
           );
 
           return "inValidEmail";
@@ -1460,7 +1549,7 @@ class AuthenticationService {
           await this.sendEmailVerificationCode(
             user.emailAddress,
             user.id,
-            type
+            type,
           );
 
           return "inValidEmail";
@@ -1694,7 +1783,7 @@ class AuthenticationService {
             userId,
             validateFor,
           },
-        }
+        },
       );
 
       try {
@@ -1737,7 +1826,7 @@ class AuthenticationService {
             userId,
             validateFor,
           },
-        }
+        },
       );
 
       const username = serverConfig.SMS_USER_NAME;
@@ -1746,7 +1835,7 @@ class AuthenticationService {
       const message = `${verificationCode}`;
 
       const apiUrl = `https://kullsms.com/customer/api/?username=${username}&password=${password}&message=${encodeURIComponent(
-        message
+        message,
       )}&sender=${sender}&mobiles=${phone}`;
 
       //const apiUrl = `http://smslive247.com.ng/components/com_smsreseller/smsapi.php?username=${serverConfig.SMS_USER_NAME}&password=${serverConfig.SMS_PASSWORD}&sender=YourSenderID&recipient=${phone}&message=Your NIN verification code is ${verificationCode}`;
@@ -1790,7 +1879,7 @@ class AuthenticationService {
           where: {
             userId,
           },
-        }
+        },
       );
 
       try {
@@ -1840,7 +1929,7 @@ class AuthenticationService {
           where: {
             userId,
           },
-        }
+        },
       );
 
       try {
@@ -1879,7 +1968,7 @@ class AuthenticationService {
         try {
           // Fetch transaction status from the disbursement API
           const transactionStatus = await this.getTransactionStatusDisbursement(
-            transaction.paymentReference
+            transaction.paymentReference,
           );
 
           // Process the disbursement status
@@ -1895,7 +1984,7 @@ class AuthenticationService {
         } catch (error) {
           console.error(
             `Error processing transaction ${transaction.id}:`,
-            error
+            error,
           );
         }
       }
@@ -1948,7 +2037,7 @@ class AuthenticationService {
 
         // Fetch property manager related to the building
         const propertyManager = await this.PropertyManagerModel.findByPk(
-          building.propertyManagerId
+          building.propertyManagerId,
         );
 
         const doesTransactionExist = await this.TransactionModel.findOne({
@@ -2081,7 +2170,7 @@ class AuthenticationService {
             amount,
             "landlord",
             false,
-            "initial deposit"
+            "initial deposit",
           ).landlordShare,
           reference: paymentReference,
           narration: "Rent Payment",
@@ -2111,7 +2200,7 @@ class AuthenticationService {
             amount,
             "landlord",
             true,
-            "initial deposit"
+            "initial deposit",
           ).landlordShare,
           paymentReference: landlordReference,
           transactionType: "firstRent",
@@ -2126,7 +2215,7 @@ class AuthenticationService {
             amount,
             "landlord",
             true,
-            "initial deposit"
+            "initial deposit",
           ).agentShare,
           paymentReference: agentReference,
           transactionType: "commission",
@@ -2139,7 +2228,7 @@ class AuthenticationService {
             amount,
             "landlord",
             true,
-            "initial deposit"
+            "initial deposit",
           ).landlordShare,
           reference: landlordReference,
           narration: "Rent Payment ",
@@ -2156,7 +2245,7 @@ class AuthenticationService {
             amount,
             "landlord",
             true,
-            "initial deposit"
+            "initial deposit",
           ).agentShare,
           reference: agentReference,
           narration: "Commission Payment",
@@ -2185,7 +2274,7 @@ class AuthenticationService {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -2368,7 +2457,7 @@ class AuthenticationService {
             id: inspection.prospectiveTenantId,
             isDeleted: false,
           },
-        }
+        },
       );
 
       const transactionReference = this.generateReference();
@@ -2422,7 +2511,7 @@ class AuthenticationService {
             Authorization: `Bearer ${authToken}`, // Replace with actual token generation logic
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return refundResponse.data;

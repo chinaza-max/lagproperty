@@ -1,4 +1,3 @@
-
 /**
  * @swagger
  * /auth/registerUser:
@@ -40,7 +39,7 @@
  *               type:
  *                 type: string
  *                 description: Type of user, either rent or list
- *                 enum: ["rent", "list"]  
+ *                 enum: ["rent", "list"]
  *                 example: rent
  *                 required: true
  *     responses:
@@ -51,9 +50,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
-
 
 /**
  * @swagger
@@ -136,11 +132,6 @@
  *                   example: "An error occurred during verification"
  */
 
-
-
-
-
-
 /**
  * @swagger
  * /auth/sendVerificationCodeEmailOrTel:
@@ -177,8 +168,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
 
 /**
  * @swagger
@@ -246,9 +235,6 @@
  *         description: Internal server error
  */
 
-
-
-
 /**
  * @swagger
  * /auth/sendPasswordResetLink:
@@ -296,9 +282,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
-
 
 /**
  * @swagger
@@ -348,8 +331,6 @@
  *       500:
  *         description: Internal server error
  */
-
-
 
 /**
  * @swagger
@@ -404,7 +385,6 @@
  *       500:
  *         description: Internal server error
  */
-
 
 /**
  * @swagger
@@ -475,9 +455,6 @@
  *                   example: "An error occurred while processing the payment"
  */
 
-
-
-
 /**
  * @swagger
  * /auth/getRegion:
@@ -533,7 +510,6 @@
  *                   example: "Failed to retrieve region preferences"
  */
 
-
 /**
  * @swagger
  * /auth/getMaritalStatus:
@@ -583,11 +559,6 @@
  *                       example: "Settings not found"
  */
 
-
-
-
-
-
 /**
  * @swagger
  * /auth/getReligion:
@@ -630,8 +601,6 @@
  *                   type: string
  *                   example: "SystemError"
  */
-
-
 
 /**
  * @swagger
@@ -687,12 +656,10 @@
  *                   example: "Internal server error"
  */
 
-
-
-import { Router } from"express";
+import { Router } from "express";
 import AuthController from "../controllers/auth/auth.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
-import { rateLimit } from 'express-rate-limit';
+import { rateLimit } from "express-rate-limit";
 
 class AuthRoutes extends AuthController {
   constructor() {
@@ -707,10 +674,12 @@ class AuthRoutes extends AuthController {
       max: 3, // limit each IP to 5 requests per windowMs
     });
 
-
     this.router.post("/registerUser", this.signupUser);
     this.router.post("/verifyEmailorTel", this.verifyEmailorTel);
-    this.router.post("/sendVerificationCodeEmailOrTel", this.sendVerificationCodeEmailOrTel);
+    this.router.post(
+      "/sendVerificationCodeEmailOrTel",
+      this.sendVerificationCodeEmailOrTel,
+    );
     this.router.post("/loginUser", this.loginUser);
     this.router.post("/sendPasswordResetLink", this.sendPasswordResetLink);
     this.router.post("/resetPassword", this.resetPassword);
@@ -720,16 +689,32 @@ class AuthRoutes extends AuthController {
     this.router.get("/getReligion", this.getReligion);
     this.router.get("/getGender", this.getGender);
 
-    this.router.get("/pingme", this.pingme); 
+    this.router.get("/pingme", this.pingme);
     this.router.post("/intializePayment", this.intializePayment);
-    
 
-    this.router.post("/webHookMonify", this.validateMonnifyIP, this.validateTransactionHash, this.webHookCollectionMonify);
-    this.router.post("/webHookMonifyRefund", this.validateMonnifyIP, this.validateTransactionHash, this.webHookMonifyRefund);
-    this.router.post("/webHookMonifyDisbursement", this.validateMonnifyIP, this.validateTransactionHash, this.webHookMonifyDisbursement);
+    this.router.post(
+      "/webHookMonify" /*, this.validateMonnifyIP, this.validateTransactionHash*/,
+      this.webHookCollectionMonify,
+    );
+    this.router.post(
+      "/webHookMonifyRefund",
+      this.validateMonnifyIP,
+      this.validateTransactionHash,
+      this.webHookMonifyRefund,
+    );
+    this.router.post(
+      "/webHookMonifyDisbursement",
+      this.validateMonnifyIP,
+      this.validateTransactionHash,
+      this.webHookMonifyDisbursement,
+    );
 
-    this.router.post("/authorizeTransfer", /*this.validateMonnifyIP, this.validateTransactionHash,*/ this.authorizeTransfer);
-
+    this.router.post(
+      "/authorizeTransfer",
+      this.validateMonnifyIP,
+      this.validateTransactionHash,
+      this.authorizeTransfer,
+    );
   }
 }
 
