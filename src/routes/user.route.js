@@ -3455,7 +3455,7 @@
  *         description: The ID of the transaction (either transactionId or transactionReference is required)
  *         example: "64f8a9b2c1234567890abcde"
  *       - in: query
- *         name: transactionReference
+ *         name: paymentReference
  *         schema:
  *           type: string
  *         description: The reference code of the transaction (either transactionId or transactionReference is required)
@@ -3511,7 +3511,7 @@
  *         description: The ID of the transaction (either transactionId or transactionReference is required)
  *         example: "64f8a9b2c1234567890abcde"
  *       - in: query
- *         name: transactionReference
+ *         name: paymentReference
  *         schema:
  *           type: string
  *         description: The reference code of the transaction (either transactionId or transactionReference is required)
@@ -3549,7 +3549,7 @@ class UserRoutes extends UserController {
     this.router.post(
       "/updateProfile",
       uploadHandler.image.single("image"),
-      this.updateProfile
+      this.updateProfile,
     );
 
     this.router.post("/updateNotifyBuilding", this.updateNotifyBuilding);
@@ -3569,7 +3569,7 @@ class UserRoutes extends UserController {
         { name: "propertyTerms", maxCount: 1 }, // License uploaded independently
         { name: "propertyImages", maxCount: 20 }, // Allow multiple property images
       ]),
-      this.listBuilding
+      this.listBuilding,
     );
     /*
     this.router.post("/updatelistedBuilding",uploadHandler.image.fields([
@@ -3586,7 +3586,7 @@ class UserRoutes extends UserController {
         { name: "propertyTerms", maxCount: 1 },
         { name: "propertyImages", maxCount: 20 },
       ]),
-      this.updatelistedBuilding
+      this.updatelistedBuilding,
     );
     this.router.get("/getReceipt", this.getReceipt);
     this.router.get("/downloadReceipt", this.downloadReceipt);
@@ -3615,14 +3615,14 @@ class UserRoutes extends UserController {
     this.router.get("/tenant", this.tenant);
     this.router.get(
       "/prospectiveTenantInformation",
-      this.ProspectiveTenantInformation
+      this.ProspectiveTenantInformation,
     );
     this.router.get("/appointmentAndRent", this.appointmentAndRent);
     this.router.post("/reviewTenant", this.reviewTenant);
     this.router.post("/validateNIN", this.validateNIN);
     this.router.post(
       "/BuildingPreferenceAction",
-      this.BuildingPreferenceAction
+      this.BuildingPreferenceAction,
     );
 
     //API FOR ADMIN
