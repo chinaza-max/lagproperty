@@ -1234,8 +1234,6 @@ class UserService {
         order: [["fullDate", "ASC"]], // Order by date
       });
 
-      console.log(rows);
-
       const totalPages = Math.ceil(count / pageSize);
 
       return {
@@ -1244,6 +1242,55 @@ class UserService {
         currentPage: page,
         pageSize,
         data: rows,
+      };
+    } catch (error) {
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+
+  async handleGetBookedBuildingsTenant(data) {
+    const { userId, page, pageSize } =
+      await userUtil.verifyHandleGetBookedBuildingsTenant.validateAsync(data);
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    try {
+      const { count, rows } = await Inspection.findAndCountAll({
+        include: [
+          {
+            model: this.BuildingModel, // Include building info
+            required: true,
+          },
+        ],
+        where: {
+          prospectiveTenantId: userId, // Tenant filter
+          inspectionStatus: {
+            [Op.in]: [
+              "pending",
+              "accepted",
+              "declined",
+              "refunded",
+              "disbursed",
+              "notCreated",
+            ],
+          },
+          isDeleted: false,
+        },
+        limit,
+        offset,
+        order: [["createdAt", "DESC"]],
+        distinct: true, // To avoid duplicate buildings if multiple inspections exist
+      });
+
+      const totalPages = Math.ceil(count / pageSize);
+
+      return {
+        totalCount: count,
+        totalPages,
+        currentPage: page,
+        pageSize,
+        data: rows.map((inspection) => inspection.Building), // Return building info only
       };
     } catch (error) {
       throw new SystemError(error.name, error.parent);

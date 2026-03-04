@@ -628,6 +628,28 @@ export default class UserController {
     }
   }
 
+  async getBookedBuildings(req, res, next) {
+    try {
+      const data = req.query;
+
+      const payload = {
+        ...data,
+        role: req.user.role,
+        userId: req.user.id,
+      };
+
+      const response = await userService.handleGetBookedBuildings(payload);
+
+      return res.status(200).json({
+        status: 200,
+        message: "successful",
+        data: response,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
   async getUpcomingInspection(req, res, next) {
     try {
       const data = req.query;

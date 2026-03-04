@@ -389,6 +389,13 @@ class UserUtil {
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
+  verifyHandleGetBookedBuildingsTenant = Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid("list", "rent").required(),
+    page: Joi.number().integer().min(1).default(1).required(),
+    pageSize: Joi.number().integer().min(1).default(10).required(),
+  });
+
   verifyHandleGetAllLordData = Joi.object({
     userId: Joi.number().integer().required(),
     listId: Joi.number().integer().when("type", {

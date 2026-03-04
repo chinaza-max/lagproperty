@@ -3534,6 +3534,100 @@
  *         description: Internal server error.
  */
 
+/**
+ * @swagger
+ * /user/getBookedBuildingsTenant:
+ *   get:
+ *     summary: Get booked buildings for tenant
+ *     description: Retrieve buildings that the tenant has booked for inspection along with basic building details. Supports all inspection statuses.
+ *     tags:
+ *       - Tenant
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of buildings per page
+ *     responses:
+ *       200:
+ *         description: Booked buildings fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Successful
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     pageSize:
+ *                       type: integer
+ *                       example: 10
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 101
+ *                           name:
+ *                             type: string
+ *                             example: "Sunset Apartments"
+ *                           address:
+ *                             type: string
+ *                             example: "123 Main St, Lagos"
+ *                           city:
+ *                             type: string
+ *                             example: "Lagos"
+ *                           state:
+ *                             type: string
+ *                             example: "Lagos State"
+ *                           country:
+ *                             type: string
+ *                             example: "Nigeria"
+ *                           numberOfUnits:
+ *                             type: integer
+ *                             example: 20
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2026-03-04T12:34:56Z"
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2026-03-04T12:34:56Z"
+ *       400:
+ *         description: Bad request - Invalid query parameters.
+ *       401:
+ *         description: Unauthorized access.
+ *       404:
+ *         description: No booked buildings found for tenant.
+ *       500:
+ *         description: Internal server error.
+ */
+
 import { Router } from "express";
 import UserController from "../controllers/user/user.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
@@ -3605,6 +3699,7 @@ class UserRoutes extends UserController {
 
     this.router.get("/getTenantsWithDueRent", this.getTenantsWithDueRent);
     this.router.get("/getUpcomingInspection", this.getUpcomingInspection);
+    this.router.get("/getBookedBuildings", this.getBookedBuildings);
     this.router.get("/getBuildings", this.getBuildings);
     this.router.get("/getBuildingDetails", this.getBuildingDetails);
     this.router.get("/getChat", this.getChat);
