@@ -638,7 +638,8 @@ export default class UserController {
         userId: req.user.id,
       };
 
-      const response = await userService.handleGetBookedBuildings(payload);
+      const response =
+        await userService.handleGetBookedBuildingsTenant(payload);
 
       return res.status(200).json({
         status: 200,
