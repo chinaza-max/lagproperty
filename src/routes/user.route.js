@@ -3536,7 +3536,7 @@
 
 /**
  * @swagger
- * /user/getBookedBuildingsTenant:
+ * /user/getBookedBuildings:
  *   get:
  *     summary: Get booked buildings for tenant
  *     description: Retrieve buildings that the tenant has booked for inspection along with basic building details. Supports all inspection statuses.
