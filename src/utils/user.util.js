@@ -98,6 +98,36 @@ class UserUtil {
     }),
   });
 
+  /*
+
+  verifyHandleGetBuildings = Joi.object({
+  type: Joi.string()
+    .valid(
+      "popular",
+      "recommended",
+      "bestOffer",
+      "topRated",
+      "flats",
+      "duplex",
+      "selfContains",
+      "roomAndParlour",
+      "all"
+    )
+    .required(),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1),
+
+  pageSize: Joi.number()
+    .integer()
+    .min(1)
+    .default(10),
+});
+
+*/
+
   verifyHandleGetAllProperty = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid("list", "rent").required(),
