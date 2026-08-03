@@ -23,6 +23,8 @@ class DB {
       logQueryParameters: true,
     };
 
+    console.log(options)
+
     this.sequelize = new Sequelize(
       serverConfig.DB_NAME,
       serverConfig.DB_USERNAME,

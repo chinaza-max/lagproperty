@@ -156,7 +156,14 @@ export function init(connection) {
       tableName: 'Building',
       sequelize: connection,
       timestamps: true,
-      underscored:false
+      underscored:false,
+      indexes: [
+        { fields: ["propertyManagerId"] },
+        { fields: ["propertyLocation"] },
+        { fields: ["city"] },
+        { fields: ["availability"] },
+        { fields: ["isDeleted"] },
+      ],
   });
   }
 

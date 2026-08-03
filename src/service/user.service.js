@@ -987,12 +987,12 @@ class UserService {
 
         buildings = rows
           ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
+            ...building.toJSON(),
+            averageRating:
+              parseFloat(building.getDataValue("averageRating")) || 0,
+            reviewCount:
+              parseInt(building.getDataValue("reviewCount"), 10) || 0,
+          }))
           : [];
 
         totalCount = count.length;
@@ -1036,11 +1036,11 @@ class UserService {
 
         buildings = rows
           ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating: parseFloat(building.get("averageRating")) || 0,
-              reviewCount: parseInt(building.get("reviewCount"), 10) || 0,
-              tenantCount: parseInt(building.get("tenantCount"), 10) || 0,
-            }))
+            ...building.toJSON(),
+            averageRating: parseFloat(building.get("averageRating")) || 0,
+            reviewCount: parseInt(building.get("reviewCount"), 10) || 0,
+            tenantCount: parseInt(building.get("tenantCount"), 10) || 0,
+          }))
           : [];
 
         totalCount = count.length;
@@ -1093,12 +1093,12 @@ class UserService {
 
         buildings = rows
           ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
+            ...building.toJSON(),
+            averageRating:
+              parseFloat(building.getDataValue("averageRating")) || 0,
+            reviewCount:
+              parseInt(building.getDataValue("reviewCount"), 10) || 0,
+          }))
           : [];
 
         totalCount = count.length;
@@ -1146,12 +1146,12 @@ class UserService {
 
         buildings = rows
           ? rows.map((building) => ({
-              ...building.toJSON(),
-              averageRating:
-                parseFloat(building.getDataValue("averageRating")) || 0,
-              reviewCount:
-                parseInt(building.getDataValue("reviewCount"), 10) || 0,
-            }))
+            ...building.toJSON(),
+            averageRating:
+              parseFloat(building.getDataValue("averageRating")) || 0,
+            reviewCount:
+              parseInt(building.getDataValue("reviewCount"), 10) || 0,
+          }))
           : [];
 
         totalCount = count.length;
@@ -1464,13 +1464,13 @@ class UserService {
             },
             propertyOwner: propertyManager
               ? {
-                  firstName: propertyManager.firstName,
-                  lastName: propertyManager.lastName,
-                  emailAddress: propertyManager.emailAddress,
-                  tel: propertyManager.tel,
-                  image: propertyManager.image,
-                  companyName: propertyManager.companyName,
-                }
+                firstName: propertyManager.firstName,
+                lastName: propertyManager.lastName,
+                emailAddress: propertyManager.emailAddress,
+                tel: propertyManager.tel,
+                image: propertyManager.image,
+                companyName: propertyManager.companyName,
+              }
               : null,
             createdAt: notification.createdAt,
           });
@@ -1485,11 +1485,11 @@ class UserService {
             message: notification.message,
             tenant: tenant
               ? {
-                  name: `${tenant.firstName} ${tenant.lastName}`, // Assuming tenant has firstName and lastName
-                  image: tenant.image || null,
-                  emailAddress: tenant.emailAddress,
-                  tel: tenant.tel,
-                }
+                name: `${tenant.firstName} ${tenant.lastName}`, // Assuming tenant has firstName and lastName
+                image: tenant.image || null,
+                emailAddress: tenant.emailAddress,
+                tel: tenant.tel,
+              }
               : null,
             createdAt: notification.createdAt,
           });
@@ -2695,22 +2695,22 @@ class UserService {
               include:
                 role === "list"
                   ? [
-                      {
-                        model: this.PropertyManagerModel,
-                        where: { id: userId },
-                        attributes: [],
-                      },
-                    ]
+                    {
+                      model: this.PropertyManagerModel,
+                      where: { id: userId },
+                      attributes: [],
+                    },
+                  ]
                   : [],
             },
             ...(role === "rent"
               ? [
-                  {
-                    model: this.ProspectiveTenantModel,
-                    where: { id: userId },
-                    attributes: [],
-                  },
-                ]
+                {
+                  model: this.ProspectiveTenantModel,
+                  where: { id: userId },
+                  attributes: [],
+                },
+              ]
               : []),
           ],
         });
@@ -3264,13 +3264,12 @@ class UserService {
           `Transaction Ref: ${transaction.transactionReference || "N/A"}`,
         );
         doc.text(
-          `Date: ${
-            transaction.createdAt
-              ? format(
-                  new Date(transaction.createdAt),
-                  "MMMM dd, yyyy HH:mm:ss",
-                )
-              : "N/A"
+          `Date: ${transaction.createdAt
+            ? format(
+              new Date(transaction.createdAt),
+              "MMMM dd, yyyy HH:mm:ss",
+            )
+            : "N/A"
           }`,
         );
 
@@ -3278,7 +3277,7 @@ class UserService {
         const status = transaction.paymentStatus || "UNKNOWN";
         const statusColor =
           status.toLowerCase() === "successful" ||
-          status.toLowerCase() === "success"
+            status.toLowerCase() === "success"
             ? "#16a34a"
             : "#dc2626";
 
@@ -3333,10 +3332,9 @@ class UserService {
           doc.text(`Rental Duration: ${durationText}`);
 
           doc.text(
-            `Renewal Date: ${
-              transaction.renewalDate
-                ? format(new Date(transaction.renewalDate), "MMMM dd, yyyy")
-                : "N/A"
+            `Renewal Date: ${transaction.renewalDate
+              ? format(new Date(transaction.renewalDate), "MMMM dd, yyyy")
+              : "N/A"
             }`,
           );
           doc.moveDown(1.5);
@@ -4656,9 +4654,8 @@ class UserService {
             resetLink:
               serverConfig.NODE_ENV === "development"
                 ? `http://localhost/COMPANYS_PROJECT/verifyEmail.html?${params.toString()}`
-                : `${
-                    serverConfig.DOMAIN
-                  }/adminpanel/PasswordReset.html?${params.toString()}`,
+                : `${serverConfig.DOMAIN
+                }/adminpanel/PasswordReset.html?${params.toString()}`,
           },
         });
       } catch (error) {

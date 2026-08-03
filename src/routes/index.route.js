@@ -3,6 +3,8 @@ import { Router } from "express";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import authRoute from "./auth.route.js";
 import userRoute from "./user.route.js";
+import adminRoute from "./admin.route.js";
+import analyticsRoute from "./analytics.route.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -30,6 +32,26 @@ class Routes {
     });
 
     this.router.use(`${rootAPI}/auth`, authRoute);
+
+    // Serve Postman Collection JSON file
+    this.router.get("/postman-collection", (req, res) => {
+      res.sendFile(path.join(__dirname, "../../docs/LagProperty_Postman_Collection.json"));
+    });
+    this.router.get(`${rootAPI}/postman-collection`, (req, res) => {
+      res.sendFile(path.join(__dirname, "../../docs/LagProperty_Postman_Collection.json"));
+    });
+    this.router.get("/admin-postman-collection", (req, res) => {
+      res.sendFile(path.join(__dirname, "../../docs/LagProperty_Admin_Postman_Collection.json"));
+    });
+    this.router.get(`${rootAPI}/admin-postman-collection`, (req, res) => {
+      res.sendFile(path.join(__dirname, "../../docs/LagProperty_Admin_Postman_Collection.json"));
+    });
+    this.router.get("/download-postman", (req, res) => {
+      res.download(
+        path.join(__dirname, "../../docs/LagProperty_Postman_Collection.json"),
+        "LagProperty_Postman_Collection.json"
+      );
+    });
 
     this.router.get("*", (req, res, next) => {
       const requestedPath = req.path;
@@ -59,6 +81,8 @@ class Routes {
     this.router.use(authMiddleware.validateUserToken);
 
     this.router.use(`${rootAPI}/user`, userRoute);
+    this.router.use(`${rootAPI}/admin`, adminRoute);
+    this.router.use(`${rootAPI}/analytics`, analyticsRoute);
 
     this.router.all("*", (req, res) => {
       res.status(404).json({

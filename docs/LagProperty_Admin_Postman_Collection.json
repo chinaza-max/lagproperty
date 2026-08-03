@@ -1,0 +1,666 @@
+{
+	"info": {
+		"_postman_id": "lagproperty-admin-collection-v1",
+		"name": "LagProperty Admin APIs & RBAC Collection",
+		"description": "Dedicated Postman Collection for LagProperty Admin APIs including Admin Account Creation, Role-Based Access Control (RBAC), Agent Blacklisting with recorded reasons, Analytics Dashboard (NIN transaction lookup, location housing stats), and User/Building Directory APIs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Admin Account & RBAC Management",
+			"item": [
+				{
+					"name": "Create Admin Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emailAddress\": \"finance.admin@lagproperty.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"Finance\",\n  \"lastName\": \"Manager\",\n  \"role\": \"finance_admin\",\n  \"privilege\": \"financial_analytics,transactions,escrow\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "create"]
+						},
+						"description": "Create admin with specific role (super_admin, finance_admin, compliance_admin, property_admin, support_admin)."
+					}
+				},
+				{
+					"name": "Get All Admins (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/list?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Admin Role & Privileges",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"compliance_admin\",\n  \"privilege\": \"agent_blacklist,nin_lookup\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/1/role",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "1", "role"]
+						}
+					}
+				},
+				{
+					"name": "Toggle Admin Account Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"disableAccount\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/1/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "1", "status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Analytics Dashboard",
+			"item": [
+				{
+					"name": "User Transactions by NIN (Spent / Received)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/nin-transactions?nin=12345678901&userType=tenant&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "nin-transactions"],
+							"query": [
+								{
+									"key": "nin",
+									"value": "12345678901"
+								},
+								{
+									"key": "userType",
+									"value": "tenant"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Housing & Entity Count by Location / Area",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/housing-by-location?city=Lagos&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "housing-by-location"],
+							"query": [
+								{
+									"key": "city",
+									"value": "Lagos"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Dashboard System Overview KPIs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/dashboard-overview",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "dashboard-overview"]
+						}
+					}
+				},
+				{
+					"name": "Property Preference Distribution",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/property-distribution",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "property-distribution"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. User Directory (Tenants, Landlords, Agents)",
+			"item": [
+				{
+					"name": "Get All Tenants (Paginated & Filterable)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/tenants?page=1&limit=10&search=",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users", "tenants"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Landlords & Agents (Paginated & Filterable)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/landlords-agents?type=landLord&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users", "landlords-agents"],
+							"query": [
+								{
+									"key": "type",
+									"value": "landLord"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Tenant Full Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/tenant-details/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users", "tenant-details", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Single Landlord/Agent Full Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/manager-details/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users", "manager-details", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get All Properties Listed by Landlord/Agent (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/manager-properties/1?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users", "manager-properties", "1"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Listed Buildings & Reviews Directory",
+			"item": [
+				{
+					"name": "Get All Listed Buildings / Houses Directory",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/buildings/all?availability=vacant&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "buildings", "all"],
+							"query": [
+								{
+									"key": "availability",
+									"value": "vacant"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Building / House Full Details & Reviews",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/buildings/1/details",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "buildings", "1", "details"]
+						}
+					}
+				},
+				{
+					"name": "View Building Uploaded Terms & Conditions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/buildings/1/terms",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "buildings", "1", "terms"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Reports & Excel Export",
+			"item": [
+				{
+					"name": "Export Report as Excel (.xlsx)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/export?type=buildings",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "reports", "export"],
+							"query": [
+								{
+									"key": "type",
+									"value": "buildings",
+									"description": "Allowed: buildings, landlords-agents, tenants, transactions, blacklisted-agents"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Targeted Push Notifications",
+			"item": [
+				{
+					"name": "Send Targeted Push Notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"targetGroup\": [\"agent\", \"landLord\"],\n  \"title\": \"Important Policy Announcement\",\n  \"message\": \"Please update your listed property terms and verification details.\",\n  \"buildingId\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/notifications/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "notifications", "send"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Agent Blacklisting & Reason Tracking",
+			"item": [
+				{
+					"name": "Blacklist Agent with Reason",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Fraudulent property listing and invalid identity verification documents submitted.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/agents/5/blacklist",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "agents", "5", "blacklist"]
+						}
+					}
+				},
+				{
+					"name": "Unblacklist Agent",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/agents/5/unblacklist",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "agents", "5", "unblacklist"]
+						}
+					}
+				},
+				{
+					"name": "Get All Blacklisted Agents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/agents/blacklisted?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "agents", "blacklisted"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "YOUR_ADMIN_JWT_TOKEN_HERE",
+			"type": "string"
+		}
+	]
+}

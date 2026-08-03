@@ -689,6 +689,14 @@ class AuthRoutes extends AuthController {
     this.router.get("/getReligion", this.getReligion);
     this.router.get("/getGender", this.getGender);
 
+    // ── Admin Auth ────────────────────────────────────────────────────────────
+    this.router.post("/loginAdmin", loginLimiter, this.loginAdmin);
+
+    // Bootstrap / Invite: create a new admin using a server-side registration
+    // secret (x-admin-secret header).  This allows seeding the very first
+    // super_admin without needing an existing admin JWT.
+    this.router.post("/registerAdmin", this.validateAdminRegistrationSecret, this.registerAdmin);
+
     this.router.get("/pingme", this.pingme);
     this.router.post("/intializePayment", this.intializePayment);
 

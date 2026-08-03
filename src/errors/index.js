@@ -42,6 +42,14 @@ export class ConflictError extends SystemError {
 }
 
 
+export class ForbiddenError extends SystemError {
+  constructor(message = "Access Forbidden") {
+    super("ForbiddenError", message);
+    this.name = "ForbiddenError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 export class ServerError extends SystemError {
   constructor(message= ServerError) {
     super("server-error", message); 

@@ -49,6 +49,7 @@ class SystemMiddlewares {
             message: error.message,
           });
           case "SecurityCodeVerificationError":
+          case "ForbiddenError":
             return res.status(403).json({
               status: error.code,
               message: error.message,

@@ -62,7 +62,11 @@ export function init(connection) {
       tableName: 'Admin',
       sequelize: connection,
       timestamps: true,
-      underscored:false
+      underscored:false,
+      indexes: [
+        { fields: ["emailAddress"] },
+        { fields: ["role"] },
+      ],
     });
   }
 

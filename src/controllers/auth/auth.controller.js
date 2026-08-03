@@ -1,4 +1,5 @@
 import authService from "../../service/auth.service.js";
+import adminService from "../../service/admin.service.js";
 import serverConfig from "../../config/server.js";
 import crypto from "crypto";
 
@@ -225,6 +226,33 @@ export default class AuthenticationController {
         status: 200,
         message: "login successfully  new.",
         data: { user: { ...user.dataValues }, token },
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
+  validateAdminRegistrationSecret(req, res, next) {
+    const adminSecret = req.headers["x-admin-secret"];
+    const configuredSecret = process.env.ADMIN_REGISTRATION_SECRET || "lagproperty_admin_secret_key";
+
+    if (!adminSecret || adminSecret !== configuredSecret) {
+      return res.status(403).json({
+        status: 403,
+        message: "Forbidden: Invalid or missing x-admin-secret header.",
+      });
+    }
+    next();
+  }
+
+  async registerAdmin(req, res, next) {
+    try {
+      const result = await adminService.createAdmin(req.body);
+      return res.status(201).json({
+        status: 201,
+        message: "Admin account registered successfully.",
+        data: result,
       });
     } catch (error) {
       console.log(error);

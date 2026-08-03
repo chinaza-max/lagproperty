@@ -12,7 +12,8 @@ import cron from "node-cron";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsDoc from "swagger-jsdoc";
 
-import { Setting } from "./src/db/models/index.js";
+import bcrypt from "bcrypt";
+import { Setting, Admin } from "./src/db/models/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -99,6 +100,36 @@ class Server {
       });
     }
 
+    const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || "admin@gmail.com";
+    const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || "Admin@123456";
+
+    const defaultAdmin = await Admin.findOne({
+      where: { emailAddress: adminEmail },
+    });
+
+    if (!defaultAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await Admin.create({
+        emailAddress: adminEmail,
+        password: hashedPassword,
+        firstName: "Super",
+        lastName: "Admin",
+        role: "super_admin",
+        privilege: "all",
+        isEmailValid: true,
+        disableAccount: false,
+        isDeleted: false,
+      });
+      console.log(`[SEED] Default Super Admin created with email: ${adminEmail}`);
+    } else if (!defaultAdmin.isEmailValid || defaultAdmin.isDeleted || defaultAdmin.disableAccount) {
+      await defaultAdmin.update({
+        isEmailValid: true,
+        isDeleted: false,
+        disableAccount: false,
+      });
+      console.log(`[SEED] Default Super Admin account verified & updated: ${adminEmail}`);
+    }
+
     //cron.schedule('0 */2 * * *', async () => {
     /* checktransactionUpdateWebHook
         checktransactionUpdateSingleTransfer
@@ -164,17 +195,14 @@ class Server {
 
 */
 
+
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
-    this.app.use(express.static(path.join(__dirname, "public")));
     this.app.use(cors(corsOptions));
-
+    this.app.use(express.static(path.join(__dirname, "public")));
     this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-    // this.app.use(adminJs.options.rootPath, adminRouter);  // Add admin route if available
-
     this.app.use(routes);
     this.app.use(systemMiddleware.errorHandler);
-    this.app.use(cors(corsOptions));
   }
 
   async start() {
@@ -230,5 +258,12 @@ server {
         root /var/www/html;
     }
 }
+
+
+
+Email: admin@gmail.com
+Password: Admin@123456
+Role: super_admin
+Privileges: all
 
    */

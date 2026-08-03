@@ -61,6 +61,13 @@ export function init(connection) {
       sequelize: connection,
       timestamps: true,
       underscored: false,
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["buildingId"] },
+        { fields: ["paymentStatus"] },
+        { fields: ["transactionType"] },
+        { fields: ["createdAt"] },
+      ],
     },
   );
 }

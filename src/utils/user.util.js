@@ -130,7 +130,7 @@ class UserUtil {
 
   verifyHandleGetAllProperty = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string()
       .valid("vacant", "cancelled", "occupied", "listing", "booked")
       .required()
@@ -158,7 +158,7 @@ class UserUtil {
 
   verifyHandleGetMyProperty = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string()
       .valid("vacant", "cancelled", "occupied", "listing", "booked", "all")
       .required()
@@ -179,7 +179,7 @@ class UserUtil {
   verifyHandleProspectiveTenantInformation = Joi.object({
     userId: Joi.number().required(),
     inspectionId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
   });
@@ -190,14 +190,14 @@ class UserUtil {
 
   verifyHandleTenant = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
   });
 
   verifyHandleRentAction = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
     type: Joi.string()
@@ -208,33 +208,33 @@ class UserUtil {
 
   verifyHandleGetInspectionDetails = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     inspectionId: Joi.number().integer(),
   });
 
   verifyHandleSendInvoce = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     userIdList: Joi.array().items(Joi.number().integer().required()).required(),
   });
 
   verifyHandleGetTransactionRefund = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     pageSize: Joi.number().integer().required(),
     page: Joi.number().integer().required(),
   });
 
   verifyHandleGetTransaction = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     page: Joi.number().integer().min(1).required(),
     pageSize: Joi.number().integer().min(1).required(),
   });
 
   verifyHandleGetChat = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string().valid("summary", "chatDetail").required().label("Type"),
     partnerId: Joi.number().when("type", {
       is: "chatDetail",
@@ -252,7 +252,7 @@ class UserUtil {
 
   verifyHandleInspectionAction = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string()
       .valid(
         "getNotCreatedInspection",
@@ -365,7 +365,7 @@ class UserUtil {
 
   handleGetALLreviewTenant = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     tenantId: Joi.number().integer().required(),
     page: Joi.number().integer().min(1).required(),
     pageSize: Joi.number().integer().min(1).required(),
@@ -373,13 +373,13 @@ class UserUtil {
 
   verifyHandleGetBuildingDetails = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("rent").required(),
+    role: Joi.string().valid("rent", "super_admin").required(),
     buildingId: Joi.number().required(),
   });
 
   verifyHandleGetBuildings = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string().required(),
     propertyLocation: Joi.string().when("type", {
       is: "all",
@@ -414,14 +414,14 @@ class UserUtil {
 
   verifyHandleGetTenantsWithDueRent = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     page: Joi.number().integer().min(1).default(1).required(),
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
   verifyHandleGetBookedBuildingsTenant = Joi.object({
     userId: Joi.number().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     page: Joi.number().integer().min(1).default(1).required(),
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
@@ -450,13 +450,13 @@ class UserUtil {
 
   verifyHandleAppointmentAndRent = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     paymentReference: Joi.string().required(),
   });
 
   verifyHandleReviewBuildingAction = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     reviewId: Joi.number().integer().required(),
     review: Joi.string().optional(),
     rating: Joi.number().optional(),
@@ -465,7 +465,7 @@ class UserUtil {
 
   verifyHandleReviewBuilding = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     buildingId: Joi.number().integer().required(),
     review: Joi.string().required(),
     rating: Joi.number().optional(),
@@ -497,21 +497,21 @@ class UserUtil {
 
   verifyHandleReviewTenant = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     prospectiveTenantId: Joi.number().integer().required(),
     review: Joi.string().required(),
   });
 
   verifyHandleGetNotification = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     page: Joi.number().integer().min(1).default(1).required(),
     pageSize: Joi.number().integer().min(1).default(10).required(),
   });
 
   verifyHandleGetALLreviewTenant = Joi.object({
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     prospectiveTenantId: Joi.number().integer().required(),
     page: Joi.number().integer().min(1).default(1).required(),
     pageSize: Joi.number().integer().min(1).default(10).required(),
@@ -522,7 +522,7 @@ class UserUtil {
       .valid("send", "acknowledged", "get", "delete")
       .required(),
     userId: Joi.number().integer().required(),
-    role: Joi.string().valid("list", "rent").required(),
+    role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     tenantId: Joi.number().when("type", {
       is: Joi.string().valid("send", "get"),
       then: Joi.required(),

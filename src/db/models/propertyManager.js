@@ -133,12 +133,38 @@ import { Model, DataTypes } from "sequelize";
           type: DataTypes.BOOLEAN,
           allowNull: false,
           defaultValue:false ,
+        },
+        isBlacklisted: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+        },
+        blacklistReason: {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
+        blacklistedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        blacklistedBy: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
         }
       }, {
         tableName: 'PropertyManager',
         sequelize: connection,
         timestamps: true,
-        underscored:false
+        underscored:false,
+        indexes: [
+          { fields: ["nin"] },
+          { fields: ["type"] },
+          { fields: ["emailAddress"] },
+          { fields: ["state"] },
+          { fields: ["lga"] },
+          { fields: ["disableAccount"] },
+          { fields: ["isBlacklisted"] },
+        ],
     });
   }
 

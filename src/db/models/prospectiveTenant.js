@@ -178,6 +178,11 @@ export function init(connection) {
       sequelize: connection,
       timestamps: true,
       underscored: false,
+      indexes: [
+        { fields: ["nin"] },
+        { fields: ["emailAddress"] },
+        { fields: ["role"] },
+      ],
     }
   );
 }
