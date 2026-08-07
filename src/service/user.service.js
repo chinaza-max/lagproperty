@@ -1174,6 +1174,7 @@ class UserService {
         buildings,
         user,
       );
+
       totalCount = filteredBuildings.length;
       const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -1195,6 +1196,7 @@ class UserService {
     } catch (error) {
       console.log(error);
       throw new SystemError(error.name, error.parent);
+
     }
   }
 
@@ -4720,74 +4722,94 @@ class UserService {
   }
 
   isStateInRegions(state, regionArray) {
-    if (regionArray.includes("All")) {
-      return true;
-    }
+    if (!state || !Array.isArray(regionArray) || regionArray.length === 0) return true;
+
+    const normState = state.trim().toLowerCase();
 
     for (let region of regionArray) {
-      if (regions[region] && regions[region].includes(state)) {
-        return true;
+      if (typeof region !== "string") continue;
+      const normRegion = region.trim().toLowerCase();
+      if (normRegion === "all") return true;
+
+      const matchingRegionKey = Object.keys(regions).find(
+        (key) => key.toLowerCase() === normRegion
+      );
+
+      if (matchingRegionKey && regions[matchingRegionKey]) {
+        const stateList = regions[matchingRegionKey].map((s) => s.trim().toLowerCase());
+        if (stateList.includes(normState)) {
+          return true;
+        }
       }
     }
     return false;
   }
 
   filterBuildingsByUserPreferences(buildings, user) {
+    if (!user) return buildings;
+
     return buildings.filter((building) => {
-      if (building.buildingOccupantPreference) {
-        let preferences =
+      if (!building.buildingOccupantPreference) {
+        return true;
+      }
+
+      let preferences;
+      try {
+        preferences =
           typeof building.buildingOccupantPreference === "string"
             ? JSON.parse(building.buildingOccupantPreference)
             : building.buildingOccupantPreference;
+      } catch (e) {
+        return true;
+      }
 
-        if (!Array.isArray(preferences.maritalStatus)) {
-          //let  preferences = JSON.parse(building.buildingOccupantPreference) || {};
-          console.error("maritalStatus is not an array.");
-          return false; // Exit or handle the invalid case
-        } else {
-          // Check marital status
-          if (
-            preferences.maritalStatus &&
-            Array.isArray(preferences.maritalStatus) &&
-            !preferences.maritalStatus.includes("All") &&
-            !preferences.maritalStatus.includes(user.maritalStatus)
-          ) {
-            return false;
-          }
+      if (!preferences || typeof preferences !== "object") {
+        return true;
+      }
 
-          // Check religion
-          if (
-            preferences.religion &&
-            Array.isArray(preferences.religion) &&
-            !preferences.religion.includes("All") &&
-            !preferences.religion.includes(user.religion)
-          ) {
-            return false;
-          }
+      const normalize = (str) => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
-          // Check gender
-          if (
-            preferences.gender &&
-            Array.isArray(preferences.gender) &&
-            !preferences.gender.includes("All") &&
-            !preferences.gender.includes(user.gender)
-          ) {
-            return false;
-          }
+      // Helper function to check if a user value matches preference array safely
+      const matchesPref = (prefArray, userValue) => {
+        if (!Array.isArray(prefArray) || prefArray.length === 0) return true;
 
-          // Check region using the provided `isStateInRegions` function
-          if (
-            preferences.region &&
-            Array.isArray(preferences.region) &&
-            !preferences.region.includes("All") &&
-            !this.isStateInRegions(user.stateOfOrigin, preferences.region)
-          ) {
-            return false;
-          }
+        const normalizedPrefs = prefArray.map(normalize);
+        if (normalizedPrefs.includes("all")) return true;
 
-          return true;
+        // If user profile has no value set for this field, do not block the building
+        if (!userValue) return true;
+
+        const normalizedUserVal = normalize(userValue);
+        return normalizedPrefs.includes(normalizedUserVal);
+      };
+
+      // Check marital status
+      if (!matchesPref(preferences.maritalStatus, user.maritalStatus)) {
+        return false;
+      }
+
+      // Check religion
+      if (!matchesPref(preferences.religion, user.religion)) {
+        return false;
+      }
+
+      // Check gender
+      if (!matchesPref(preferences.gender, user.gender)) {
+        return false;
+      }
+
+      // Check region
+      if (
+        user.stateOfOrigin &&
+        Array.isArray(preferences.region) &&
+        preferences.region.length > 0
+      ) {
+        if (!this.isStateInRegions(user.stateOfOrigin, preferences.region)) {
+          return false;
         }
       }
+
+      return true;
     });
   }
 }
