@@ -134,7 +134,20 @@ export function init(connection) {
         get() {
           const rawValue = this.getDataValue('propertyImages');
           try {
-            return rawValue ? JSON.parse(rawValue) : [];
+            if (!rawValue) return [];
+            const parsed = typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            if (Array.isArray(parsed)) {
+              return parsed.map((img) => {
+                if (img && typeof img === 'object' && img.url) {
+                  return {
+                    ...img,
+                    url: img.url.replace(/^http:\/\/178\.62\.5\.186:5000/i, "https://app.dianetechnologies.com"),
+                  };
+                }
+                return img;
+              });
+            }
+            return parsed;
           } catch (error) {
             return [];
           }
@@ -146,6 +159,11 @@ export function init(connection) {
       propertyTerms: {
         type: DataTypes.TEXT,
         allowNull: true,
+        get() {
+          const rawValue = this.getDataValue('propertyTerms');
+          if (!rawValue) return null;
+          return rawValue.replace(/^http:\/\/178\.62\.5\.186:5000/i, "https://app.dianetechnologies.com");
+        },
       },
       isDeleted: {
         type: DataTypes.BOOLEAN,

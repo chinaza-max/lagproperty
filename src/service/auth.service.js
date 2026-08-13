@@ -1667,14 +1667,120 @@ class AuthenticationService {
   }
 
   async handleVerifyEmailorTel(data) {
-    let { userId, verificationCode, validateFor, type } =
+    let { userId, verificationCode, validateFor, type, identityId } =
       await authUtil.verifyHandleVerifyEmailorTel.validateAsync(data);
 
+    let relatedUser;
+
+    if (type === "nin") {
+      // --- Fidopoint NIN OTP Verification ---
+      if (!identityId) {
+        throw new NotFoundError("identityId is required for NIN verification");
+      }
+
+      // Look up the stored session
+      let ninSession = await this.EmailandTelValidationModel.findOne({
+        where: { identityId, type: "nin", validateFor },
+      });
+
+      if (!ninSession) {
+        throw new NotFoundError("NIN verification session not found");
+      } else if (ninSession.expiresIn.getTime() < new Date().getTime()) {
+        throw new NotFoundError("NIN verification session expired. Please restart.");
+      }
+
+      // Retrieve the user
+      if (validateFor === "list") {
+        relatedUser = await this.PropertyManagerModel.findOne({
+          where: { id: ninSession.userId },
+        });
+      } else {
+        relatedUser = await this.ProspectiveTenantModel.findOne({
+          where: { id: ninSession.userId },
+        });
+      }
+
+      if (!relatedUser) {
+        throw new NotFoundError("User not found");
+      }
+
+      try {
+        // Call Fidopoint /nin/verify
+        const fidopointResponse = await axios.post(
+          `${serverConfig.FIDOPOINT_BASE_URL}/nin/verify`,
+          {
+            identityId,
+            otp: String(verificationCode),
+            type: "NIN",
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": serverConfig.FIDOPOINT_API_KEY,
+            },
+          }
+        );
+
+        const verifyData = fidopointResponse.data?.data?.data;
+        const providerResponse = verifyData?.providerResponse || {};
+
+        console.log("[Fidopoint] NIN verified:", JSON.stringify(providerResponse, null, 2));
+
+        // Build update payload
+        let updatePayload = { isNINValid: true };
+
+        // Sync firstName if it doesn't match
+        if (
+          providerResponse.firstName &&
+          providerResponse.firstName.trim().toLowerCase() !==
+            (relatedUser.firstName || "").trim().toLowerCase()
+        ) {
+          updatePayload.firstName = providerResponse.firstName.trim();
+        }
+
+        // Sync lastName if it doesn't match
+        if (
+          providerResponse.lastName &&
+          providerResponse.lastName.trim().toLowerCase() !==
+            (relatedUser.lastName || "").trim().toLowerCase()
+        ) {
+          updatePayload.lastName = providerResponse.lastName.trim();
+        }
+
+        // Sync dateOfBirth if present and different
+        const rawDob = providerResponse.dateOfBirth || providerResponse.dob || providerResponse.birthdate;
+        if (rawDob) {
+          // rawDob format is "DD-MM-YYYY", convert to Date
+          const [dd, mm, yyyy] = rawDob.split("-");
+          const parsedDob = new Date(`${yyyy}-${mm}-${dd}`);
+          const existingDob = relatedUser.dateOfBirth
+            ? new Date(relatedUser.dateOfBirth).toISOString().split("T")[0]
+            : null;
+          const incomingDob = parsedDob.toISOString().split("T")[0];
+          if (!existingDob || existingDob !== incomingDob) {
+            updatePayload.dateOfBirth = parsedDob;
+          }
+        }
+
+        await relatedUser.update(updatePayload);
+
+        // Expire the session
+        await ninSession.update({ expiresIn: new Date() });
+
+        return relatedUser;
+      } catch (error) {
+        console.log("[Fidopoint] NIN verify error:", error?.response?.data || error.message);
+        throw new SystemError(
+          error.name,
+          error?.response?.data?.message || error?.response?.data?.error || error.message
+        );
+      }
+    }
+
+    // --- Standard email / tel verification ---
     let relatedEmailoRTelValidationCode =
       await this.EmailandTelValidationModel.findOne({
         where: {
-          //userId: userId,
-          // validateFor,
           verificationCode: verificationCode,
           type,
         },
@@ -1687,8 +1793,6 @@ class AuthenticationService {
     ) {
       throw new NotFoundError("verification code expired");
     }
-
-    let relatedUser;
 
     if (validateFor == "list") {
       relatedUser = await this.PropertyManagerModel.findOne({
@@ -1712,16 +1816,6 @@ class AuthenticationService {
       if (type === "email") {
         relatedUser.update({
           isEmailValid: true,
-        });
-
-        relatedEmailoRTelValidationCode.update({
-          expiresIn: new Date(),
-        });
-
-        return relatedUser;
-      } else if (type === "nin") {
-        relatedUser.update({
-          isNINValid: true,
         });
 
         relatedEmailoRTelValidationCode.update({
@@ -2525,6 +2619,105 @@ class AuthenticationService {
   //checkRefundUpdate
   //cronJobToUpdateDueRent
   //cronJobToUpdateDisbursement
+
+  /**
+   * Handles incoming Fidopoint webhook events.
+   * Called when Fidopoint sends an `identity.nin.verified` event to your server.
+   */
+  async handleNINWebhook(payload) {
+    const { event, data } = payload;
+
+    if (event !== "identity.nin.verified") {
+      console.log(`[Fidopoint Webhook] Ignoring unhandled event: ${event}`);
+      return { ignored: true };
+    }
+
+    const { identityId, status, verificationResult } = data;
+    const providerResponse = verificationResult?.data?.providerResponse || {};
+
+    console.log(`[Fidopoint Webhook] identity.nin.verified — identityId: ${identityId}, status: ${status}`);
+    console.log("[Fidopoint Webhook] providerResponse:", JSON.stringify(providerResponse, null, 2));
+
+    if (status !== "SUCCESS") {
+      console.log(`[Fidopoint Webhook] Verification not successful. Status: ${status}`);
+      return { processed: false, reason: "status not SUCCESS" };
+    }
+
+    // Look up the stored session by identityId
+    const ninSession = await this.EmailandTelValidationModel.findOne({
+      where: { identityId, type: "nin" },
+    });
+
+    if (!ninSession) {
+      console.log(`[Fidopoint Webhook] No session found for identityId: ${identityId}`);
+      return { processed: false, reason: "session not found" };
+    }
+
+    const { userId, validateFor } = ninSession;
+
+    // Find the user
+    let user;
+    if (validateFor === "list") {
+      user = await this.PropertyManagerModel.findByPk(userId);
+    } else {
+      user = await this.ProspectiveTenantModel.findByPk(userId);
+    }
+
+    if (!user) {
+      console.log(`[Fidopoint Webhook] User not found for userId: ${userId}`);
+      return { processed: false, reason: "user not found" };
+    }
+
+    // Build update payload
+    let updatePayload = { isNINValid: true };
+
+    // Sync firstName if it doesn't match
+    if (
+      providerResponse.firstName &&
+      providerResponse.firstName.trim().toLowerCase() !==
+        (user.firstName || "").trim().toLowerCase()
+    ) {
+      updatePayload.firstName = providerResponse.firstName.trim();
+    }
+
+    // Sync lastName if it doesn't match
+    if (
+      providerResponse.lastName &&
+      providerResponse.lastName.trim().toLowerCase() !==
+        (user.lastName || "").trim().toLowerCase()
+    ) {
+      updatePayload.lastName = providerResponse.lastName.trim();
+    }
+
+    // Sync dateOfBirth if present and different
+    const rawDob =
+      providerResponse.dateOfBirth ||
+      providerResponse.dob ||
+      providerResponse.birthdate;
+    if (rawDob) {
+      const [dd, mm, yyyy] = rawDob.split("-");
+      const parsedDob = new Date(`${yyyy}-${mm}-${dd}`);
+      const existingDob = user.dateOfBirth
+        ? new Date(user.dateOfBirth).toISOString().split("T")[0]
+        : null;
+      const incomingDob = parsedDob.toISOString().split("T")[0];
+      if (!existingDob || existingDob !== incomingDob) {
+        updatePayload.dateOfBirth = parsedDob;
+      }
+    }
+
+    await user.update(updatePayload);
+
+    // Expire the session to prevent replay
+    await ninSession.update({ expiresIn: new Date() });
+
+    console.log(
+      `[Fidopoint Webhook] User ${userId} updated — isNINValid=true, fields synced:`,
+      Object.keys(updatePayload).filter((k) => k !== "isNINValid")
+    );
+
+    return { processed: true };
+  }
 }
 
 export default new AuthenticationService();

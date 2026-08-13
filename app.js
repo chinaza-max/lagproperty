@@ -145,19 +145,41 @@ class Server {
 
   initializeMiddlewaresAndRoutes() {
     let corsOptions;
-    if (this.mode == "production") {
-      const allowedOrigins = ["http://example.com"]; // Add your allowed origin(s) here
+    if (this.mode === "production") {
+      const allowedOrigins = [
+        "https://lagproperty-guardians.vercel.app",
+        "https://lagpropertyproject.web.app",
+      ];
 
       corsOptions = {
         origin: function (origin, callback) {
-          // Check if the origin is in the allowedOrigins array
-          if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-          } else {
-            callback(new Error("Not allowed by CORS"));
+          // Allow requests without an Origin header
+          // (Postman, server-to-server requests, etc.)
+          if (!origin) {
+            return callback(null, true);
           }
+
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+
+          console.log(`[CORS] Blocked origin: ${origin}`);
+          return callback(new Error("Not allowed by CORS"));
         },
+
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+        allowedHeaders: [
+          "Origin",
+          "X-Requested-With",
+          "Content-Type",
+          "Accept",
+          "Authorization",
+        ],
+
+        credentials: true,
       };
+
     } else {
       corsOptions = {
         origin: "*",

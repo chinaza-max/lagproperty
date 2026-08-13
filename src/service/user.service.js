@@ -1984,6 +1984,7 @@ class UserService {
   async handleValidateNIN(data) {
     var { nin, userId, role } =
       await userUtil.validateHandleValidateNIN2.validateAsync(data);
+
     let user;
     if (role == "rent") {
       user = await this.ProspectiveTenantModel.findByPk(userId);
@@ -1991,35 +1992,60 @@ class UserService {
       user = await this.PropertyManagerModel.findByPk(userId);
     }
 
-    let phone = user ? user.telCode + user.tel : null;
-
-    const accessToken = await authService.getAuthTokenMonify();
-    const body = {
-      nin: nin,
-    };
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
 
     try {
-      /*
-      const response = await axios.post(
-        `${serverConfig.MONNIFY_BASE_URL}/api/v1/vas/nin-details`,
-        body,
+      // Call Fidopoint /nin/initiate — Fidopoint automatically sends OTP to the NIN-linked phone
+      const fidopointResponse = await axios.post(
+        `${serverConfig.FIDOPOINT_BASE_URL}/nin/initiate`,
+        {
+          number: nin,
+          type: "NIN",
+          async: false,
+        },
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            "x-api-key": serverConfig.FIDOPOINT_API_KEY,
           },
         }
       );
-*/
-      //  const phone = response.data.responseBody.mobileNumber;
 
-      authService.sendNINVerificationCode(phone, userId, role);
+      const identityId = fidopointResponse.data?.data?.data?._id;
+
+      if (!identityId) {
+        throw new BadRequestError("Failed to initiate NIN verification. No identityId returned.");
+      }
+
+      // Store identityId in EmailandTelValidation for later OTP confirmation
+      var keyExpirationMillisecondsFromEpoch =
+        new Date().getTime() + 30 * 60 * 1000;
+
+      await this.EmailandTelValidationModel.upsert(
+        {
+          userId,
+          type: "nin",
+          validateFor: role,
+          identityId,
+          verificationCode: null,
+          expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
+        },
+        {
+          where: { userId, validateFor: role },
+        }
+      );
+
+      console.log(`[Fidopoint] NIN initiation successful. identityId: ${identityId}`);
+      return { identityId };
     } catch (error) {
-      console.log("error monify");
-
-      console.log(error);
-
-      console.log(error?.response?.data);
-      throw new SystemError(error.name, error?.response?.data?.error);
+      console.log("[Fidopoint] Error initiating NIN verification:");
+      console.log(error?.response?.data || error);
+      throw new SystemError(
+        error.name,
+        error?.response?.data?.message || error?.response?.data?.error || error.message
+      );
     }
   }
 

@@ -723,6 +723,11 @@ class AuthRoutes extends AuthController {
       this.validateTransactionHash,
       this.authorizeTransfer,
     );
+
+    // ── Fidopoint NIN Webhook ──────────────────────────────────────────────────
+    // Public endpoint — no auth token required. Fidopoint calls this after
+    // an identity verification completes.  Always responds with 200.
+    this.router.post("/nin-webhook", this.ninWebhook);
   }
 }
 

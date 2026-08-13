@@ -35,7 +35,11 @@ import {
       },
       verificationCode: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+      },
+      identityId: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       expiresIn: {
         type: DataTypes.DATE,

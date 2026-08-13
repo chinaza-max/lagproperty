@@ -1012,13 +1012,18 @@ export default class UserController {
 
       let my_bj = {
         ...data,
+        userId: req.user.id,
+        role: req.user.role,
       };
 
-      await userService.handleValidateNIN(my_bj);
+      const result = await userService.handleValidateNIN(my_bj);
 
       return res.status(200).json({
         status: 200,
-        message: "opt has been sent to the number attached to the nin",
+        message: "OTP has been sent to the phone number linked to this NIN",
+        data: {
+          identityId: result.identityId,
+        },
       });
     } catch (error) {
       next(error);

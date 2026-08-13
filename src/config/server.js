@@ -5,7 +5,7 @@ config();
 class ServerConfig {
   NODE_ENV = process.env.NODE_ENV;
   PORT = process.env.PORT;
-  DOMAIN = process.env.DOMAIN;
+  DOMAIN = process.env.DOMAIN || "https://app.dianetechnologies.com";
   MONNIFY_CLIENT_SECRET = process.env.MONNIFY_CLIENT_SECRET;
   MONNIFY_IP = process.env.MONNIFY_IP;
   MONNIFY_BASE_URL = process.env.MONNIFY_BASE_URL;
@@ -45,6 +45,10 @@ class ServerConfig {
   SMS_USER_NAME = process.env.SMS_USER_NAME;
   SMS_PASSWORD = process.env.SMS_PASSWORD;
   SMS_ID = process.env.SMS_ID;
+
+  FIDOPOINT_BASE_URL =
+    process.env.FIDOPOINT_BASE_URL || "http://localhost:3000/api/v1/identity";
+  FIDOPOINT_API_KEY = process.env.FIDOPOINT_API_KEY;
 }
 
 export default new ServerConfig();

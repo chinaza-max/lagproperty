@@ -676,6 +676,24 @@ export default class AuthenticationController {
       res.status(500).send("An unexpected error occurred");
     }
   };
+
+  /**
+   * POST /api/v1/auth/nin-webhook
+   * Receives asynchronous NIN verification results from Fidopoint.
+   */
+  async ninWebhook(req, res, next) {
+    try {
+      const payload = req.body;
+      console.log("[Fidopoint Webhook] Received payload:", JSON.stringify(payload, null, 2));
+      await authService.handleNINWebhook(payload);
+      // Always acknowledge with 200 so Fidopoint doesn't retry
+      return res.status(200).json({ received: true });
+    } catch (error) {
+      console.error("[Fidopoint Webhook] Error:", error);
+      // Still return 200 to prevent Fidopoint from retrying endlessly
+      return res.status(200).json({ received: true });
+    }
+  }
 }
 
 /*this.sendEmailVerificationCode
