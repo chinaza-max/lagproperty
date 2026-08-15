@@ -27,13 +27,20 @@ class MailService {
 
     if (serverConfig.NODE_ENV === "production") {
       filePath = `/home/fbyteamschedule/public_html/fby-security-api/src/resources/mailTemplates/${options.templateName}.html`;
-    } else if (serverConfig.NODE_ENV === "development") {
+      if (!fs.existsSync(filePath)) {
+        filePath = `./src/resources/mailTemplates/${options.templateName}.html`;
+      }
+    } else {
+      filePath = `./src/resources/mailTemplates/${options.templateName}.html`;
+    }
+
+    if (!fs.existsSync(filePath)) {
       filePath = `./src/resources/mailTemplates/${options.templateName}.html`;
     }
 
     const source = fs.readFileSync(filePath, "utf-8").toString();
     const template = Handlebars.compile(source);
-    const html = template(options.variables);
+    const html = template(options.variables || {});
 
     const mailData = {
       from: `${options.from ? options.from : serverConfig.EMAIL_SENDER} <${

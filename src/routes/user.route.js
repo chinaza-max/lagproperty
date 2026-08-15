@@ -3630,8 +3630,244 @@
 
 import { Router } from "express";
 import UserController from "../controllers/user/user.controller.js";
+import complaintController from "../controllers/complaint.controller.js";
 import uploadHandler from "../middlewares/upload.middleware.js";
 
+/**
+ * @swagger
+ * /user/fcm-token:
+ *   patch:
+ *     summary: Update Firebase FCM Token for logged-in user (Tenant or Landlord/Agent)
+ *     description: Updates the FCM token stored for push notifications on the authenticated user's account.
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fcmToken
+ *             properties:
+ *               fcmToken:
+ *                 type: string
+ *                 description: The FCM registration token obtained from Firebase Client SDK
+ *                 example: "eK3xP9...fcm_token_string"
+ *     responses:
+ *       200:
+ *         description: FCM push token updated successfully
+ *       400:
+ *         description: Bad request, missing fcmToken
+ *       401:
+ *         description: Unauthorized
+ */
+
+/**
+ * @swagger
+ * /user/complaints/create:
+ *   post:
+ *     summary: Report/Complain about an Agent, Landlord, or Property
+ *     description: File a report against an agent, landlord, or property with category, subject, description, and optional file attachments.
+ *     tags:
+ *       - User Complaints & Support Chat
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - subject
+ *               - description
+ *             properties:
+ *               reportedAgentOrLandlordId:
+ *                 type: integer
+ *                 description: ID of the PropertyManager (agent/landlord) being reported
+ *                 example: 5
+ *               buildingId:
+ *                 type: integer
+ *                 description: ID of building/property involved if applicable
+ *                 example: 12
+ *               category:
+ *                 type: string
+ *                 description: Report category (e.g. fraud, harassment, property_damage, illegal_eviction, general)
+ *                 example: "fraud"
+ *               subject:
+ *                 type: string
+ *                 example: "Agent collected inspection fee and disappeared"
+ *               description:
+ *                 type: string
+ *                 example: "I transferred N50,000 for inspection fee on Monday but the agent blocked my phone calls."
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Select up to 10 image/document files to attach to report
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - subject
+ *               - description
+ *             properties:
+ *               reportedAgentOrLandlordId:
+ *                 type: integer
+ *                 example: 5
+ *               buildingId:
+ *                 type: integer
+ *                 example: 12
+ *               category:
+ *                 type: string
+ *                 example: "fraud"
+ *               subject:
+ *                 type: string
+ *                 example: "Agent collected inspection fee and disappeared"
+ *               description:
+ *                 type: string
+ *                 example: "I transferred N50,000 for inspection fee on Monday but the agent blocked my phone calls."
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["https://res.cloudinary.com/example/receipt.jpg"]
+ *     responses:
+ *       201:
+ *         description: Report/Complaint ticket created successfully.
+ *       400:
+ *         description: Missing required fields or validation error.
+ */
+
+/**
+ * @swagger
+ * /user/complaints/my-complaints:
+ *   get:
+ *     summary: Get list of complaints filed by current user
+ *     description: Retrieve paginated complaint tickets filed by the logged-in user.
+ *     tags:
+ *       - User Complaints & Support Chat
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, in_progress, resolved, dismissed]
+ *         description: Filter by complaint ticket status
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Paginated list of complaints filed by user.
+ */
+
+/**
+ * @swagger
+ * /user/complaints/{id}:
+ *   get:
+ *     summary: View detailed complaint ticket & complete chat thread
+ *     description: Detailed ticket view containing ticket status, reported manager details, building details, and complete message thread.
+ *     tags:
+ *       - User Complaints & Support Chat
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Unique Complaint Ticket ID
+ *     responses:
+ *       200:
+ *         description: Complaint ticket details and message thread.
+ *       404:
+ *         description: Complaint ticket not found.
+ */
+
+/**
+ * @swagger
+ * /user/complaints/{id}/messages:
+ *   post:
+ *     summary: Post a reply message in complaint chat thread
+ *     description: Post a reply in the 2-way support chat thread with optional file attachments.
+ *     tags:
+ *       - User Complaints & Support Chat
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Unique Complaint Ticket ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: "Here is the payment receipt screenshot proof."
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Upload up to 10 image or document attachments
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: "Here is the payment receipt screenshot proof."
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["https://res.cloudinary.com/example/receipt2.jpg"]
+ *     responses:
+ *       201:
+ *         description: Message reply posted successfully to complaint thread.
+ *       400:
+ *         description: Message content is required.
+ */
+
+/**
+ * @swagger
+ * /user/notification-events:
+ *   get:
+ *     summary: Fetch system notification event dictionary mapper list
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returns dictionary of all push notification events for frontend integration.
+ */
 class UserRoutes extends UserController {
   constructor() {
     super();
@@ -3647,6 +3883,17 @@ class UserRoutes extends UserController {
     );
 
     this.router.post("/updateNotifyBuilding", this.updateNotifyBuilding);
+    this.router.patch("/fcm-token", this.updateFcmToken);
+    this.router.post("/updateFcmToken", this.updateFcmToken);
+
+    // Complaint & Support Chat Routes
+    this.router.post("/complaints/create", uploadHandler.image.array("attachments", 10), complaintController.createComplaint);
+    this.router.get("/complaints/my-complaints", complaintController.getUserComplaints);
+    this.router.get("/complaints/:id", complaintController.getComplaintDetailsUser);
+    this.router.post("/complaints/:id/messages", uploadHandler.image.array("attachments", 10), complaintController.addUserMessage);
+
+    // Notification Event Mapper Dictionary Endpoint
+    this.router.get("/notification-events", complaintController.getNotificationEvents);
 
     /* this.router.post("/listBuilding",uploadHandler.image.fields([
       { name: 'bedroomSizeImage', maxCount: 1 }, 

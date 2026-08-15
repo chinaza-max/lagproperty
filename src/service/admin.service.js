@@ -17,6 +17,10 @@ import {
 import { NotFoundError, BadRequestError, ConflictError } from "../errors/index.js";
 import { getPaginationParams, formatPaginatedResponse } from "../utils/pagination.util.js";
 
+import mailService from "./mail.service.js";
+import serverConfig from "../config/server.js";
+import { sendBatchedPushNotifications } from "../config/firebase.js";
+
 class AdminService {
   /**
    * Create a new Admin with designated Role & Privilege
@@ -51,10 +55,80 @@ class AdminService {
       isDeleted: false,
     });
 
+    // Send email with login credentials
+    try {
+      await mailService.sendMail({
+        to: emailAddress.toLowerCase().trim(),
+        subject: "Your Admin Account Credentials - LagProperty",
+        templateName: "adminCredentials",
+        variables: {
+          firstName,
+          lastName,
+          emailAddress: emailAddress.toLowerCase().trim(),
+          password: password, // Raw password before hashing
+          role: newAdmin.role,
+          privilege: newAdmin.privilege,
+          loginUrl: process.env.ADMIN_PORTAL_URL || `${serverConfig.DOMAIN}/admin`,
+        },
+      });
+    } catch (mailErr) {
+      console.error("[AdminService] Failed to send admin credential email:", mailErr.message);
+    }
+
     const adminResponse = newAdmin.toJSON();
     delete adminResponse.password;
 
     return adminResponse;
+  }
+
+  /**
+   * Delete an Admin user account (soft delete)
+   */
+  async deleteAdmin(adminId, performingAdminId) {
+    if (performingAdminId && String(adminId) === String(performingAdminId)) {
+      throw new BadRequestError("You cannot delete your own admin account.");
+    }
+
+    const admin = await Admin.findOne({
+      where: { id: adminId, isDeleted: false },
+    });
+
+    if (!admin) {
+      throw new NotFoundError("Admin account not found.");
+    }
+
+    await admin.update({
+      isDeleted: true,
+      disableAccount: true,
+    });
+
+    return {
+      id: admin.id,
+      emailAddress: admin.emailAddress,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      isDeleted: true,
+    };
+  }
+
+  /**
+   * Update Admin FCM Token for push notifications
+   */
+  async updateAdminFcmToken(adminId, fcmToken) {
+    if (!fcmToken || typeof fcmToken !== "string" || !fcmToken.trim()) {
+      throw new BadRequestError("fcmToken is required.");
+    }
+
+    const admin = await Admin.findOne({
+      where: { id: adminId, isDeleted: false },
+    });
+
+    if (!admin) {
+      throw new NotFoundError("Admin account not found.");
+    }
+
+    await admin.update({ fcmToken: fcmToken.trim() });
+    return { id: admin.id, fcmTokenUpdated: true };
   }
 
   /**
@@ -122,6 +196,133 @@ class AdminService {
     await admin.update({
       disableAccount: typeof disableAccount === "boolean" ? disableAccount : !admin.disableAccount,
     });
+
+    const response = admin.toJSON();
+    delete response.password;
+    return response;
+  }
+
+  /**
+   * Logged-in admin changes their own password
+   */
+  async changeAdminPassword(adminId, passwordData) {
+    const { oldPassword, newPassword } = passwordData;
+
+    if (!oldPassword || !newPassword) {
+      throw new BadRequestError("Both oldPassword and newPassword are required.");
+    }
+
+    if (newPassword.length < 6) {
+      throw new BadRequestError("New password must be at least 6 characters long.");
+    }
+
+    const admin = await Admin.findOne({
+      where: { id: adminId, isDeleted: false },
+    });
+
+    if (!admin) {
+      throw new NotFoundError("Admin account not found.");
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, admin.password);
+    if (!isMatch) {
+      throw new BadRequestError("Incorrect current password.");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await admin.update({ password: hashedPassword });
+
+    const response = admin.toJSON();
+    delete response.password;
+    return response;
+  }
+
+  /**
+   * Super Admin resets password for an Admin account
+   */
+  async resetAdminPassword(targetAdminId, bodyData) {
+    let { newPassword } = bodyData || {};
+
+    const admin = await Admin.findOne({
+      where: { id: targetAdminId, isDeleted: false },
+    });
+
+    if (!admin) {
+      throw new NotFoundError("Admin account not found.");
+    }
+
+    // Auto-generate secure password if not provided
+    if (!newPassword || !newPassword.trim()) {
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      newPassword = `Pass@${randomSuffix}`;
+    }
+
+    if (newPassword.length < 6) {
+      throw new BadRequestError("New password must be at least 6 characters long.");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await admin.update({ password: hashedPassword });
+
+    // Send password update notification email
+    try {
+      await mailService.sendMail({
+        to: admin.emailAddress,
+        subject: "Your Admin Password Has Been Reset - LagProperty",
+        templateName: "adminCredentials",
+        variables: {
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          emailAddress: admin.emailAddress,
+          password: newPassword,
+          role: admin.role,
+          privilege: admin.privilege,
+          loginUrl: process.env.ADMIN_PORTAL_URL || `${serverConfig.DOMAIN}/admin`,
+        },
+      });
+    } catch (mailErr) {
+      console.error("[AdminService] Failed to send password reset email:", mailErr.message);
+    }
+
+    const response = admin.toJSON();
+    delete response.password;
+    return {
+      admin: response,
+      newPassword, // Returned so Super Admin can copy directly
+    };
+  }
+
+  /**
+   * Update Admin Profile (name, email)
+   */
+  async updateAdminProfile(adminId, profileData) {
+    const { firstName, lastName, emailAddress } = profileData;
+
+    const admin = await Admin.findOne({
+      where: { id: adminId, isDeleted: false },
+    });
+
+    if (!admin) {
+      throw new NotFoundError("Admin account not found.");
+    }
+
+    const updatePayload = {};
+    if (firstName && firstName.trim()) updatePayload.firstName = firstName.trim();
+    if (lastName && lastName.trim()) updatePayload.lastName = lastName.trim();
+    if (emailAddress && emailAddress.trim()) {
+      const cleanEmail = emailAddress.toLowerCase().trim();
+      if (cleanEmail !== admin.emailAddress) {
+        const existing = await Admin.findOne({
+          where: { emailAddress: cleanEmail, isDeleted: false, id: { [Op.ne]: adminId } },
+        });
+        if (existing) {
+          throw new ConflictError("An admin with this email address already exists.");
+        }
+        updatePayload.emailAddress = cleanEmail;
+      }
+    }
+
+    await admin.update(updatePayload);
 
     const response = admin.toJSON();
     delete response.password;
@@ -1018,7 +1219,7 @@ class AdminService {
           disableAccount: false,
           isDeleted: false,
         },
-        attributes: ["id", "emailAddress", "firstName", "lastName", "type"],
+        attributes: ["id", "emailAddress", "firstName", "lastName", "type", "fcmToken"],
       });
     }
 
@@ -1029,11 +1230,12 @@ class AdminService {
           disableAccount: false,
           isDeleted: false,
         },
-        attributes: ["id", "emailAddress", "firstName", "lastName", "role"],
+        attributes: ["id", "emailAddress", "firstName", "lastName", "role", "fcmToken"],
       });
     }
 
     const notificationRecords = [];
+    const fcmTokens = [];
 
     // Create DB notifications for managers
     for (const manager of recipientManagers) {
@@ -1044,6 +1246,10 @@ class AdminService {
         message: title ? `${title}: ${message}` : message,
         buildingId: buildingId || null,
       });
+
+      if (manager.fcmToken && manager.fcmToken.trim()) {
+        fcmTokens.push(manager.fcmToken.trim());
+      }
     }
 
     // Create DB notifications for tenants
@@ -1055,10 +1261,30 @@ class AdminService {
         message: title ? `${title}: ${message}` : message,
         buildingId: buildingId || null,
       });
+
+      if (tenant.fcmToken && tenant.fcmToken.trim()) {
+        fcmTokens.push(tenant.fcmToken.trim());
+      }
     }
 
     if (notificationRecords.length > 0) {
       await Notification.bulkCreate(notificationRecords);
+    }
+
+    // Dispatch FCM Push Notifications in scheduled/throttled batches
+    let pushResult = { total: 0, successCount: 0, failureCount: 0 };
+    if (fcmTokens.length > 0) {
+      pushResult = await sendBatchedPushNotifications({
+        tokens: fcmTokens,
+        title: title || "System Announcement",
+        body: message,
+        data: {
+          buildingId: buildingId || "",
+          type: "system_announcement",
+        },
+        batchSize: 100,
+        delayMs: 200,
+      });
     }
 
     const totalRecipients = recipientManagers.length + recipientTenants.length;
@@ -1072,6 +1298,8 @@ class AdminService {
         landlordsAndAgentsCount: recipientManagers.length,
         tenantsCount: recipientTenants.length,
         notificationsDispatched: notificationRecords.length,
+        pushNotificationsSent: pushResult.successCount,
+        pushNotificationsFailed: pushResult.failureCount,
       },
     };
   }

@@ -119,6 +119,10 @@ import { Model, DataTypes } from "sequelize";
           allowNull: false,
           defaultValue:false
         },
+        fcmToken: {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
         isProfileCompleted: {
           type: DataTypes.BOOLEAN,
           allowNull: false,

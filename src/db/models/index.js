@@ -9,180 +9,176 @@ import Inspection, { init as initInspection } from "./inspection.js";
 import PasswordReset, { init as initPasswordReset } from "./passwordReset.js";
 import PropertyManager, { init as initPropertyManager } from "./propertyManager.js";
 import PropertyManagerReview, { init as initPropertyManagerReview } from "./propertyManagerReview.js";
-import Transaction , { init as initTransaction } from "./transaction.js";
-import RefundLog , { init as initRefundLog } from "./RefundLog.js";
-import QuitNotice , { init as initQuitNotice } from "./quitNotice.js";
-import Setting , { init as initSetting } from "./setting.js";
-import Notification , { init as initNotification } from "./notification.js";
-
-
-
-
+import Transaction, { init as initTransaction } from "./transaction.js";
+import RefundLog, { init as initRefundLog } from "./RefundLog.js";
+import QuitNotice, { init as initQuitNotice } from "./quitNotice.js";
+import Setting, { init as initSetting } from "./setting.js";
+import Notification, { init as initNotification } from "./notification.js";
+import Complaint, { init as initComplaint } from "./complaint.js";
+import ComplaintMessage, { init as initComplaintMessage } from "./complaintMessage.js";
 
 function associate() {
-
-
   ProspectiveTenant.hasMany(Tenant, {
-    foreignKey: 'prospectiveTenantId',
+    foreignKey: "prospectiveTenantId",
     as: "rentalhistory",
   });
   Tenant.belongsTo(ProspectiveTenant, {
-    foreignKey: 'prospectiveTenantId',
-  })
-
-  Chat.belongsTo(Chat, {
-    as: 'RepliedMessage',
-    foreignKey: 'repliedMessageId',
+    foreignKey: "prospectiveTenantId",
   });
 
-  
+  Chat.belongsTo(Chat, {
+    as: "RepliedMessage",
+    foreignKey: "repliedMessageId",
+  });
+
+  // Complaint & ComplaintMessage Associations
+  Complaint.hasMany(ComplaintMessage, {
+    foreignKey: "complaintId",
+    as: "messages",
+  });
+  ComplaintMessage.belongsTo(Complaint, {
+    foreignKey: "complaintId",
+    as: "complaint",
+  });
+
+  Complaint.belongsTo(PropertyManager, {
+    foreignKey: "reportedAgentOrLandlordId",
+    as: "reportedManager",
+  });
+  PropertyManager.hasMany(Complaint, {
+    foreignKey: "reportedAgentOrLandlordId",
+    as: "receivedComplaints",
+  });
+
+  Complaint.belongsTo(Building, {
+    foreignKey: "buildingId",
+    as: "building",
+  });
+
+  Complaint.belongsTo(Admin, {
+    foreignKey: "assignedAdminId",
+    as: "assignedAdmin",
+  });
 
   Tenant.hasMany(QuitNotice, {
-    foreignKey: 'tenantId',
+    foreignKey: "tenantId",
     as: "myQuitNotice",
   });
   QuitNotice.belongsTo(Tenant, {
-    foreignKey: 'tenantId',
-  })
-
-
-
+    foreignKey: "tenantId",
+  });
 
   PropertyManager.hasMany(QuitNotice, {
-    foreignKey: 'propertyManagerId',
+    foreignKey: "propertyManagerId",
     as: "ManagerQuitNotice",
   });
   QuitNotice.belongsTo(PropertyManager, {
-    foreignKey: 'propertyManagerId',
-  })
-
-
+    foreignKey: "propertyManagerId",
+  });
 
   Building.hasMany(QuitNotice, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingQuitNotice",
   });
   QuitNotice.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
+    foreignKey: "buildingId",
+  });
 
-
-
-  
   Building.hasMany(Notification, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingNotification",
   });
   Notification.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
-
+    foreignKey: "buildingId",
+  });
 
   Building.hasMany(TenantReview, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingReview",
   });
   TenantReview.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
-
-
-
-  ProspectiveTenant.hasMany(TenantReview, {
-    foreignKey: 'prospectiveTenantId',
-    as: "MyBuildingReview",
+    foreignKey: "buildingId",
   });
 
+  ProspectiveTenant.hasMany(TenantReview, {
+    foreignKey: "prospectiveTenantId",
+    as: "MyBuildingReview",
+  });
   TenantReview.belongsTo(ProspectiveTenant, {
-    foreignKey: 'prospectiveTenantId',
-  })
-
+    foreignKey: "prospectiveTenantId",
+  });
 
   Building.hasMany(Transaction, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingTransaction",
   });
   Transaction.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
-
+    foreignKey: "buildingId",
+  });
 
   PropertyManager.hasMany(PropertyManagerReview, {
-    foreignKey: 'propertyManagerId',
+    foreignKey: "propertyManagerId",
     as: "PropertyManagerReview",
   });
   PropertyManagerReview.belongsTo(PropertyManager, {
-    foreignKey: 'propertyManagerId',
-  })
-
+    foreignKey: "propertyManagerId",
+  });
 
   ProspectiveTenant.hasMany(PropertyManagerReview, {
-    foreignKey: 'prospectiveTenantId',
+    foreignKey: "prospectiveTenantId",
     as: "PropertyManagerReview",
   });
   PropertyManagerReview.belongsTo(ProspectiveTenant, {
-    foreignKey: 'prospectiveTenantId',
-  })
-
+    foreignKey: "prospectiveTenantId",
+  });
 
   ProspectiveTenant.hasMany(Inspection, {
-    foreignKey: 'prospectiveTenantId',
-    as: "MyInspection", 
+    foreignKey: "prospectiveTenantId",
+    as: "MyInspection",
   });
   Inspection.belongsTo(ProspectiveTenant, {
-    foreignKey: 'prospectiveTenantId',
-  })
+    foreignKey: "prospectiveTenantId",
+  });
 
   Building.hasMany(Inspection, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingInspection",
   });
   Inspection.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
-
+    foreignKey: "buildingId",
+  });
 
   Building.hasMany(RefundLog, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingRefundLog",
   });
   RefundLog.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
-
-
+    foreignKey: "buildingId",
+  });
 
   Building.hasMany(Tenant, {
-    foreignKey: 'buildingId',
+    foreignKey: "buildingId",
     as: "BuildingTenant",
   });
   Tenant.belongsTo(Building, {
-    foreignKey: 'buildingId',
-  })
+    foreignKey: "buildingId",
+  });
 
   PropertyManager.hasMany(Building, {
-    foreignKey: 'propertyManagerId',
+    foreignKey: "propertyManagerId",
     as: "propertyManagerBuilding",
   });
   Building.belongsTo(PropertyManager, {
-    foreignKey: 'propertyManagerId',
-  })
-
- 
-
-
-  //console.log(BusinessSpot.associations)
-  //console.log(UserDate.associations)
-
-  
+    foreignKey: "propertyManagerId",
+  });
 }
 
 async function authenticateConnection(connection) {
   try {
     await connection.authenticate();
-    console.log('Connection to database has been established successfully.');
+    console.log("Connection to database has been established successfully.");
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error("Unable to connect to the database:", error);
   }
 }
 
@@ -202,8 +198,10 @@ export {
   QuitNotice,
   Tenant,
   Setting,
-  Notification
-}
+  Notification,
+  Complaint,
+  ComplaintMessage,
+};
 
 export function init(connection) {
   initProspectiveTenant(connection);
@@ -211,18 +209,24 @@ export function init(connection) {
   initAdmin(connection);
   initBuilding(connection);
   initChat(connection);
-  initEmailandTelValidation(connection)
-  initInspection(connection)
-  initPasswordReset(connection)
-  initPropertyManager(connection)
-  initPropertyManagerReview(connection)
-  initTransaction(connection)
-  initTenant(connection)
-  initRefundLog(connection)
-  initQuitNotice(connection)
-  initSetting(connection)
-  initNotification(connection)
+  initEmailandTelValidation(connection);
+  initInspection(connection);
+  initPasswordReset(connection);
+  initPropertyManager(connection);
+  initPropertyManagerReview(connection);
+  initTransaction(connection);
+  initTenant(connection);
+  initRefundLog(connection);
+  initQuitNotice(connection);
+  initSetting(connection);
+  initNotification(connection);
+  initComplaint(connection);
+  initComplaintMessage(connection);
 
   associate();
-  authenticateConnection(connection)
+  authenticateConnection(connection);
+
+  // Sync Complaint tables safely
+  Complaint.sync().catch((err) => console.error("Complaint sync error:", err.message));
+  ComplaintMessage.sync().catch((err) => console.error("ComplaintMessage sync error:", err.message));
 }

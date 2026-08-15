@@ -48,6 +48,27 @@ export default class UserController {
     }
   }
 
+  async updateFcmToken(req, res, next) {
+    try {
+      const data = {
+        ...req.body,
+        userId: req.user.id,
+        role: req.user.role || req.user.type,
+      };
+
+      const result = await userService.handleUpdateFcmToken(data);
+
+      return res.status(200).json({
+        status: 200,
+        message: "FCM push notification token updated successfully.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
   /*
   
   async updatelistedBuilding(req, res, next) {

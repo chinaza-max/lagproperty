@@ -48,6 +48,10 @@ export function init(connection) {
         allowNull: false,
         defaultValue:false
       },
+      fcmToken: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       notificationAllowed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

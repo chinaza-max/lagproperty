@@ -53,7 +53,8 @@ import rbacMiddleware from "../middlewares/rbac.middleware.js";
  * @swagger
  * /analytics/housing-by-location:
  *   get:
- *     summary: Get property listing counts and agent/landlord distribution per location/area
+ *     summary: Get property listing counts and agent/landlord distribution per location/area inside city
+ *     description: Returns housing breakdown grouped by city & location area (e.g., Lekki, Ikeja, Victoria Island inside Lagos).
  *     tags: [Analytics Dashboard]
  *     security:
  *       - bearerAuth: []
@@ -62,12 +63,17 @@ import rbacMiddleware from "../middlewares/rbac.middleware.js";
  *         name: city
  *         schema:
  *           type: string
- *         description: Filter by city name
+ *         description: Filter by city name (e.g. Lagos)
  *       - in: query
- *         name: state
+ *         name: location
  *         schema:
  *           type: string
- *         description: Filter by state/location name
+ *         description: Filter by location/area name inside city (e.g. Lekki, Ikeja)
+ *       - in: query
+ *         name: propertyLocation
+ *         schema:
+ *           type: string
+ *         description: Filter by property location area name
  *       - in: query
  *         name: page
  *         schema:

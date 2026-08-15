@@ -74,6 +74,45 @@ class AdminController {
   }
 
   /**
+   * DELETE /api/v1/admin/:id
+   * Soft delete an admin user account
+   */
+  async deleteAdmin(req, res, next) {
+    try {
+      const performingAdminId = req.user ? req.user.id : null;
+      const result = await adminService.deleteAdmin(req.params.id, performingAdminId);
+      return res.status(200).json({
+        status: 200,
+        message: "Admin account deleted successfully.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      return next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/fcm-token
+   * Update FCM Token for requesting Admin
+   */
+  async updateFcmToken(req, res, next) {
+    try {
+      const adminId = req.user ? req.user.id : null;
+      const { fcmToken } = req.body;
+      const result = await adminService.updateAdminFcmToken(adminId, fcmToken);
+      return res.status(200).json({
+        status: 200,
+        message: "Admin FCM push notification token updated successfully.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      return next(error);
+    }
+  }
+
+  /**
    * POST /api/v1/admin/agents/:id/blacklist
    * Blacklist an agent and record reason
    */
@@ -308,6 +347,63 @@ class AdminController {
       return res.status(200).json({
         status: 200,
         message: "Targeted push notifications dispatched successfully.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      return next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/change-password
+   * Logged-in admin changes their own password
+   */
+  async changeAdminPassword(req, res, next) {
+    try {
+      const adminId = req.user.id;
+      const result = await adminService.changeAdminPassword(adminId, req.body);
+      return res.status(200).json({
+        status: 200,
+        message: "Your password has been changed successfully.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      return next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/:id/reset-password
+   * Super Admin resets any admin user's password
+   */
+  async resetAdminPassword(req, res, next) {
+    try {
+      const targetAdminId = req.params.id;
+      const result = await adminService.resetAdminPassword(targetAdminId, req.body);
+      return res.status(200).json({
+        status: 200,
+        message: "Admin password reset successfully. Notification email dispatched.",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      return next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/profile
+   * Admin updates their login profile (name, email)
+   */
+  async updateAdminProfile(req, res, next) {
+    try {
+      const adminId = req.user.id;
+      const result = await adminService.updateAdminProfile(adminId, req.body);
+      return res.status(200).json({
+        status: 200,
+        message: "Admin profile updated successfully.",
         data: result,
       });
     } catch (error) {

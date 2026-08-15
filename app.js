@@ -3,6 +3,7 @@ import cors from "cors";
 import routes from "./src/routes/index.route.js";
 import DB from "./src/db/index.js";
 import serverConfig from "./src/config/server.js";
+import firebaseService from "./src/config/firebase.js";
 import authService from "./src/service/auth.service.js";
 import systemMiddleware from "./src/middlewares/system.middleware.js";
 import path from "path";

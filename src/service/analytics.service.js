@@ -4,8 +4,6 @@ import {
   PropertyManager,
   Building,
   Transaction,
-  Tenant,
-  Inspection,
 } from "../db/models/index.js";
 import { NotFoundError, BadRequestError } from "../errors/index.js";
 import { getPaginationParams, formatPaginatedResponse } from "../utils/pagination.util.js";
@@ -39,7 +37,6 @@ class AnalyticsService {
     }
 
     if (!tenantUser && !managerUser) {
-      // Retry search across both if userType was specified but didn't match
       tenantUser = await ProspectiveTenant.findOne({
         where: { nin: nin.toString().trim(), isDeleted: false },
       });
@@ -54,46 +51,28 @@ class AnalyticsService {
       throw new NotFoundError(`No user found matching NIN: ${nin}`);
     }
 
-    // Process Tenant NIN Lookup
     if (tenantUser) {
-      const { count, rows: transactions } = await Transaction.findAndCountAll({
-        where: { userId: tenantUser.id, isDeleted: false },
-        include: [
-          {
-            model: Building,
-            attributes: ["id", "propertyPreference", "propertyLocation", "city", "address", "price"],
+      const [{ count, rows: transactions }, totalSpentResult] = await Promise.all([
+        Transaction.findAndCountAll({
+          where: { userId: tenantUser.id, isDeleted: false },
+          include: [
+            {
+              model: Building,
+              attributes: ["id", "propertyPreference", "propertyLocation", "city", "address", "price"],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+          limit: pageSize,
+          offset,
+        }),
+        Transaction.sum("amount", {
+          where: {
+            userId: tenantUser.id,
+            isDeleted: false,
+            paymentStatus: ["successful", "paid", "completed", "approved"],
           },
-        ],
-        order: [["createdAt", "DESC"]],
-        limit: pageSize,
-        offset,
-      });
-
-      // Calculate total amount spent by tenant
-      const totalSpentResult = await Transaction.sum("amount", {
-        where: {
-          userId: tenantUser.id,
-          isDeleted: false,
-          paymentStatus: ["successful", "paid", "completed", "approved"],
-        },
-      });
-
-      const totalSpent = totalSpentResult || 0;
-
-      const userProfile = {
-        id: tenantUser.id,
-        firstName: tenantUser.firstName,
-        lastName: tenantUser.lastName,
-        emailAddress: tenantUser.emailAddress,
-        tel: tenantUser.tel,
-        nin: tenantUser.nin,
-        isNINValid: tenantUser.isNINValid,
-        role: "tenant",
-        maritalStatus: tenantUser.maritalStatus,
-        gender: tenantUser.gender,
-        isProfileCompleted: tenantUser.isProfileCompleted,
-        disableAccount: tenantUser.disableAccount,
-      };
+        }),
+      ]);
 
       return formatPaginatedResponse({
         data: transactions,
@@ -101,9 +80,17 @@ class AnalyticsService {
         page: currentPage,
         limit: pageSize,
         extra: {
-          user: userProfile,
+          user: {
+            id: tenantUser.id,
+            firstName: tenantUser.firstName,
+            lastName: tenantUser.lastName,
+            emailAddress: tenantUser.emailAddress,
+            tel: tenantUser.tel,
+            nin: tenantUser.nin,
+            role: "tenant",
+          },
           summary: {
-            totalSpent,
+            totalSpent: totalSpentResult || 0,
             totalReceived: 0,
             transactionCount: count,
           },
@@ -111,72 +98,49 @@ class AnalyticsService {
       });
     }
 
-    // Process PropertyManager (Landlord or Agent) NIN Lookup
     if (managerUser) {
-      // Find all buildings belonging to this property manager
       const buildings = await Building.findAll({
         where: { propertyManagerId: managerUser.id, isDeleted: false },
         attributes: ["id"],
       });
-
       const buildingIds = buildings.map((b) => b.id);
 
       const transactionWhereClause = {
         isDeleted: false,
         [Op.or]: [
           { userId: managerUser.id },
-          buildingIds.length > 0 ? { buildingId: { [Op.in]: buildingIds } } : null,
-        ].filter(Boolean),
-      };
-
-      const { count, rows: transactions } = await Transaction.findAndCountAll({
-        where: transactionWhereClause,
-        include: [
-          {
-            model: Building,
-            attributes: ["id", "propertyPreference", "propertyLocation", "city", "address", "price"],
-          },
+          ...(buildingIds.length > 0 ? [{ buildingId: { [Op.in]: buildingIds } }] : []),
         ],
-        order: [["createdAt", "DESC"]],
-        limit: pageSize,
-        offset,
-      });
-
-      // Sum financial amounts received
-      const totalReceivedResult = await Transaction.sum("amount", {
-        where: {
-          ...transactionWhereClause,
-          paymentStatus: ["successful", "paid", "completed", "approved"],
-          transactionType: ["firstRent", "rent", "subsequentRent", "commission"],
-        },
-      });
-
-      const totalSpentResult = await Transaction.sum("amount", {
-        where: {
-          userId: managerUser.id,
-          isDeleted: false,
-          paymentStatus: ["successful", "paid", "completed", "approved"],
-        },
-      });
-
-      const userProfile = {
-        id: managerUser.id,
-        firstName: managerUser.firstName,
-        lastName: managerUser.lastName,
-        companyName: managerUser.companyName,
-        emailAddress: managerUser.emailAddress,
-        tel: managerUser.tel,
-        nin: managerUser.nin,
-        isNINValid: managerUser.isNINValid,
-        type: managerUser.type, // 'landLord' or 'agent'
-        role: managerUser.type === "agent" ? "agent" : "landlord",
-        state: managerUser.state,
-        lga: managerUser.lga,
-        isBlacklisted: managerUser.isBlacklisted || false,
-        blacklistReason: managerUser.blacklistReason || null,
-        blacklistedAt: managerUser.blacklistedAt || null,
-        disableAccount: managerUser.disableAccount,
       };
+
+      const [{ count, rows: transactions }, totalReceivedResult, totalSpentResult] = await Promise.all([
+        Transaction.findAndCountAll({
+          where: transactionWhereClause,
+          include: [
+            {
+              model: Building,
+              attributes: ["id", "propertyPreference", "propertyLocation", "city", "address", "price"],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+          limit: pageSize,
+          offset,
+        }),
+        Transaction.sum("amount", {
+          where: {
+            ...transactionWhereClause,
+            paymentStatus: ["successful", "paid", "completed", "approved"],
+            transactionType: ["firstRent", "rent", "subsequentRent", "commission"],
+          },
+        }),
+        Transaction.sum("amount", {
+          where: {
+            userId: managerUser.id,
+            isDeleted: false,
+            paymentStatus: ["successful", "paid", "completed", "approved"],
+          },
+        }),
+      ]);
 
       return formatPaginatedResponse({
         data: transactions,
@@ -184,7 +148,18 @@ class AnalyticsService {
         page: currentPage,
         limit: pageSize,
         extra: {
-          user: userProfile,
+          user: {
+            id: managerUser.id,
+            firstName: managerUser.firstName,
+            lastName: managerUser.lastName,
+            companyName: managerUser.companyName,
+            emailAddress: managerUser.emailAddress,
+            tel: managerUser.tel,
+            nin: managerUser.nin,
+            type: managerUser.type,
+            role: managerUser.type === "agent" ? "agent" : "landlord",
+            isBlacklisted: managerUser.isBlacklisted || false,
+          },
           summary: {
             totalReceived: totalReceivedResult || 0,
             totalSpent: totalSpentResult || 0,
@@ -197,168 +172,177 @@ class AnalyticsService {
   }
 
   /**
-   * Area/Location Housing & Entity Analytics
-   * Shows houses listed per area, vacant/occupied counts, and number of agents/landlords operating per area
+   * Area/Location Housing Analytics — HIGHLY OPTIMIZED (single batch query, no N+1)
+   * propertyLocation = area/neighborhood inside a city (e.g. Lekki, Ikeja, Maryland)
    */
   async getHousingByLocationAnalytics(queryParams) {
-    const { city, state, page, limit } = queryParams;
-    const { limit: pageSize, offset, page: currentPage } = getPaginationParams({ page, limit });
+    const { city, location, propertyLocation, state, page, limit } = queryParams;
+
+    // Cap max limit to 50 to prevent memory overload
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
+    const safePage = Math.max(parseInt(page) || 1, 1);
+
+    const { limit: pageSize, offset, page: currentPage } = getPaginationParams({ page: safePage, limit: safeLimit });
 
     const whereClause = { isDeleted: false };
-    if (city) {
-      whereClause.city = { [Op.like]: `%${city}%` };
-    }
-    if (state) {
-      whereClause.propertyLocation = { [Op.like]: `%${state}%` };
+    if (city && String(city).trim() && String(city).trim() !== "1") {
+      whereClause.city = { [Op.like]: `%${String(city).trim()}%` };
     }
 
-    // Find location groups from Buildings table
+    const locationFilter = location || propertyLocation || state;
+    // Ignore dummy placeholder parameters like "1" or numbers passed by frontend components
+    if (locationFilter && String(locationFilter).trim() && String(locationFilter).trim() !== "1" && isNaN(Number(locationFilter))) {
+      whereClause.propertyLocation = { [Op.like]: `%${String(locationFilter).trim()}%` };
+    }
+
+    // STEP 1: Aggregated query — counts per city + location group
     const locationStatsRaw = await Building.findAll({
       attributes: [
         "city",
         "propertyLocation",
         [Sequelize.fn("COUNT", Sequelize.col("Building.id")), "totalBuildings"],
-        [
-          Sequelize.fn(
-            "SUM",
-            Sequelize.literal("CASE WHEN availability = 'vacant' THEN 1 ELSE 0 END")
-          ),
-          "vacantCount",
-        ],
-        [
-          Sequelize.fn(
-            "SUM",
-            Sequelize.literal("CASE WHEN availability = 'occupied' THEN 1 ELSE 0 END")
-          ),
-          "occupiedCount",
-        ],
-        [
-          Sequelize.fn(
-            "SUM",
-            Sequelize.literal("CASE WHEN availability = 'booked' THEN 1 ELSE 0 END")
-          ),
-          "bookedCount",
-        ],
-        [
-          Sequelize.fn(
-            "COUNT",
-            Sequelize.fn("DISTINCT", Sequelize.col("Building.propertyManagerId"))
-          ),
-          "totalPropertyManagers",
-        ],
+        [Sequelize.fn("SUM", Sequelize.literal("CASE WHEN availability = 'vacant' THEN 1 ELSE 0 END")), "vacantCount"],
+        [Sequelize.fn("SUM", Sequelize.literal("CASE WHEN availability = 'occupied' THEN 1 ELSE 0 END")), "occupiedCount"],
+        [Sequelize.fn("SUM", Sequelize.literal("CASE WHEN availability = 'booked' THEN 1 ELSE 0 END")), "bookedCount"],
+        [Sequelize.fn("COUNT", Sequelize.fn("DISTINCT", Sequelize.col("Building.propertyManagerId"))), "totalPropertyManagers"],
       ],
       where: whereClause,
       group: ["city", "propertyLocation"],
       raw: true,
     });
 
-    const totalLocations = locationStatsRaw.length;
-    const paginatedLocations = locationStatsRaw.slice(offset, offset + pageSize);
+    if (!locationStatsRaw || locationStatsRaw.length === 0) {
+      return formatPaginatedResponse({ data: [], totalItems: 0, page: 1, limit: pageSize });
+    }
 
-    // Enhance each location with distinct agent and landlord breakdown
-    const enrichedLocations = await Promise.all(
-      paginatedLocations.map(async (item) => {
-        // Find buildings in this city
-        const buildingsInArea = await Building.findAll({
-          where: {
-            city: item.city,
-            isDeleted: false,
-          },
-          attributes: ["propertyManagerId"],
+    const totalLocations = locationStatsRaw.length;
+    // Fallback to page 1 if requested page offset exceeds total available items
+    const actualOffset = offset >= totalLocations ? 0 : offset;
+    const actualPage = offset >= totalLocations ? 1 : currentPage;
+
+    const paginatedLocations = locationStatsRaw.slice(actualOffset, actualOffset + pageSize);
+
+    // STEP 2: Batch query property managers for the current page
+    const pageCities = paginatedLocations.map((r) => r.city).filter(Boolean);
+    const pageLocations = paginatedLocations.map((r) => r.propertyLocation).filter(Boolean);
+
+    let pmBreakdownMap = {};
+
+    if (pageCities.length > 0) {
+      const buildingsForPage = await Building.findAll({
+        where: {
+          city: { [Op.in]: pageCities },
+          propertyLocation: { [Op.in]: pageLocations },
+          isDeleted: false,
+        },
+        attributes: ["city", "propertyLocation", "propertyManagerId"],
+        raw: true,
+      });
+
+      const pmIdsByArea = {};
+      for (const b of buildingsForPage) {
+        const key = `${b.city}|${b.propertyLocation}`;
+        if (!pmIdsByArea[key]) pmIdsByArea[key] = new Set();
+        if (b.propertyManagerId) pmIdsByArea[key].add(b.propertyManagerId);
+      }
+
+      const allPmIds = [...new Set(buildingsForPage.map((b) => b.propertyManagerId).filter(Boolean))];
+
+      if (allPmIds.length > 0) {
+        const managers = await PropertyManager.findAll({
+          where: { id: { [Op.in]: allPmIds }, isDeleted: false },
+          attributes: ["id", "type"],
           raw: true,
         });
 
-        const pmIds = Array.from(new Set(buildingsInArea.map((b) => b.propertyManagerId)));
-
-        let agentCount = 0;
-        let landlordCount = 0;
-
-        if (pmIds.length > 0) {
-          agentCount = await PropertyManager.count({
-            where: {
-              id: { [Op.in]: pmIds },
-              type: "agent",
-              isDeleted: false,
-            },
-          });
-
-          landlordCount = await PropertyManager.count({
-            where: {
-              id: { [Op.in]: pmIds },
-              type: "landLord",
-              isDeleted: false,
-            },
-          });
+        const managerTypeMap = {};
+        for (const m of managers) {
+          managerTypeMap[m.id] = m.type;
         }
 
-        return {
-          city: item.city,
-          state: item.propertyLocation,
-          totalBuildings: parseInt(item.totalBuildings, 10) || 0,
-          vacantCount: parseInt(item.vacantCount, 10) || 0,
-          occupiedCount: parseInt(item.occupiedCount, 10) || 0,
-          bookedCount: parseInt(item.bookedCount, 10) || 0,
-          totalPropertyManagers: parseInt(item.totalPropertyManagers, 10) || 0,
-          agentCount,
-          landlordCount,
-        };
-      })
-    );
+        for (const [key, pmIds] of Object.entries(pmIdsByArea)) {
+          let agentCount = 0;
+          let landlordCount = 0;
+          for (const pmId of pmIds) {
+            if (managerTypeMap[pmId] === "agent") agentCount++;
+            else if (managerTypeMap[pmId] === "landLord") landlordCount++;
+          }
+          pmBreakdownMap[key] = { agentCount, landlordCount };
+        }
+      }
+    }
+
+    // STEP 3: Assemble final optimized response
+    const enrichedLocations = paginatedLocations.map((item) => {
+      const key = `${item.city}|${item.propertyLocation}`;
+      const { agentCount = 0, landlordCount = 0 } = pmBreakdownMap[key] || {};
+      return {
+        city: item.city || "",
+        location: item.propertyLocation || "",
+        propertyLocation: item.propertyLocation || "",
+        totalBuildings: parseInt(item.totalBuildings, 10) || 0,
+        vacantCount: parseInt(item.vacantCount, 10) || 0,
+        occupiedCount: parseInt(item.occupiedCount, 10) || 0,
+        bookedCount: parseInt(item.bookedCount, 10) || 0,
+        totalPropertyManagers: parseInt(item.totalPropertyManagers, 10) || 0,
+        agentCount,
+        landlordCount,
+      };
+    });
 
     return formatPaginatedResponse({
       data: enrichedLocations,
       totalItems: totalLocations,
-      page: currentPage,
+      page: actualPage,
       limit: pageSize,
     });
   }
 
   /**
-   * System Overview Analytics Dashboard KPI stats
+   * System Overview Analytics Dashboard KPI stats — OPTIMIZED (all queries in parallel)
    */
   async getDashboardOverviewAnalytics() {
-    const totalTenants = await ProspectiveTenant.count({ where: { isDeleted: false } });
-    const totalLandlords = await PropertyManager.count({
-      where: { type: "landLord", isDeleted: false },
-    });
-    const totalAgents = await PropertyManager.count({
-      where: { type: "agent", isDeleted: false },
-    });
-    const totalBlacklistedAgents = await PropertyManager.count({
-      where: { isBlacklisted: true, isDeleted: false },
-    });
-
-    const totalBuildings = await Building.count({ where: { isDeleted: false } });
-    const vacantBuildings = await Building.count({
-      where: { availability: "vacant", isDeleted: false },
-    });
-    const occupiedBuildings = await Building.count({
-      where: { availability: "occupied", isDeleted: false },
-    });
-    const bookedBuildings = await Building.count({
-      where: { availability: "booked", isDeleted: false },
-    });
-
-    const totalTransactions = await Transaction.count({ where: { isDeleted: false } });
-    const totalVolumeResult = await Transaction.sum("amount", {
-      where: { paymentStatus: ["successful", "paid", "completed", "approved"], isDeleted: false },
-    });
+    const [
+      totalTenants,
+      totalLandlords,
+      totalAgents,
+      totalBlacklistedAgents,
+      totalBuildings,
+      vacantBuildings,
+      occupiedBuildings,
+      bookedBuildings,
+      totalTransactions,
+      totalVolumeResult,
+    ] = await Promise.all([
+      ProspectiveTenant.count({ where: { isDeleted: false } }).catch(() => 0),
+      PropertyManager.count({ where: { type: "landLord", isDeleted: false } }).catch(() => 0),
+      PropertyManager.count({ where: { type: "agent", isDeleted: false } }).catch(() => 0),
+      PropertyManager.count({ where: { isBlacklisted: true, isDeleted: false } }).catch(() => 0),
+      Building.count({ where: { isDeleted: false } }).catch(() => 0),
+      Building.count({ where: { availability: "vacant", isDeleted: false } }).catch(() => 0),
+      Building.count({ where: { availability: "occupied", isDeleted: false } }).catch(() => 0),
+      Building.count({ where: { availability: "booked", isDeleted: false } }).catch(() => 0),
+      Transaction.count({ where: { isDeleted: false } }).catch(() => 0),
+      Transaction.sum("amount", {
+        where: { paymentStatus: ["successful", "paid", "completed", "approved"], isDeleted: false },
+      }).catch(() => 0),
+    ]);
 
     return {
       users: {
-        totalTenants,
-        totalLandlords,
-        totalAgents,
-        totalBlacklistedAgents,
+        totalTenants: totalTenants || 0,
+        totalLandlords: totalLandlords || 0,
+        totalAgents: totalAgents || 0,
+        totalBlacklistedAgents: totalBlacklistedAgents || 0,
       },
       properties: {
-        totalBuildings,
-        vacantBuildings,
-        occupiedBuildings,
-        bookedBuildings,
+        totalBuildings: totalBuildings || 0,
+        vacantBuildings: vacantBuildings || 0,
+        occupiedBuildings: occupiedBuildings || 0,
+        bookedBuildings: bookedBuildings || 0,
       },
       financials: {
-        totalTransactions,
+        totalTransactions: totalTransactions || 0,
         totalTransactionVolume: totalVolumeResult || 0,
       },
     };
@@ -382,7 +366,7 @@ class AnalyticsService {
     });
 
     return distribution.map((item) => ({
-      propertyType: item.propertyPreference,
+      propertyType: item.propertyPreference || "Unspecified",
       count: parseInt(item.count, 10) || 0,
       averagePrice: Math.round(parseFloat(item.averagePrice) || 0),
       minPrice: parseInt(item.minPrice, 10) || 0,

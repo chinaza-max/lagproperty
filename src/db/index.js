@@ -2,18 +2,14 @@ import { Sequelize } from "sequelize";
 import serverConfig from "../config/server.js";
 import { init as initModels } from "./models/index.js";
 
-import fs from "fs";
-
 class DB {
   constructor() {
-    this.sequelize;
+    this.sequelize = null;
     this.models = null;
   }
 
   async connectDB() {
     const options = {
-      //logging: console.log,
-      //logging: false,
       dialect: "mysql",
       host: serverConfig.DB_HOST,
       username: serverConfig.DB_USERNAME,
@@ -23,57 +19,32 @@ class DB {
       logQueryParameters: true,
     };
 
-    console.log(options)
+    console.log(options);
 
     this.sequelize = new Sequelize(
       serverConfig.DB_NAME,
       serverConfig.DB_USERNAME,
       serverConfig.DB_PASSWORD,
-      options,
+      options
     );
 
     this.models = initModels(this.sequelize);
+    await this.syncMissingColumns();
+  }
 
-    if (serverConfig.NODE_ENV === "development") {
-      // await this.sequelize.sync({ alter: true });
-      // await this.sequelize.sync({ force: true });
+  async syncMissingColumns() {
+    const tables = ["Admin", "PropertyManager", "ProspectiveTenant"];
+    for (const table of tables) {
+      try {
+        const [results] = await this.sequelize.query(`SHOW COLUMNS FROM \`${table}\` LIKE 'fcmToken';`);
+        if (!results || results.length === 0) {
+          await this.sequelize.query(`ALTER TABLE \`${table}\` ADD COLUMN \`fcmToken\` TEXT NULL;`);
+          console.log(`[DB Migration] Successfully added missing column 'fcmToken' to '${table}' table.`);
+        }
+      } catch (err) {
+        console.error(`[DB Migration Notice] Column check for '${table}':`, err.message);
+      }
     }
-
-    /*     
-        (async () => {
-          try {  
-            const [results] = await this.sequelize.query('SHOW TABLES;');
-            const tables = results.map(result => result.Tables_in_your_database_name);
-            console.log('List of tables:', tables);
-          } catch (error) {
-            console.error('Error retrieving tables:', error);
-          } finally {
-            await this.sequelize.close();
-          }
-        })();
-*/
-    /*
-        const disableForeignKeyChecks = 'SET foreign_key_checks = 0;';
-const dropTable = 'DROP TABLE IF EXISTS WishList;';
-const enableForeignKeyChecks = 'SET foreign_key_checks = 1;';
-
-// Execute SQL commands
-this.sequelize.query(disableForeignKeyChecks)
-  .then(() => this.sequelize.query(dropTable))
-  .then(() => this.sequelize.query(enableForeignKeyChecks))
-  .then(() => {
-    console.log('Table dropped successfully.');
-    console.log('Table dropped successfully.');
-    console.log('Table dropped successfully.');
-    console.log('Table dropped successfully.');
-    console.log('Table dropped successfully.');
-    console.log('Table dropped successfully.');
-
-  })
-  .catch((error) => {
-    console.error('Error dropping table:', error);
-  });
-*/
   }
 }
 

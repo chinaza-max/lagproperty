@@ -385,6 +385,45 @@ class UserService {
     }
   }
 
+  async handleUpdateFcmToken(data) {
+    const { userId, role, fcmToken } = data;
+
+    if (!fcmToken || typeof fcmToken !== "string" || !fcmToken.trim()) {
+      throw new BadRequestError("fcmToken is required.");
+    }
+
+    const cleanToken = fcmToken.trim();
+
+    if (role === "list" || role === "agent" || role === "landLord") {
+      const manager = await this.PropertyManagerModel.findOne({
+        where: { id: userId, isDeleted: false },
+      });
+      if (!manager) {
+        throw new NotFoundError("Landlord/Agent user not found.");
+      }
+      await manager.update({ fcmToken: cleanToken });
+      return { id: manager.id, fcmTokenUpdated: true };
+    } else {
+      const tenant = await this.ProspectiveTenantModel.findOne({
+        where: { id: userId, isDeleted: false },
+      });
+      if (tenant) {
+        await tenant.update({ fcmToken: cleanToken });
+        return { id: tenant.id, fcmTokenUpdated: true };
+      }
+
+      const manager = await this.PropertyManagerModel.findOne({
+        where: { id: userId, isDeleted: false },
+      });
+      if (manager) {
+        await manager.update({ fcmToken: cleanToken });
+        return { id: manager.id, fcmTokenUpdated: true };
+      }
+
+      throw new NotFoundError("User account not found.");
+    }
+  }
+
   async handleProspectiveTenantInformation(data) {
     const { userId, inspectionId, role, page, pageSize } =
       await userUtil.verifyHandleProspectiveTenantInformation.validateAsync(
