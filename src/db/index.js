@@ -31,7 +31,7 @@ class DB {
 
     // Auto-create or alter tables to match current models (safe for dev & fresh DBs)
     try {
-      //  await this.sequelize.sync({ alter: true });
+      await this.sequelize.sync({ alter: true });
       console.log("[DB] All tables synced successfully.");
     } catch (err) {
       console.error("[DB] Table sync error:", err.message);
@@ -41,6 +41,16 @@ class DB {
   }
 
   async syncMissingColumns() {
+    try {
+      const [identityResults] = await this.sequelize.query(`SHOW COLUMNS FROM \`EmailandTelValidation\` LIKE 'identityId';`);
+      if (!identityResults || identityResults.length === 0) {
+        await this.sequelize.query(`ALTER TABLE \`EmailandTelValidation\` ADD COLUMN \`identityId\` VARCHAR(255) NULL;`);
+        console.log(`[DB Migration] Successfully added missing column 'identityId' to 'EmailandTelValidation' table.`);
+      }
+    } catch (err) {
+      console.error(`[DB Migration Notice] Column check for 'EmailandTelValidation.identityId':`, err.message);
+    }
+
     const tables = ["Admin", "PropertyManager", "ProspectiveTenant"];
     for (const table of tables) {
       try {
