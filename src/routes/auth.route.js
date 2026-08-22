@@ -56,7 +56,7 @@
  * /auth/verifyEmailorTel:
  *   post:
  *     summary: Verify Email, Telephone, or NIN OTP
- *     description: Verifies the user's email, telephone number, or NIN using a verification code/OTP. For NIN verification (`type: "nin"`), `identityId` returned from `/user/validateNIN` is required.
+ *     description: "Verifies the user email, telephone number, or NIN using a verification code/OTP. For NIN verification (type: 'nin'), identityId returned from /user/validateNIN is required."
  *     tags:
  *       - Verification
  *       - nin Verification
