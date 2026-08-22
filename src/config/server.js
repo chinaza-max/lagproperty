@@ -47,8 +47,10 @@ class ServerConfig {
   SMS_ID = process.env.SMS_ID;
 
   FIDOPOINT_BASE_URL =
-    process.env.FIDOPOINT_BASE_URL || "http://localhost:3000/api/v1/identity";
+    process.env.FIDOPOINT_BASE_URL || "http://localhost:5000/api/v1/identity";
   FIDOPOINT_API_KEY = process.env.FIDOPOINT_API_KEY;
+  FIDOPOINT_EMAIL = process.env.FIDOPOINT_EMAIL;
+  FIDOPOINT_PASSWORD = process.env.FIDOPOINT_PASSWORD;
 }
 
 export default new ServerConfig();

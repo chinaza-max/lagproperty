@@ -8,10 +8,11 @@ class SystemMiddlewares {
     req,
     res,
     next
-){
+  ) {
+    console.error("[ErrorHandler] Error caught:", error);
     if (error instanceof SystemError) {
 
-      
+
       switch (error.name) {
         case "NotFoundError":
           return res.status(404).json({
@@ -48,12 +49,12 @@ class SystemMiddlewares {
             status: error.code,
             message: error.message,
           });
-          case "SecurityCodeVerificationError":
-          case "ForbiddenError":
-            return res.status(403).json({
-              status: error.code,
-              message: error.message,
-            });
+        case "SecurityCodeVerificationError":
+        case "ForbiddenError":
+          return res.status(403).json({
+            status: error.code,
+            message: error.message,
+          });
         case "ServerError":
         case "SystemError":
         default:
@@ -64,8 +65,8 @@ class SystemMiddlewares {
       }
     }
 
-   
-    else if(error instanceof Joi.ValidationError){
+
+    else if (error instanceof Joi.ValidationError) {
       return res.status(400).json({
         status: "validation-error",
         errors: error.details,
@@ -76,7 +77,7 @@ class SystemMiddlewares {
       status: "server-error",
       message: "An unexpected error occured.",
     });
-    
+
   }
 }
 

@@ -3137,10 +3137,12 @@
  * @swagger
  * /user/validateNIN:
  *   post:
- *     summary: Validate nin (National Identification Number)
- *     description: Validates the user's National Identification Number (NIN) for verification purposes.
+ *     summary: Initiate NIN Verification & Request OTP
+ *     description: Initiates NIN verification via Fidopoint Identity service, sends an OTP to the phone number linked to the NIN, and returns an `identityId` for verification.
  *     tags:
  *       - nin Verification
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -3152,31 +3154,33 @@
  *             properties:
  *               nin:
  *                 type: string
- *                 description: The user's National Identification Number (NIN).
- *                 example: "12345678901"
+ *                 description: The user's 11-digit National Identification Number (NIN).
+ *                 example: "72022553879"
+ *           examples:
+ *             NIN_Initiation:
+ *               summary: NIN Initiation Sample Payload
+ *               value:
+ *                 nin: "72022553879"
  *     responses:
  *       200:
- *         description: Successfully validated the NIN.
+ *         description: OTP sent successfully to the phone number linked to NIN.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "NIN validation successful"
+ *                   example: "OTP has been sent to the phone number linked to this NIN"
  *                 data:
  *                   type: object
  *                   properties:
- *                     userId:
+ *                     identityId:
  *                       type: string
- *                       example: "12345"
- *                     nin:
- *                       type: string
- *                       example: "12345678901"
- *                     role:
- *                       type: string
- *                       example: "rent"
+ *                       example: "6a761a8da4069463bbd97463"
  *       400:
  *         description: Bad request, invalid or missing NIN.
  *         content:
@@ -3184,19 +3188,14 @@
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "BadRequestError"
  *                 message:
  *                   type: string
  *                   example: "Invalid NIN"
  *       500:
  *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "An error occurred during validation"
  */
 
 /**

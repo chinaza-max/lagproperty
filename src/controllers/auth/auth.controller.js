@@ -32,6 +32,7 @@ export default class AuthenticationController {
   async verifyEmailorTel(req, res, next) {
     try {
       const data = req.body;
+      console.log("[AuthController] verifyEmailorTel request body:", JSON.stringify(data, null, 2));
 
       let my_bj = {
         ...data,
@@ -446,6 +447,7 @@ export default class AuthenticationController {
   async sendVerificationCodeEmailOrTel(req, res, next) {
     try {
       const data = req.body;
+      console.log("[AuthController] sendVerificationCodeEmailOrTel request body:", JSON.stringify(data, null, 2));
 
       let my_bj = {
         ...data,
@@ -686,7 +688,6 @@ export default class AuthenticationController {
       const payload = req.body;
       console.log("[Fidopoint Webhook] Received payload:", JSON.stringify(payload, null, 2));
       await authService.handleNINWebhook(payload);
-      // Always acknowledge with 200 so Fidopoint doesn't retry
       return res.status(200).json({ received: true });
     } catch (error) {
       console.error("[Fidopoint Webhook] Error:", error);

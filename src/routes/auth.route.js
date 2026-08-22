@@ -55,10 +55,11 @@
  * @swagger
  * /auth/verifyEmailorTel:
  *   post:
- *     summary: Verify Email or Telephone with a Verification Code
- *     description: Verifies the user's email or telephone number using a verification code. The request body also specifies the context (`validateFor`) and the type (`email`, `tel`, or `nin`).
+ *     summary: Verify Email, Telephone, or NIN OTP
+ *     description: Verifies the user's email, telephone number, or NIN using a verification code/OTP. For NIN verification (`type: "nin"`), `identityId` returned from `/user/validateNIN` is required.
  *     tags:
  *       - Verification
+ *       - nin Verification
  *     requestBody:
  *       required: true
  *       content:
@@ -71,65 +72,102 @@
  *               - type
  *             properties:
  *               verificationCode:
- *                 type: integer
- *                 description: The 6-digit verification code sent to the user.
- *                 example: 123456
+ *                 type: string
+ *                 description: The 6-digit verification code or NIN OTP sent to the user.
+ *                 example: "123456"
+ *               identityId:
+ *                 type: string
+ *                 description: Required when type is "nin". The identityId returned from /user/validateNIN initiation.
+ *                 example: "6a761a8da4069463bbd97463"
  *               validateFor:
  *                 type: string
- *                 description: The context in which the validation is being done (e.g., list, rent, admin).
+ *                 description: Context for validation (list, rent, or admin).
  *                 enum:
  *                   - list
  *                   - rent
  *                   - admin
- *                 example: "list"
+ *                 example: "rent"
  *               type:
  *                 type: string
- *                 description: Specifies whether the verification is for email, telephone, or NIN.
+ *                 description: Verification type (email, tel, or nin).
  *                 enum:
  *                   - email
  *                   - tel
  *                   - nin
- *                 example: "email"
+ *                 example: "nin"
+ *           examples:
+ *             NIN_Verification:
+ *               summary: NIN OTP Verification Sample
+ *               value:
+ *                 verificationCode: "123456"
+ *                 identityId: "6a761a8da4069463bbd97463"
+ *                 validateFor: "rent"
+ *                 type: "nin"
+ *             Email_Verification:
+ *               summary: Email Verification Sample
+ *               value:
+ *                 verificationCode: "123456"
+ *                 validateFor: "rent"
+ *                 type: "email"
+ *             Telephone_Verification:
+ *               summary: Telephone Verification Sample
+ *               value:
+ *                 verificationCode: "123456"
+ *                 validateFor: "rent"
+ *                 type: "tel"
  *     responses:
  *       200:
- *         description: Successfully verified the email or telephone.
+ *         description: Verification successful.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
  *                 message:
  *                   type: string
  *                   example: "Verification successful"
  *                 data:
  *                   type: object
  *                   properties:
- *                     userId:
+ *                     token:
  *                       type: string
- *                       example: "12345"
- *                     verificationCode:
- *                       type: integer
- *                       example: 123456
+ *                       example: "eyJhbGciOiJIUzI1Ni..."
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         firstName:
+ *                           type: string
+ *                           example: "CHINAZA"
+ *                         lastName:
+ *                           type: string
+ *                           example: "OGBONNA"
+ *                         dateOfBirth:
+ *                           type: string
+ *                           example: "1999-07-28T00:00:00.000Z"
+ *                         isNINValid:
+ *                           type: boolean
+ *                           example: true
  *       400:
- *         description: Bad request, missing or invalid parameters.
+ *         description: Bad request (Incorrect OTP or invalid parameters).
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "BadRequestError"
  *                 message:
  *                   type: string
- *                   example: "Invalid verification code or type"
+ *                   example: "Incorrect OTP."
  *       500:
  *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "An error occurred during verification"
  */
 
 /**

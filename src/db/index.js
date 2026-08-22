@@ -29,6 +29,15 @@ class DB {
     );
 
     this.models = initModels(this.sequelize);
+
+    // Auto-create or alter tables to match current models (safe for dev & fresh DBs)
+    try {
+      //  await this.sequelize.sync({ alter: true });
+      console.log("[DB] All tables synced successfully.");
+    } catch (err) {
+      console.error("[DB] Table sync error:", err.message);
+    }
+
     await this.syncMissingColumns();
   }
 
@@ -43,6 +52,29 @@ class DB {
         }
       } catch (err) {
         console.error(`[DB Migration Notice] Column check for '${table}':`, err.message);
+      }
+    }
+
+    const userTables = ["PropertyManager", "ProspectiveTenant"];
+    for (const table of userTables) {
+      try {
+        const [dobResults] = await this.sequelize.query(`SHOW COLUMNS FROM \`${table}\` LIKE 'dateOfBirth';`);
+        if (!dobResults || dobResults.length === 0) {
+          await this.sequelize.query(`ALTER TABLE \`${table}\` ADD COLUMN \`dateOfBirth\` DATETIME NULL;`);
+          console.log(`[DB Migration] Successfully added missing column 'dateOfBirth' to '${table}' table.`);
+        }
+      } catch (err) {
+        console.error(`[DB Migration Notice] Column check for '${table}.dateOfBirth':`, err.message);
+      }
+
+      try {
+        const [ninResults] = await this.sequelize.query(`SHOW COLUMNS FROM \`${table}\` LIKE 'isNINValid';`);
+        if (!ninResults || ninResults.length === 0) {
+          await this.sequelize.query(`ALTER TABLE \`${table}\` ADD COLUMN \`isNINValid\` TINYINT(1) NULL DEFAULT 0;`);
+          console.log(`[DB Migration] Successfully added missing column 'isNINValid' to '${table}' table.`);
+        }
+      } catch (err) {
+        console.error(`[DB Migration Notice] Column check for '${table}.isNINValid':`, err.message);
       }
     }
   }

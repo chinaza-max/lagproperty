@@ -43,9 +43,8 @@ class MailService {
     const html = template(options.variables || {});
 
     const mailData = {
-      from: `${options.from ? options.from : serverConfig.EMAIL_SENDER} <${
-        serverConfig.EMAIL_USER
-      }>`,
+      from: `${options.from ? options.from : serverConfig.EMAIL_SENDER} <${serverConfig.EMAIL_USER
+        }>`,
       to: options.to,
       subject: options.subject,
       html: html,

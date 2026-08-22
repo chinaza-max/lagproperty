@@ -26,6 +26,7 @@ import { addMonths, format } from "date-fns";
 import { fn, col, literal } from "sequelize";
 import PDFDocument from "pdfkit";
 import axios from "axios";
+import { postToFidopoint } from "../utils/fidopoint.util.js";
 //import { addMonths } from "date-fns";
 import {
   NotFoundError,
@@ -2037,20 +2038,11 @@ class UserService {
 
     try {
       // Call Fidopoint /nin/initiate — Fidopoint automatically sends OTP to the NIN-linked phone
-      const fidopointResponse = await axios.post(
-        `${serverConfig.FIDOPOINT_BASE_URL}/nin/initiate`,
-        {
-          number: nin,
-          type: "NIN",
-          async: false,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": serverConfig.FIDOPOINT_API_KEY,
-          },
-        }
-      );
+      const fidopointResponse = await postToFidopoint("/nin/initiate", {
+        number: nin,
+        type: "NIN",
+        async: false,
+      });
 
       const identityId = fidopointResponse.data?.data?.data?._id;
 
@@ -2058,23 +2050,30 @@ class UserService {
         throw new BadRequestError("Failed to initiate NIN verification. No identityId returned.");
       }
 
-      // Store identityId in EmailandTelValidation for later OTP confirmation
-      var keyExpirationMillisecondsFromEpoch =
-        new Date().getTime() + 30 * 60 * 1000;
+      // Store/update identityId in EmailandTelValidation with fresh 30-minute expiration
+      const keyExpiration = new Date(Date.now() + 30 * 60 * 1000);
 
-      await this.EmailandTelValidationModel.upsert(
-        {
+      const existingValidation = await this.EmailandTelValidationModel.findOne({
+        where: { userId, type: "nin", validateFor: role },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (existingValidation) {
+        await existingValidation.update({
+          identityId,
+          verificationCode: null,
+          expiresIn: keyExpiration,
+        });
+      } else {
+        await this.EmailandTelValidationModel.create({
           userId,
           type: "nin",
           validateFor: role,
           identityId,
           verificationCode: null,
-          expiresIn: new Date(keyExpirationMillisecondsFromEpoch),
-        },
-        {
-          where: { userId, validateFor: role },
-        }
-      );
+          expiresIn: keyExpiration,
+        });
+      }
 
       console.log(`[Fidopoint] NIN initiation successful. identityId: ${identityId}`);
       return { identityId };

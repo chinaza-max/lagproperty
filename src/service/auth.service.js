@@ -20,6 +20,7 @@ import userService from "../service/user.service.js";
 import { Buffer } from "buffer";
 import mailService from "../service/mail.service.js";
 import axios from "axios";
+import { postToFidopoint } from "../utils/fidopoint.util.js";
 
 import { ConflictError, SystemError, NotFoundError } from "../errors/index.js";
 import { Op, Sequelize } from "sequelize";
@@ -161,6 +162,7 @@ class AuthenticationService {
   }
 
   async handleSendVerificationCodeEmailOrTel(data) {
+    console.log("[AuthService] handleSendVerificationCodeEmailOrTel data:", data);
     let { userId, type, validateFor } =
       await authUtil.verifyHandleSendVerificationCodeEmailOrTel.validateAsync(
         data,
@@ -1667,7 +1669,8 @@ class AuthenticationService {
   }
 
   async handleVerifyEmailorTel(data) {
-    let { userId, verificationCode, validateFor, type, identityId } =
+    console.log("[AuthService] handleVerifyEmailorTel data:", data);
+    let { verificationCode, validateFor, type, identityId } =
       await authUtil.verifyHandleVerifyEmailorTel.validateAsync(data);
 
     let relatedUser;
@@ -1681,6 +1684,7 @@ class AuthenticationService {
       // Look up the stored session
       let ninSession = await this.EmailandTelValidationModel.findOne({
         where: { identityId, type: "nin", validateFor },
+        order: [["updatedAt", "DESC"]],
       });
 
       if (!ninSession) {
@@ -1706,20 +1710,11 @@ class AuthenticationService {
 
       try {
         // Call Fidopoint /nin/verify
-        const fidopointResponse = await axios.post(
-          `${serverConfig.FIDOPOINT_BASE_URL}/nin/verify`,
-          {
-            identityId,
-            otp: String(verificationCode),
-            type: "NIN",
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": serverConfig.FIDOPOINT_API_KEY,
-            },
-          }
-        );
+        const fidopointResponse = await postToFidopoint("/nin/verify", {
+          identityId,
+          otp: String(verificationCode),
+          type: "NIN",
+        });
 
         const verifyData = fidopointResponse.data?.data?.data;
         const providerResponse = verifyData?.providerResponse || {};
@@ -1733,7 +1728,7 @@ class AuthenticationService {
         if (
           providerResponse.firstName &&
           providerResponse.firstName.trim().toLowerCase() !==
-            (relatedUser.firstName || "").trim().toLowerCase()
+          (relatedUser.firstName || "").trim().toLowerCase()
         ) {
           updatePayload.firstName = providerResponse.firstName.trim();
         }
@@ -1742,7 +1737,7 @@ class AuthenticationService {
         if (
           providerResponse.lastName &&
           providerResponse.lastName.trim().toLowerCase() !==
-            (relatedUser.lastName || "").trim().toLowerCase()
+          (relatedUser.lastName || "").trim().toLowerCase()
         ) {
           updatePayload.lastName = providerResponse.lastName.trim();
         }
@@ -1778,6 +1773,7 @@ class AuthenticationService {
     }
 
     // --- Standard email / tel verification ---
+    console.log(`[AuthService] Standard verification lookup - code: ${verificationCode}, type: ${type}, validateFor: ${validateFor}`);
     let relatedEmailoRTelValidationCode =
       await this.EmailandTelValidationModel.findOne({
         where: {
@@ -1786,11 +1782,15 @@ class AuthenticationService {
         },
       });
 
+    console.log("[AuthService] Validation record found:", relatedEmailoRTelValidationCode ? relatedEmailoRTelValidationCode.toJSON() : null);
+
     if (relatedEmailoRTelValidationCode == null) {
+      console.error(`[AuthService] Invalid verification code ${verificationCode} for type ${type}`);
       throw new NotFoundError("Invalid verification code");
     } else if (
       relatedEmailoRTelValidationCode.expiresIn.getTime() < new Date().getTime()
     ) {
+      console.error(`[AuthService] Verification code expired at ${relatedEmailoRTelValidationCode.expiresIn}`);
       throw new NotFoundError("verification code expired");
     }
 
@@ -1814,27 +1814,30 @@ class AuthenticationService {
 
     try {
       if (type === "email") {
-        relatedUser.update({
+        await relatedUser.update({
           isEmailValid: true,
         });
 
-        relatedEmailoRTelValidationCode.update({
+        await relatedEmailoRTelValidationCode.update({
           expiresIn: new Date(),
         });
 
+        console.log(`[AuthService] User ID ${relatedUser.id} email verified successfully`);
         return relatedUser;
       } else {
-        relatedUser.update({
+        await relatedUser.update({
           isTelValid: true,
         });
 
-        relatedEmailoRTelValidationCode.update({
+        await relatedEmailoRTelValidationCode.update({
           expiresIn: new Date(),
         });
 
+        console.log(`[AuthService] User ID ${relatedUser.id} tel verified successfully`);
         return relatedUser;
       }
     } catch (error) {
+      console.error("[AuthService] Failed to update verification status:", error);
       throw new ServerError("Failed to update " + type);
     }
   }
@@ -2635,21 +2638,18 @@ class AuthenticationService {
     const { identityId, status, verificationResult } = data;
     const providerResponse = verificationResult?.data?.providerResponse || {};
 
-    console.log(`[Fidopoint Webhook] identity.nin.verified — identityId: ${identityId}, status: ${status}`);
-    console.log("[Fidopoint Webhook] providerResponse:", JSON.stringify(providerResponse, null, 2));
 
     if (status !== "SUCCESS") {
-      console.log(`[Fidopoint Webhook] Verification not successful. Status: ${status}`);
       return { processed: false, reason: "status not SUCCESS" };
     }
 
     // Look up the stored session by identityId
     const ninSession = await this.EmailandTelValidationModel.findOne({
       where: { identityId, type: "nin" },
+      order: [["updatedAt", "DESC"]],
     });
 
     if (!ninSession) {
-      console.log(`[Fidopoint Webhook] No session found for identityId: ${identityId}`);
       return { processed: false, reason: "session not found" };
     }
 
@@ -2664,7 +2664,6 @@ class AuthenticationService {
     }
 
     if (!user) {
-      console.log(`[Fidopoint Webhook] User not found for userId: ${userId}`);
       return { processed: false, reason: "user not found" };
     }
 
@@ -2675,7 +2674,7 @@ class AuthenticationService {
     if (
       providerResponse.firstName &&
       providerResponse.firstName.trim().toLowerCase() !==
-        (user.firstName || "").trim().toLowerCase()
+      (user.firstName || "").trim().toLowerCase()
     ) {
       updatePayload.firstName = providerResponse.firstName.trim();
     }
@@ -2684,7 +2683,7 @@ class AuthenticationService {
     if (
       providerResponse.lastName &&
       providerResponse.lastName.trim().toLowerCase() !==
-        (user.lastName || "").trim().toLowerCase()
+      (user.lastName || "").trim().toLowerCase()
     ) {
       updatePayload.lastName = providerResponse.lastName.trim();
     }

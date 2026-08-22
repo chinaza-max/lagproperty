@@ -53,6 +53,10 @@ import { Model, DataTypes } from "sequelize";
           type: DataTypes.STRING,
           allowNull: true,
         },
+        dateOfBirth: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
         isNINValid: {
           type: DataTypes.BOOLEAN,
           allowNull: true
