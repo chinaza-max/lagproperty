@@ -28,7 +28,7 @@ class DB {
     );
 
     this.models = initModels(this.sequelize);
-
+    //
     // Auto-create or alter tables to match current models (safe for dev & fresh DBs)
     try {
       await this.sequelize.sync({ alter: true });
