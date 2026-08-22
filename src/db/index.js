@@ -29,10 +29,10 @@ class DB {
 
     this.models = initModels(this.sequelize);
     //
-    // Auto-create or alter tables to match current models (safe for dev & fresh DBs)
+    // Auto-create or alter tables (commented out for production safety)
     try {
-      await this.sequelize.sync({ alter: true });
-      console.log("[DB] All tables synced successfully.");
+      // await this.sequelize.sync({ alter: true });
+      console.log("[DB] Table check complete.");
     } catch (err) {
       console.error("[DB] Table sync error:", err.message);
     }
