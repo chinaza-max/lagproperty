@@ -622,11 +622,18 @@ export default class UserController {
       const data = req.query;
 
       if (typeof data.amenities === "string") {
-        try {
-          const stringData = data.amenities;
-          data.amenities = JSON.parse(stringData.replace(/'/g, '"'));
-        } catch (error) {
-          throw new Error("Invalid array format for amenities");
+        if (!data.amenities.trim() || data.amenities.trim() === "[]") {
+          delete data.amenities;
+        } else {
+          try {
+            const stringData = data.amenities;
+            data.amenities = JSON.parse(stringData.replace(/'/g, '"'));
+          } catch (error) {
+            data.amenities = data.amenities
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean);
+          }
         }
       }
 

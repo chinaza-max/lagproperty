@@ -601,7 +601,23 @@ class UserService {
 
         totalPages = Math.ceil(tenantData.count / pageSize);
       } else if (role === "rent") {
-        if (type === "tenantInvoicesDue") {
+        if (type === "recentRent") {
+          tenantData = await this.TenantModel.findAndCountAll({
+            where: {
+              status: "active",
+              prospectiveTenantId: userId,
+            },
+            include: [
+              {
+                model: this.BuildingModel,
+                attributes: ["id", "price"],
+              },
+            ],
+            order: [["rentNextDueDate", "DESC"]],
+            offset,
+            limit,
+          });
+        } else if (type === "tenantInvoicesDue") {
           // Fetch tenants with rent due
           tenantData = await this.TenantModel.findAndCountAll({
             where: {
@@ -622,9 +638,13 @@ class UserService {
             limit,
           });
         }
-
-        totalPages = Math.ceil(tenantData.count / pageSize);
       }
+
+      if (!tenantData) {
+        tenantData = { count: 0, rows: [] };
+      }
+      totalPages = Math.ceil(tenantData.count / pageSize) || 0;
+
       return {
         response: tenantData.rows,
         pagination: {
@@ -774,7 +794,9 @@ class UserService {
         });
       }
 
-      const totalPages = Math.ceil(totalCount / pageSize);
+      if (totalCount === undefined) totalCount = 0;
+      if (!transactions) transactions = [];
+      const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
       return {
         pagination: {
@@ -1085,25 +1107,29 @@ class UserService {
 
         totalCount = count.length;
       } else if (type == "recommended") {
-        const user = await this.ProspectiveTenantModel.findByPk(userId);
-        if (!user) {
-          throw new NotFoundError("User not found");
+        let whereOr = [];
+        if (user) {
+          const { propertyPreference, rentalDuration } = user;
+          if (rentalDuration) {
+            whereOr.push({ rentalDuration: rentalDuration });
+          }
+          if (propertyPreference) {
+            const prefArray = Array.isArray(propertyPreference)
+              ? propertyPreference
+              : [propertyPreference];
+            whereOr.push({
+              propertyPreference: {
+                [Op.in]: prefArray,
+              },
+            });
+          }
         }
-
-        const { propertyPreference, rentalDuration } = user;
 
         const { count, rows } = await this.BuildingModel.findAndCountAll({
           where: {
             availability: "vacant",
             isDeleted: false,
-            [Op.or]: [
-              { rentalDuration: rentalDuration },
-              {
-                propertyPreference: {
-                  [Op.in]: propertyPreference,
-                },
-              },
-            ],
+            ...(whereOr.length > 0 ? { [Op.or]: whereOr } : {}),
           },
           attributes: [
             ...buildingAttributes,
@@ -1143,19 +1169,31 @@ class UserService {
 
         totalCount = count.length;
       } else if (type === "bestOffer") {
-        const user = await this.ProspectiveTenantModel.findByPk(userId);
-        if (!user) {
-          throw new NotFoundError("User not found");
+        let priceCondition = {};
+        if (user && user.budgetMin != null && user.budgetMax != null) {
+          priceCondition = {
+            price: {
+              [Op.between]: [user.budgetMin, user.budgetMax],
+            },
+          };
+        } else if (user && user.budgetMin != null) {
+          priceCondition = {
+            price: {
+              [Op.gte]: user.budgetMin,
+            },
+          };
+        } else if (user && user.budgetMax != null) {
+          priceCondition = {
+            price: {
+              [Op.lte]: user.budgetMax,
+            },
+          };
         }
-
-        const { budgetMin, budgetMax } = user;
 
         const { count, rows } = await this.BuildingModel.findAndCountAll({
           where: {
             availability: "vacant",
-            price: {
-              [Op.between]: [budgetMin, budgetMax],
-            },
+            ...priceCondition,
             isDeleted: false,
           },
           attributes: [
@@ -2633,7 +2671,9 @@ class UserService {
           };
           */
         } else if (type === "listing") {
-          whereCondition.propertyManagerId = propertyManagerId;
+          if (propertyManagerId) {
+            whereCondition.propertyManagerId = propertyManagerId;
+          }
 
           /*
           const buildings = await this.BuildingModel.findAndCountAll({
@@ -3691,40 +3731,6 @@ class UserService {
               include: [
                 {
                   model: Building,
-                  attributes: [
-                    "id",
-                    "propertyManagerId",
-                    "propertyPreference",
-                    "propertyLocation",
-                    "city",
-                    "address",
-                    "lat",
-                    "lng",
-                    "numberOfFloors",
-                    "numberOfRooms",
-                    "amenity",
-                    "availability",
-                    "furnishingStatus",
-                    "rentalDuration",
-                    "price",
-                    "electricityBill",
-                    "wasteBill",
-                    "commissionBill",
-                    "propertyDescription",
-                    "bedroomSizeLength",
-                    "bedroomSizeWidth",
-                    "bedroomSizeImage",
-                    "kitchenSizeLength",
-                    "kitchenSizeWidth",
-                    "kitchenSizeImage",
-                    "livingRoomSizeLength",
-                    "livingRoomSizeWidth",
-                    "livingRoomSizeImage",
-                    "diningAreaSizeLength",
-                    "diningAreaSizeWidth",
-                    "diningAreaSizeImage",
-                    "propertyTerms",
-                  ],
                   where: { propertyManagerId: userId },
                   required: true,
                 },
@@ -3752,40 +3758,6 @@ class UserService {
               include: [
                 {
                   model: Building,
-                  attributes: [
-                    "id",
-                    "propertyManagerId",
-                    "propertyPreference",
-                    "propertyLocation",
-                    "city",
-                    "address",
-                    "lat",
-                    "lng",
-                    "numberOfFloors",
-                    "numberOfRooms",
-                    "amenity",
-                    "availability",
-                    "furnishingStatus",
-                    "rentalDuration",
-                    "price",
-                    "electricityBill",
-                    "wasteBill",
-                    "commissionBill",
-                    "propertyDescription",
-                    "bedroomSizeLength",
-                    "bedroomSizeWidth",
-                    "bedroomSizeImage",
-                    "kitchenSizeLength",
-                    "kitchenSizeWidth",
-                    "kitchenSizeImage",
-                    "livingRoomSizeLength",
-                    "livingRoomSizeWidth",
-                    "livingRoomSizeImage",
-                    "diningAreaSizeLength",
-                    "diningAreaSizeWidth",
-                    "diningAreaSizeImage",
-                    "propertyTerms",
-                  ],
                 },
               ],
             });
@@ -3873,40 +3845,6 @@ class UserService {
               include: [
                 {
                   model: Building,
-                  attributes: [
-                    "id",
-                    "propertyManagerId",
-                    "propertyPreference",
-                    "propertyLocation",
-                    "city",
-                    "address",
-                    "lat",
-                    "lng",
-                    "numberOfFloors",
-                    "numberOfRooms",
-                    "amenity",
-                    "availability",
-                    "furnishingStatus",
-                    "rentalDuration",
-                    "price",
-                    "electricityBill",
-                    "wasteBill",
-                    "commissionBill",
-                    "propertyDescription",
-                    "bedroomSizeLength",
-                    "bedroomSizeWidth",
-                    "bedroomSizeImage",
-                    "kitchenSizeLength",
-                    "kitchenSizeWidth",
-                    "kitchenSizeImage",
-                    "livingRoomSizeLength",
-                    "livingRoomSizeWidth",
-                    "livingRoomSizeImage",
-                    "diningAreaSizeLength",
-                    "diningAreaSizeWidth",
-                    "diningAreaSizeImage",
-                    "propertyTerms",
-                  ],
                 },
               ],
             });

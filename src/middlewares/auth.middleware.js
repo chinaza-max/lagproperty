@@ -17,11 +17,11 @@ class AuthenticationMiddlewares {
       console.log(req.path)
       if ((req.path=='/')||(req.path=="/favicon.ico"))  return next();;
 
-      if (!authorization) throw new BadRequestError("No token provided.");
+      if (!authorization) throw new UnAuthorizedError("No token provided.");
 
       const token = authorization.split(" ")[1];
 
-      if (!token) throw new BadRequestError("No token provided.");
+      if (!token) throw new UnAuthorizedError("No token provided.");
 
       const { payload, expired } = authService.verifyToken(token);
 

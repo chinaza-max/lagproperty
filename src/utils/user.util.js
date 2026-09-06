@@ -163,17 +163,9 @@ class UserUtil {
       .valid("vacant", "cancelled", "occupied", "listing", "booked", "all")
       .required()
       .label("type"),
-    pageSize: Joi.number().integer().required(),
-    page: Joi.number().integer().required(),
-    propertyManagerId: Joi.number().when("role", {
-      is: "rent",
-      then: Joi.when("type", {
-        is: "listing",
-        then: Joi.required(),
-        otherwise: Joi.forbidden(),
-      }),
-      otherwise: Joi.forbidden(),
-    }),
+    pageSize: Joi.number().integer().min(1).default(10).optional(),
+    page: Joi.number().integer().min(1).default(1).optional(),
+    propertyManagerId: Joi.number().optional().allow(null),
   });
 
   verifyHandleProspectiveTenantInformation = Joi.object({
@@ -228,8 +220,8 @@ class UserUtil {
   verifyHandleGetTransaction = Joi.object({
     userId: Joi.number().required(),
     role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
-    page: Joi.number().integer().min(1).required(),
-    pageSize: Joi.number().integer().min(1).required(),
+    page: Joi.number().integer().min(1).default(1).optional(),
+    pageSize: Joi.number().integer().min(1).default(10).optional(),
   });
 
   verifyHandleGetChat = Joi.object({

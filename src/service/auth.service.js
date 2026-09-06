@@ -22,7 +22,7 @@ import mailService from "../service/mail.service.js";
 import axios from "axios";
 import { postToFidopoint } from "../utils/fidopoint.util.js";
 
-import { ConflictError, SystemError, NotFoundError } from "../errors/index.js";
+import { ConflictError, SystemError, NotFoundError, BadRequestError } from "../errors/index.js";
 import { Op, Sequelize } from "sequelize";
 
 const TRANSACTION_STATUS = {
@@ -838,13 +838,25 @@ class AuthenticationService {
       );
 
       // Check if the request was successful
-      if (response.data.requestSuccessful) {
+      if (response.data && response.data.requestSuccessful) {
         return response.data.responseBody; // Return the data if validation is successful
       } else {
-        throw new Error("Validation failed");
+        const errorMsg =
+          response.data?.responseMessage ||
+          response.data?.message ||
+          "Bank account validation failed";
+        throw new BadRequestError(errorMsg);
       }
     } catch (error) {
-      throw new SystemError("Failed to update password");
+      if (error instanceof SystemError) {
+        throw error;
+      }
+      const message =
+        error.response?.data?.responseMessage ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to validate bank account";
+      throw new BadRequestError(message);
     }
   }
 
