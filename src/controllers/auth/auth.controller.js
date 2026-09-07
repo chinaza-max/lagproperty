@@ -375,6 +375,19 @@ export default class AuthenticationController {
     }
   }
 
+  async getBanks(req, res, next) {
+    try {
+      const result = await authService.handleGetBanks();
+      return res.status(200).json({
+        status: 200,
+        message: "Banks fetched successfully",
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getRegion(req, res, next) {
     try {
       const result = await authService.getRegion();

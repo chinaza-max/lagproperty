@@ -376,6 +376,8 @@
  *   post:
  *     summary: Validate bank account details
  *     description: Validates bank account details by checking the account number and bank code with an external API. Returns the validation result.
+ *     tags:
+ *       - Bank
  *     requestBody:
  *       required: true
  *       content:
@@ -422,6 +424,82 @@
  *         description: Bad request, validation error
  *       500:
  *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /auth/getBanks:
+ *   get:
+ *     summary: Retrieve list of supported banks
+ *     description: Fetches a list of all supported banks with their names and bank codes (used for bank account validation). Responses are cached for 1 hour.
+ *     tags:
+ *       - Bank
+ *       - General API
+ *     responses:
+ *       200:
+ *         description: Banks fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Banks fetched successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                         description: Bank name
+ *                         example: "Access Bank"
+ *                       code:
+ *                         type: string
+ *                         description: Bank code
+ *                         example: "044"
+ *                       ussdTemplate:
+ *                         type: string
+ *                         nullable: true
+ *                         example: null
+ *                       baseUssdCode:
+ *                         type: string
+ *                         nullable: true
+ *                         example: null
+ *                       transferUssdTemplate:
+ *                         type: string
+ *                         nullable: true
+ *                         example: null
+ *       400:
+ *         description: Failed to fetch banks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch banks"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
  */
 
 /**
@@ -722,6 +800,7 @@ class AuthRoutes extends AuthController {
     this.router.post("/sendPasswordResetLink", this.sendPasswordResetLink);
     this.router.post("/resetPassword", this.resetPassword);
     this.router.post("/validateBankAccount", this.validateBankAccount);
+    this.router.get("/getBanks", this.getBanks);
     this.router.get("/getRegion", this.getRegion);
     this.router.get("/getMaritalStatus", this.getMaritalStatus);
     this.router.get("/getReligion", this.getReligion);

@@ -140,6 +140,18 @@
 							"path": ["auth", "validateBankAccount"]
 						}
 					}
+				},
+				{
+					"name": "Get Banks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/getBanks",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "getBanks"]
+						}
+					}
 				}
 			]
 		},

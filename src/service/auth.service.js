@@ -824,7 +824,7 @@ class AuthenticationService {
     const accessToken = await this.getAuthTokenMonify();
     try {
       const response = await axios.get(
-        `${serverConfig.MONNIFY_BASE_URL}/api/v1/disbursements/account/validate`,
+        `${serverConfig.MONNIFY_BASE_URL}/api/v2/disbursements/account/validate`,
         {
           params: {
             accountNumber: accountNumber,
@@ -856,6 +856,49 @@ class AuthenticationService {
         error.response?.data?.message ||
         error.message ||
         "Failed to validate bank account";
+      throw new BadRequestError(message);
+    }
+  }
+
+  // In-memory cache — avoids hitting Monnify on every request (1 hour TTL)
+  _banksCache = null;
+  _banksCacheExpiry = null;
+
+  async handleGetBanks() {
+    if (this._banksCache && this._banksCacheExpiry > Date.now()) {
+      return this._banksCache;
+    }
+
+    const accessToken = await this.getAuthTokenMonify();
+
+    try {
+      const response = await axios.get(
+        `${serverConfig.MONNIFY_BASE_URL}/api/v1/sdk/transactions/banks`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (response.data && response.data.requestSuccessful) {
+        const banks = response.data.responseBody || [];
+        this._banksCache = banks;
+        this._banksCacheExpiry = Date.now() + 60 * 60 * 1000;
+        return banks;
+      } else {
+        throw new BadRequestError(
+          response.data?.responseMessage || "Failed to fetch banks"
+        );
+      }
+    } catch (error) {
+      if (error instanceof BadRequestError) throw error;
+      const message =
+        error.response?.data?.responseMessage ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch bank list";
       throw new BadRequestError(message);
     }
   }
