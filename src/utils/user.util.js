@@ -23,6 +23,7 @@ class UserUtil {
       .valid("landLord", "agent", "unset")
       .required()
       .label("Type"),
+    // Agent-only bank details (profile of the agent themselves)
     agentBankCode: Joi.string().when("type", {
       is: "agent",
       then: Joi.required().label("Agent Bank Code"),
@@ -33,8 +34,37 @@ class UserUtil {
       then: Joi.required().label("Agent Bank Account"),
       otherwise: Joi.forbidden(),
     }),
-    landlordBankCode: Joi.string().required().label("Landlord Bank Code"),
-    landlordBankAccount: Joi.string().required().label("Landlord Bank Account"),
+    agentBankName: Joi.string().when("type", {
+      is: "agent",
+      then: Joi.optional().label("Agent Bank Name"),
+      otherwise: Joi.forbidden(),
+    }),
+    agentAccountName: Joi.string().when("type", {
+      is: "agent",
+      then: Joi.optional().label("Agent Account Name"),
+      otherwise: Joi.forbidden(),
+    }),
+    // Landlord-only bank details (on their own profile — agents do NOT provide these here)
+    landlordBankCode: Joi.string().when("type", {
+      is: "landLord",
+      then: Joi.required().label("Landlord Bank Code"),
+      otherwise: Joi.forbidden(),
+    }),
+    landlordBankAccount: Joi.string().when("type", {
+      is: "landLord",
+      then: Joi.required().label("Landlord Bank Account"),
+      otherwise: Joi.forbidden(),
+    }),
+    landlordBankName: Joi.string().when("type", {
+      is: "landLord",
+      then: Joi.optional().label("Landlord Bank Name"),
+      otherwise: Joi.forbidden(),
+    }),
+    landlordAccountName: Joi.string().when("type", {
+      is: "landLord",
+      then: Joi.optional().label("Landlord Account Name"),
+      otherwise: Joi.forbidden(),
+    }),
     companyName: Joi.string().required().label("Company Name"),
     agentRegistrationNO: Joi.string().when("type", {
       is: "agent",
@@ -649,6 +679,11 @@ class UserUtil {
       region: Joi.array().items(Joi.string()).required(),
       gender: Joi.array().items(Joi.string()).required(),
     }).optional(),
+    // Landlord bank details attached to building (updatable via standalone endpoint)
+    landlordBankCode: Joi.string().optional().label("Landlord Bank Code"),
+    landlordBankAccount: Joi.string().optional().label("Landlord Bank Account"),
+    landlordBankName: Joi.string().optional().label("Landlord Bank Name"),
+    landlordAccountName: Joi.string().optional().label("Landlord Account Name"),
   }).unknown(true);
 
   /*
@@ -769,6 +804,29 @@ class UserUtil {
       region: Joi.array().items(Joi.string()).required(),
       gender: Joi.array().items(Joi.string()).required(),
     }).required(),
+    // Landlord bank details — required for agents, auto-filled for landlords in service layer
+    landlordBankCode: Joi.string().optional().label("Landlord Bank Code"),
+    landlordBankAccount: Joi.string().optional().label("Landlord Bank Account"),
+    landlordBankName: Joi.string().optional().label("Landlord Bank Name"),
+    landlordAccountName: Joi.string().optional().label("Landlord Account Name"),
+  });
+
+  // Validate standalone update of building landlord bank details
+  verifyUpdateBuildingBankDetails = Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid("list").required(),
+    buildingId: Joi.alternatives().try(Joi.number(), Joi.string()).required(),
+    landlordBankCode: Joi.string().required().label("Landlord Bank Code"),
+    landlordBankAccount: Joi.string().required().label("Landlord Bank Account"),
+    landlordBankName: Joi.string().optional().label("Landlord Bank Name"),
+    landlordAccountName: Joi.string().optional().label("Landlord Account Name"),
+  });
+
+  // Validate fetching building bank details
+  verifyGetBuildingBankDetails = Joi.object({
+    userId: Joi.number().required(),
+    role: Joi.string().valid("list").required(),
+    buildingId: Joi.alternatives().try(Joi.number(), Joi.string()).required(),
   });
 }
 

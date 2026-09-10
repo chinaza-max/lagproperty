@@ -1391,4 +1391,47 @@ export default class UserController {
       next(error);
     }
   }
+
+  async updateBuildingBankDetails(req, res, next) {
+    try {
+      const data = {
+        ...req.body,
+        userId: req.user.id,
+        role: req.user.role,
+      };
+
+      const result = await userService.handleUpdateBuildingBankDetails(data);
+
+      return res.status(200).json({
+        status: 200,
+        message: "Building bank details updated successfully",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
+  async getBuildingBankDetails(req, res, next) {
+    try {
+      const data = {
+        ...req.query,
+        userId: req.user.id,
+        role: req.user.role,
+      };
+
+      const result = await userService.handleGetBuildingBankDetails(data);
+
+      return res.status(200).json({
+        status: 200,
+        message: "Building bank details retrieved successfully",
+        data: result,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
 }
+

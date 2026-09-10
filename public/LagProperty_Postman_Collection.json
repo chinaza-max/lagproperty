@@ -75,7 +75,32 @@
 					}
 				},
 				{
-					"name": "Verify Email, Phone, or NIN",
+					"name": "Initiate NIN Verification (Request OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nin\": \"72022553879\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/validateNIN",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "validateNIN"]
+						}
+					}
+				},
+				{
+					"name": "Verify NIN OTP",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -86,7 +111,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"verificationCode\": 123456,\n  \"validateFor\": \"rent\",\n  \"type\": \"email\"\n}"
+							"raw": "{\n  \"verificationCode\": \"123456\",\n  \"identityId\": \"6a761a8da4069463bbd97463\",\n  \"validateFor\": \"rent\",\n  \"type\": \"nin\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/verifyEmailorTel",
@@ -113,6 +138,18 @@
 							"raw": "{{baseUrl}}/auth/validateBankAccount",
 							"host": ["{{baseUrl}}"],
 							"path": ["auth", "validateBankAccount"]
+						}
+					}
+				},
+				{
+					"name": "Get Banks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/getBanks",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "getBanks"]
 						}
 					}
 				}
@@ -626,6 +663,168 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["admin", "agents", "blacklisted"]
 						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Property Management & Building Bank Details",
+			"item": [
+				{
+					"name": "Update Profile (Agent - Own Account Details)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Agent\",\n  \"lastName\": \"Smith\",\n  \"type\": \"agent\",\n  \"agentBankCode\": \"058\",\n  \"agentBankAccount\": \"0123456789\",\n  \"agentBankName\": \"Guaranty Trust Bank\",\n  \"agentAccountName\": \"Agent Smith Enterprises\",\n  \"agentRegistrationNO\": \"AG-88214\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/updateProfile",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "updateProfile"]
+						},
+						"description": "Updates an agent's profile with their personal/commission account details. Landlord bank fields are strictly forbidden here."
+					}
+				},
+				{
+					"name": "Update Profile (Landlord - House Owner Account Details)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Chief\",\n  \"lastName\": \"Adeleke\",\n  \"type\": \"landLord\",\n  \"landlordBankCode\": \"058\",\n  \"landlordBankAccount\": \"9876543210\",\n  \"landlordBankName\": \"Guaranty Trust Bank\",\n  \"landlordAccountName\": \"Chief Adeleke Properties\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/updateProfile",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "updateProfile"]
+						},
+						"description": "Updates a landlord's profile with their receiving account details. Agent bank fields are strictly forbidden here."
+					}
+				},
+				{
+					"name": "List Building (Agent Upload with Landlord Bank Details)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"propertyPreference\": \"flats\",\n  \"propertyLocation\": \"Lekki Phase 1\",\n  \"city\": \"Lekki\",\n  \"address\": \"Plot 14 Admiralty Way\",\n  \"lat\": \"6.4474\",\n  \"lng\": \"3.4735\",\n  \"numberOfFloors\": 3,\n  \"numberOfRooms\": 4,\n  \"amenity\": [\"Water\", \"Security\", \"Generator\"],\n  \"availability\": \"vacant\",\n  \"furnishingStatus\": \"furnished\",\n  \"rentalDuration\": 12,\n  \"price\": 3500000,\n  \"propertyDescription\": \"Luxury 4-bedroom serviced apartment\",\n  \"landlordBankCode\": \"058\",\n  \"landlordBankAccount\": \"0123456789\",\n  \"landlordBankName\": \"GTBank\",\n  \"landlordAccountName\": \"Chief Adeleke\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/listBuilding",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "listBuilding"]
+						},
+						"description": "When an agent uploads a building, landlordBankCode and landlordBankAccount are REQUIRED so disbursement routes to that specific landlord."
+					}
+				},
+				{
+					"name": "Update Building Bank Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"buildingId\": \"0a5b8221-17ef-4e47-aefb-b8df9b15518b\",\n  \"landlordBankCode\": \"058\",\n  \"landlordBankAccount\": \"0123456789\",\n  \"landlordBankName\": \"GTBank\",\n  \"landlordAccountName\": \"Jane Adeleke\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/updateBuildingBankDetails",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "updateBuildingBankDetails"]
+						},
+						"description": "Update or attach landlord bank account details to a specific building. Only the owning property manager can call this."
+					}
+				},
+				{
+					"name": "Get Building Bank Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/user/getBuildingBankDetails?buildingId=0a5b8221-17ef-4e47-aefb-b8df9b15518b",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "getBuildingBankDetails"],
+							"query": [
+								{
+									"key": "buildingId",
+									"value": "0a5b8221-17ef-4e47-aefb-b8df9b15518b"
+								}
+							]
+						},
+						"description": "Retrieve the landlord bank details attached to a specific building."
 					}
 				}
 			]

@@ -89,11 +89,27 @@ import { Model, DataTypes } from "sequelize";
           type: DataTypes.STRING,
           allowNull: true,
         },
+        agentBankName: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        agentAccountName: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
         landlordBankCode: {
           type: DataTypes.STRING,
           allowNull: true,
         },
         landlordBankAccount: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        landlordBankName: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        landlordAccountName: {
           type: DataTypes.STRING,
           allowNull: true,
         },

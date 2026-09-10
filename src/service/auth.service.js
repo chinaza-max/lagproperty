@@ -755,6 +755,14 @@ class AuthenticationService {
       },
     });
 
+    // Use building-level landlord bank details; fall back to property manager profile
+    const landlordBankCode =
+      BuildingModel.landlordBankCode ||
+      PropertyManagerModelResult.landlordBankCode;
+    const landlordBankAccount =
+      BuildingModel.landlordBankAccount ||
+      PropertyManagerModelResult.landlordBankAccount;
+
     const paymentReference = "rent" + "_" + userService.generateReference();
     const authToken = await this.getAuthTokenMonify();
 
@@ -782,8 +790,8 @@ class AuthenticationService {
       ).landlordShare,
       reference: paymentReference,
       narration: "Rent Payment ",
-      destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-      destinationAccountNumber: PropertyManagerModelResult.landlordBankAccount,
+      destinationBankCode: landlordBankCode,
+      destinationAccountNumber: landlordBankAccount,
       currency: "NGN",
       sourceAccountNumber: serverConfig.MONNIFY_ACC,
       async: true,
@@ -2298,6 +2306,17 @@ class AuthenticationService {
 
       const authToken = await this.getAuthTokenMonify();
 
+      // Fetch the building to get per-building landlord bank details
+      const building = await this.BuildingModel.findByPk(inspection.buildingId);
+
+      // Use building-level bank details; fall back to property manager profile
+      const landlordBankCode =
+        (building && building.landlordBankCode) ||
+        propertyManager.landlordBankCode;
+      const landlordBankAccount =
+        (building && building.landlordBankAccount) ||
+        propertyManager.landlordBankAccount;
+
       // Check if the property manager is a landlord or agent and proceed accordingly
       if (
         propertyManager.type === "landLord" &&
@@ -2326,8 +2345,8 @@ class AuthenticationService {
           ).landlordShare,
           reference: paymentReference,
           narration: "Rent Payment",
-          destinationBankCode: propertyManager.landlordBankCode,
-          destinationAccountNumber: propertyManager.landlordBankAccount,
+          destinationBankCode: landlordBankCode,
+          destinationAccountNumber: landlordBankAccount,
           currency: "NGN",
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
           async: true,
@@ -2374,7 +2393,7 @@ class AuthenticationService {
           paymentStatus: "PENDING",
         });
 
-        // Transfer to landlord
+        // Transfer to landlord (using building-level landlord bank details)
         const landlordDetails = {
           amount: this.calculateDistribution(
             amount,
@@ -2384,14 +2403,14 @@ class AuthenticationService {
           ).landlordShare,
           reference: landlordReference,
           narration: "Rent Payment ",
-          destinationBankCode: propertyManager.landlordBankCode,
-          destinationAccountNumber: propertyManager.landlordBankAccount,
+          destinationBankCode: landlordBankCode,
+          destinationAccountNumber: landlordBankAccount,
           currency: "NGN",
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
           async: true,
         };
 
-        // Transfer to agent
+        // Transfer to agent (using agent's own profile bank details)
         const agentDetails = {
           amount: this.calculateDistribution(
             amount,

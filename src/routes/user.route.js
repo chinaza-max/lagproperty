@@ -79,20 +79,36 @@
  *                 example: "agent"
  *               agentBankCode:
  *                 type: string
- *                 description: The bank code for agents (required if type is 'agent')
- *                 example: "123456"
+ *                 description: The bank code for agents (required if type is 'agent'; forbidden for 'landLord')
+ *                 example: "058"
  *               agentBankAccount:
  *                 type: string
- *                 description: The bank account for agents (required if type is 'agent')
+ *                 description: The bank account for agents (required if type is 'agent'; forbidden for 'landLord')
  *                 example: "0123456789"
+ *               agentBankName:
+ *                 type: string
+ *                 description: The bank name for agents (optional; forbidden for 'landLord')
+ *                 example: "Guaranty Trust Bank"
+ *               agentAccountName:
+ *                 type: string
+ *                 description: The account holder name for agents (optional; forbidden for 'landLord')
+ *                 example: "Agent John Doe"
  *               landlordBankCode:
  *                 type: string
- *                 description: The bank code for landlords
- *                 example: "654321"
+ *                 description: The bank code for landlords (required if type is 'landLord'; forbidden for 'agent')
+ *                 example: "058"
  *               landlordBankAccount:
  *                 type: string
- *                 description: The bank account for landlords
+ *                 description: The bank account for landlords (required if type is 'landLord'; forbidden for 'agent')
  *                 example: "9876543210"
+ *               landlordBankName:
+ *                 type: string
+ *                 description: The bank name for landlords (optional; forbidden for 'agent')
+ *                 example: "Zenith Bank"
+ *               landlordAccountName:
+ *                 type: string
+ *                 description: The account holder name for landlords (optional; forbidden for 'agent')
+ *                 example: "Landlord Jane Doe"
  *               companyName:
  *                 type: string
  *                 description: The name of the company (if applicable)
@@ -214,6 +230,22 @@
  *                 type: string
  *                 description: Additional description of the property
  *                 example: 'Spacious and modern apartment with a great view'
+ *               landlordBankCode:
+ *                 type: string
+ *                 description: Bank code of the landlord. REQUIRED when uploading as an Agent (since an agent works for multiple landlords). Optional for Landlords (system auto-copies from their profile if omitted).
+ *                 example: '058'
+ *               landlordBankAccount:
+ *                 type: string
+ *                 description: Bank account number of the landlord. REQUIRED when uploading as an Agent. Optional for Landlords (auto-copied from profile if omitted).
+ *                 example: '0123456789'
+ *               landlordBankName:
+ *                 type: string
+ *                 description: Bank name of the landlord (optional)
+ *                 example: 'Guaranty Trust Bank'
+ *               landlordAccountName:
+ *                 type: string
+ *                 description: Account holder name of the landlord (optional)
+ *                 example: 'Jane Doe'
  *               propertyTerms:
  *                 type: object
  *                 properties:
@@ -3867,6 +3899,131 @@ import uploadHandler from "../middlewares/upload.middleware.js";
  *       200:
  *         description: Returns dictionary of all push notification events for frontend integration.
  */
+
+/**
+ * @swagger
+ * /user/updateBuildingBankDetails:
+ *   post:
+ *     summary: Update landlord bank details for a building
+ *     description: Allows the building owner or assigned agent to update or attach landlord bank account details to a specific building.
+ *     tags:
+ *       - Building
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - buildingId
+ *               - landlordBankCode
+ *               - landlordBankAccount
+ *             properties:
+ *               buildingId:
+ *                 type: string
+ *                 description: ID of the building
+ *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *               landlordBankCode:
+ *                 type: string
+ *                 description: Bank code of the landlord
+ *                 example: "058"
+ *               landlordBankAccount:
+ *                 type: string
+ *                 description: Bank account number of the landlord
+ *                 example: "0123456789"
+ *               landlordBankName:
+ *                 type: string
+ *                 description: Bank name of the landlord (optional)
+ *                 example: "Guaranty Trust Bank"
+ *               landlordAccountName:
+ *                 type: string
+ *                 description: Account holder name of the landlord (optional)
+ *                 example: "Jane Doe"
+ *     responses:
+ *       200:
+ *         description: Building bank details updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Building bank details updated successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     buildingId:
+ *                       type: string
+ *                     landlordBankCode:
+ *                       type: string
+ *                     landlordBankAccount:
+ *                       type: string
+ *                     landlordBankName:
+ *                       type: string
+ *                     landlordAccountName:
+ *                       type: string
+ *       400:
+ *         description: Bad request or unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /user/getBuildingBankDetails:
+ *   get:
+ *     summary: Get landlord bank details for a building
+ *     description: Retrieves the landlord bank account details attached to a specific building. Only accessible by the building owner/agent.
+ *     tags:
+ *       - Building
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: buildingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the building
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Building bank details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Building bank details retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     landlordBankCode:
+ *                       type: string
+ *                     landlordBankAccount:
+ *                       type: string
+ *                     landlordBankName:
+ *                       type: string
+ *                     landlordAccountName:
+ *                       type: string
+ *       400:
+ *         description: Bad request or unauthorized
+ *       500:
+ *         description: Internal server error
+ */
 class UserRoutes extends UserController {
   constructor() {
     super();
@@ -3928,6 +4085,8 @@ class UserRoutes extends UserController {
       ]),
       this.updatelistedBuilding,
     );
+    this.router.post("/updateBuildingBankDetails", this.updateBuildingBankDetails);
+    this.router.get("/getBuildingBankDetails", this.getBuildingBankDetails);
     this.router.get("/getReceipt", this.getReceipt);
     this.router.get("/downloadReceipt", this.downloadReceipt);
     this.router.post("/inspectionAction", this.inspectionAction);

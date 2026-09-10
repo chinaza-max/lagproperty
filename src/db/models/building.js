@@ -165,6 +165,23 @@ export function init(connection) {
           return rawValue.replace(/^http:\/\/178\.62\.5\.186:5000/i, "https://app.dianetechnologies.com");
         },
       },
+      // Landlord bank details stored per building (required for agent uploads, auto-filled for landlord uploads)
+      landlordBankCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      landlordBankAccount: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      landlordBankName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      landlordAccountName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       isDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

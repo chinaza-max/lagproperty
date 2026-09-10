@@ -229,4 +229,28 @@ export function init(connection) {
   // Sync Complaint tables safely
   Complaint.sync().catch((err) => console.error("Complaint sync error:", err.message));
   ComplaintMessage.sync().catch((err) => console.error("ComplaintMessage sync error:", err.message));
+
+  // Safe column migrations for bank details on Building and PropertyManager
+  const safeAddColumn = async (tableName, columnName, columnDef) => {
+    try {
+      await connection.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${columnDef}`);
+      console.log(`Added column ${columnName} to ${tableName}`);
+    } catch (err) {
+      if (!err.message.includes("Duplicate column name")) {
+        console.error(`Error adding column ${columnName} to ${tableName}:`, err.message);
+      }
+    }
+  };
+
+  // Building: landlord bank details per property
+  safeAddColumn("Building", "landlordBankCode", "VARCHAR(255) NULL");
+  safeAddColumn("Building", "landlordBankAccount", "VARCHAR(255) NULL");
+  safeAddColumn("Building", "landlordBankName", "VARCHAR(255) NULL");
+  safeAddColumn("Building", "landlordAccountName", "VARCHAR(255) NULL");
+
+  // PropertyManager: bank name + account name for agent and landlord
+  safeAddColumn("PropertyManager", "agentBankName", "VARCHAR(255) NULL");
+  safeAddColumn("PropertyManager", "agentAccountName", "VARCHAR(255) NULL");
+  safeAddColumn("PropertyManager", "landlordBankName", "VARCHAR(255) NULL");
+  safeAddColumn("PropertyManager", "landlordAccountName", "VARCHAR(255) NULL");
 }

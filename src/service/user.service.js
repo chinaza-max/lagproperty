@@ -2424,20 +2424,129 @@ class UserService {
 */
 
   async handleListBuilding(data) {
-    const { userId, role, propertyImages, propertyTerms, ...updateData } =
-      await userUtil.verifyHandleListBuilding.validateAsync(data);
+    const {
+      userId,
+      role,
+      propertyImages,
+      propertyTerms,
+      landlordBankCode,
+      landlordBankAccount,
+      landlordBankName,
+      landlordAccountName,
+      ...updateData
+    } = await userUtil.verifyHandleListBuilding.validateAsync(data);
 
     try {
+      // Fetch the property manager to determine type and get their bank details
+      const propertyManager = await this.PropertyManagerModel.findByPk(userId);
+      if (!propertyManager) {
+        throw new BadRequestError("Property manager account not found.");
+      }
+
+      let resolvedLandlordBankCode = landlordBankCode;
+      let resolvedLandlordBankAccount = landlordBankAccount;
+      let resolvedLandlordBankName = landlordBankName;
+      let resolvedLandlordAccountName = landlordAccountName;
+
+      if (propertyManager.type === "agent") {
+        // Agent must supply landlord bank details for each building they upload (different landlords)
+        if (!landlordBankCode || !landlordBankAccount) {
+          throw new BadRequestError(
+            "Agents must provide the landlord's bank details (landlordBankCode and landlordBankAccount) when listing a building."
+          );
+        }
+      } else if (propertyManager.type === "landLord") {
+        // Landlord: automatically use their own profile bank details
+        resolvedLandlordBankCode = propertyManager.landlordBankCode;
+        resolvedLandlordBankAccount = propertyManager.landlordBankAccount;
+        resolvedLandlordBankName = propertyManager.landlordBankName;
+        resolvedLandlordAccountName = propertyManager.landlordAccountName;
+      }
+
       const building = await this.BuildingModel.create({
         propertyManagerId: userId,
         propertyImages,
         propertyTerms: propertyTerms.url,
+        landlordBankCode: resolvedLandlordBankCode,
+        landlordBankAccount: resolvedLandlordBankAccount,
+        landlordBankName: resolvedLandlordBankName,
+        landlordAccountName: resolvedLandlordAccountName,
         ...updateData,
       });
 
       await this.checkAndNotifyTenants(building);
     } catch (error) {
+      if (error instanceof BadRequestError) throw error;
       console.error(error);
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+
+  /**
+   * Standalone: Update landlord bank details for a specific building.
+   * Agents can update the landlord account attached to any building they manage.
+   * Landlords can update their own buildings.
+   */
+  async handleUpdateBuildingBankDetails(data) {
+    const { userId, role, buildingId, landlordBankCode, landlordBankAccount, landlordBankName, landlordAccountName } =
+      await userUtil.verifyUpdateBuildingBankDetails.validateAsync(data);
+
+    try {
+      const building = await this.BuildingModel.findOne({
+        where: { id: buildingId, propertyManagerId: userId, isDeleted: false },
+      });
+
+      if (!building) {
+        throw new BadRequestError("Building not found or you are not authorized to update it.");
+      }
+
+      await building.update({
+        landlordBankCode,
+        landlordBankAccount,
+        ...(landlordBankName && { landlordBankName }),
+        ...(landlordAccountName && { landlordAccountName }),
+      });
+
+      return {
+        buildingId: building.id,
+        landlordBankCode,
+        landlordBankAccount,
+        landlordBankName: landlordBankName || building.landlordBankName,
+        landlordAccountName: landlordAccountName || building.landlordAccountName,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestError) throw error;
+      throw new SystemError(error.name, error.parent);
+    }
+  }
+
+  /**
+   * Get the landlord bank details attached to a specific building.
+   * Only the owning property manager can retrieve this.
+   */
+  async handleGetBuildingBankDetails(data) {
+    const { userId, role, buildingId } =
+      await userUtil.verifyGetBuildingBankDetails.validateAsync(data);
+
+    try {
+      const building = await this.BuildingModel.findOne({
+        where: { id: buildingId, propertyManagerId: userId, isDeleted: false },
+        attributes: [
+          "id",
+          "landlordBankCode",
+          "landlordBankAccount",
+          "landlordBankName",
+          "landlordAccountName",
+        ],
+      });
+
+      if (!building) {
+        throw new BadRequestError("Building not found or you are not authorized to view it.");
+      }
+
+      return building;
+    } catch (error) {
+      if (error instanceof BadRequestError) throw error;
       throw new SystemError(error.name, error.parent);
     }
   }
@@ -4231,6 +4340,17 @@ class UserService {
     console.log(TransactionModelResult);
     const TransactionModelResultAmount = TransactionModelResult.amount;
     try {
+      // Fetch the building to get per-building landlord bank details
+      const building = await this.BuildingModel.findByPk(inspection.buildingId);
+
+      // Use building-level bank details if available, fall back to property manager profile
+      const landlordBankCode =
+        (building && building.landlordBankCode) ||
+        PropertyManagerModelResult.landlordBankCode;
+      const landlordBankAccount =
+        (building && building.landlordBankAccount) ||
+        PropertyManagerModelResult.landlordBankAccount;
+
       if (PropertyManagerModelResult.type == "landLord") {
         const authToken = await authService.getAuthTokenMonify();
 
@@ -4254,9 +4374,8 @@ class UserService {
           ).landlordShare,
           reference: paymentReference,
           narration: "Rent Payment ",
-          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-          destinationAccountNumber:
-            PropertyManagerModelResult.landlordBankAccount,
+          destinationBankCode: landlordBankCode,
+          destinationAccountNumber: landlordBankAccount,
           currency: "NGN",
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
           async: true,
@@ -4264,6 +4383,7 @@ class UserService {
 
         await this.initiateTransfer(authToken, transferDetails);
       } else {
+        // Agent listing: split between landlord and agent
         const paymentReference = "firstRent" + "_" + this.generateReference();
 
         const authToken = await authService.getAuthTokenMonify();
@@ -4277,6 +4397,7 @@ class UserService {
           transactionType: "firstRent",
         });
 
+        // Transfer to landlord (building-level bank details)
         const transferDetails = {
           amount: this.calculateDistribution(
             TransactionModelResultAmount,
@@ -4286,9 +4407,8 @@ class UserService {
           ).landlordShare,
           reference: paymentReference,
           narration: "Rent Payment ",
-          destinationBankCode: PropertyManagerModelResult.landlordBankCode,
-          destinationAccountNumber:
-            PropertyManagerModelResult.landlordBankAccount,
+          destinationBankCode: landlordBankCode,
+          destinationAccountNumber: landlordBankAccount,
           currency: "NGN",
           twoFaEnabled: false,
           sourceAccountNumber: serverConfig.MONNIFY_ACC,
@@ -4297,7 +4417,7 @@ class UserService {
 
         await this.initiateTransfer(authToken, transferDetails);
 
-        //BELOW IS FOR AGENT TRANSFER
+        //BELOW IS FOR AGENT TRANSFER (agent commission from their profile bank)
 
         const paymentReference2 = "commission" + "_" + this.generateReference();
 
