@@ -3273,36 +3273,19 @@
  * @swagger
  * /user/getAllProperty:
  *   get:
- *     summary: Fetch all buildings with filters, sorting, and pagination
+ *     summary: Fetch all buildings with optional individual filters, sorting, and pagination
  *     description: >
- *       Retrieves a paginated list of buildings.
- *       Supports filtering by availability and furnishing status, sorting,
- *       and role-based access for property managers (list) and renters (rent).
+ *       Retrieves a paginated list of buildings without automatic profile preference filtering.
+ *       Allows frontend to send individual optional filter parameters.
  *     tags:
  *       - Building
  *     parameters:
  *       - in: query
- *         name: userId
- *         required: true
- *         schema:
- *           type: integer
- *         description: The ID of the logged-in user.
- *
- *       - in: query
- *         name: role
- *         required: true
- *         schema:
- *           type: string
- *           enum: [list, rent]
- *         description: User role (property manager or renter).
- *
- *       - in: query
  *         name: type
- *         required: true
  *         schema:
  *           type: string
- *           enum: [vacant, occupied, booked, cancelled, listing]
- *         description: Type of property list to fetch.
+ *           enum: [vacant, occupied, booked, cancelled, listing, all]
+ *         description: Optional property type/status filter.
  *
  *       - in: query
  *         name: availability
@@ -3319,10 +3302,70 @@
  *         description: Filter buildings by furnishing status.
  *
  *       - in: query
+ *         name: propertyLocation
+ *         schema:
+ *           type: string
+ *         description: Filter buildings by location name/area.
+ *
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: Filter buildings by city.
+ *
+ *       - in: query
+ *         name: propertyPreference
+ *         schema:
+ *           type: string
+ *         description: Filter by property category (e.g. self con, flat, duplex).
+ *
+ *       - in: query
+ *         name: bedrooms
+ *         schema:
+ *           type: integer
+ *         description: Filter by number of rooms/bedrooms.
+ *
+ *       - in: query
+ *         name: numberOfFloors
+ *         schema:
+ *           type: integer
+ *         description: Filter by number of floors.
+ *
+ *       - in: query
+ *         name: rentalDuration
+ *         schema:
+ *           type: integer
+ *         description: Filter by rental duration.
+ *
+ *       - in: query
+ *         name: budgetMin
+ *         schema:
+ *           type: integer
+ *         description: Minimum price/budget filter.
+ *
+ *       - in: query
+ *         name: budgetMax
+ *         schema:
+ *           type: integer
+ *         description: Maximum price/budget filter.
+ *
+ *       - in: query
+ *         name: amenities
+ *         schema:
+ *           type: string
+ *         description: Comma-separated or JSON array string of required amenities.
+ *
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search keyword matching location, city, address, category, or description.
+ *
+ *       - in: query
  *         name: propertyManagerId
  *         schema:
  *           type: integer
- *         description: Required when role is "rent" and type is "listing".
+ *         description: Filter properties by specific property manager / landlord.
  *
  *       - in: query
  *         name: sortBy
@@ -3342,18 +3385,16 @@
  *
  *       - in: query
  *         name: page
- *         required: true
  *         schema:
  *           type: integer
- *           example: 1
+ *           default: 1
  *         description: The page number to retrieve.
  *
  *       - in: query
  *         name: pageSize
- *         required: true
  *         schema:
  *           type: integer
- *           example: 10
+ *           default: 10
  *         description: Number of items per page.
  *
  *     responses:

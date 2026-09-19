@@ -162,28 +162,45 @@ class UserUtil {
     userId: Joi.number().required(),
     role: Joi.string().valid("list", "rent", "admin", "super_admin").required(),
     type: Joi.string()
-      .valid("vacant", "cancelled", "occupied", "listing", "booked")
-      .required()
+      .valid("vacant", "cancelled", "occupied", "listing", "booked", "all")
+      .optional()
+      .allow(null, "")
       .label("type"),
-    availability: Joi.string().valid("vacant", "occupied", "booked").optional(),
+    availability: Joi.string()
+      .valid("vacant", "occupied", "booked")
+      .optional()
+      .allow(null, ""),
     furnishingStatus: Joi.string()
       .valid("furnished", "unfurnished", "partly furnished", "unset")
-      .optional(),
-    pageSize: Joi.number().integer().min(1).required(),
-    page: Joi.number().integer().min(1).required(),
+      .optional()
+      .allow(null, ""),
+    propertyLocation: Joi.string().optional().allow(null, ""),
+    city: Joi.string().optional().allow(null, ""),
+    propertyPreference: Joi.alternatives()
+      .try(Joi.string(), Joi.array().items(Joi.string()))
+      .optional()
+      .allow(null, ""),
+    numberOfRooms: Joi.number().integer().optional(),
+    bedrooms: Joi.number().integer().optional(),
+    numberOfFloors: Joi.number().integer().optional(),
+    rentalDuration: Joi.number().integer().optional(),
+    budgetMin: Joi.number().integer().optional(),
+    budgetMax: Joi.number().integer().optional(),
+    minPrice: Joi.number().integer().optional(),
+    maxPrice: Joi.number().integer().optional(),
+    amenities: Joi.alternatives()
+      .try(Joi.string(), Joi.array().items(Joi.string()))
+      .optional()
+      .allow(null, ""),
+    propertyManagerId: Joi.number().optional().allow(null, ""),
+    pageSize: Joi.number().integer().min(1).default(10).optional(),
+    page: Joi.number().integer().min(1).default(1).optional(),
     sortBy: Joi.string()
       .valid("price", "createdAt", "numberOfRooms", "numberOfFloors")
-      .default("createdAt"),
-    sortOrder: Joi.string().valid("asc", "desc").default("desc"),
-    propertyManagerId: Joi.number().when("role", {
-      is: "rent",
-      then: Joi.when("type", {
-        is: "listing",
-        then: Joi.required(),
-        otherwise: Joi.forbidden(),
-      }),
-      otherwise: Joi.forbidden(),
-    }),
+      .default("createdAt")
+      .optional(),
+    sortOrder: Joi.string().valid("asc", "desc").default("desc").optional(),
+    search: Joi.string().optional().allow(null, ""),
   });
 
   verifyHandleGetMyProperty = Joi.object({

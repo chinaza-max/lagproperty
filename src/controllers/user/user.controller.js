@@ -1127,7 +1127,28 @@ export default class UserController {
 
   async getAllProperty(req, res, next) {
     try {
-      const data = req.query;
+      const data = { ...req.query };
+
+      if (typeof data.amenities === "string") {
+        if (!data.amenities.trim() || data.amenities.trim() === "[]") {
+          delete data.amenities;
+        } else {
+          try {
+            data.amenities = JSON.parse(data.amenities.replace(/'/g, '"'));
+          } catch (error) {
+            data.amenities = data.amenities
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean);
+          }
+        }
+      }
+
+      if (typeof data.propertyPreference === "string" && data.propertyPreference.trim().startsWith("[")) {
+        try {
+          data.propertyPreference = JSON.parse(data.propertyPreference.replace(/'/g, '"'));
+        } catch (e) {}
+      }
 
       let my_bj = {
         ...data,

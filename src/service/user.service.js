@@ -2878,9 +2878,22 @@ class UserService {
       pageSize,
       availability,
       furnishingStatus,
+      propertyLocation,
+      city,
+      propertyPreference,
+      numberOfRooms,
+      bedrooms,
+      numberOfFloors,
+      rentalDuration,
+      budgetMin,
+      budgetMax,
+      minPrice,
+      maxPrice,
+      amenities,
+      propertyManagerId,
       sortBy,
       sortOrder,
-      propertyManagerId,
+      search,
     } = await userUtil.verifyHandleGetAllProperty.validateAsync(data);
 
     try {
@@ -2892,15 +2905,15 @@ class UserService {
       // role-specific filters
       if (role === "list") {
         whereCondition.propertyManagerId = userId;
-      } else if (role === "rent" && type === "listing") {
+      } else if (propertyManagerId) {
         whereCondition.propertyManagerId = propertyManagerId;
       }
 
       // type-based filters
       if (type === "vacant") whereCondition.availability = "vacant";
-      if (type === "occupied") whereCondition.availability = "occupied";
-      if (type === "booked") whereCondition.availability = "booked";
-      if (type === "cancelled") {
+      else if (type === "occupied") whereCondition.availability = "occupied";
+      else if (type === "booked") whereCondition.availability = "booked";
+      else if (type === "cancelled") {
         const refundedInspections = await this.InspectionModel.findAll({
           where: { inspectionStatus: "refunded" },
           include: [
@@ -2936,15 +2949,104 @@ class UserService {
         whereCondition.id = buildingIds;
       }
 
-      // additional filters
+      // additional individual filters
       if (availability) whereCondition.availability = availability;
       if (furnishingStatus) whereCondition.furnishingStatus = furnishingStatus;
+
+      // location filter
+      if (propertyLocation && typeof propertyLocation === "string" && propertyLocation.trim()) {
+        whereCondition.propertyLocation = {
+          [Op.like]: `%${propertyLocation.trim()}%`,
+        };
+      }
+
+      // city filter
+      if (city && typeof city === "string" && city.trim()) {
+        whereCondition.city = {
+          [Op.like]: `%${city.trim()}%`,
+        };
+      }
+
+      // property type/preference filter
+      if (propertyPreference) {
+        if (Array.isArray(propertyPreference) && propertyPreference.length > 0) {
+          whereCondition.propertyPreference = {
+            [Op.in]: propertyPreference,
+          };
+        } else if (typeof propertyPreference === "string" && propertyPreference.trim()) {
+          whereCondition.propertyPreference = {
+            [Op.like]: `%${propertyPreference.trim()}%`,
+          };
+        }
+      }
+
+      // bedrooms / numberOfRooms filter
+      const rooms = bedrooms || numberOfRooms;
+      if (rooms) {
+        whereCondition.numberOfRooms = rooms;
+      }
+
+      // numberOfFloors filter
+      if (numberOfFloors) {
+        whereCondition.numberOfFloors = numberOfFloors;
+      }
+
+      // rentalDuration filter
+      if (rentalDuration) {
+        whereCondition.rentalDuration = rentalDuration;
+      }
+
+      // Price / budget range filters
+      const effectiveMinPrice = budgetMin ?? minPrice;
+      const effectiveMaxPrice = budgetMax ?? maxPrice;
+      if (effectiveMinPrice !== undefined || effectiveMaxPrice !== undefined) {
+        whereCondition.price = {};
+        if (effectiveMinPrice !== undefined && effectiveMinPrice !== null) {
+          whereCondition.price[Op.gte] = effectiveMinPrice;
+        }
+        if (effectiveMaxPrice !== undefined && effectiveMaxPrice !== null) {
+          whereCondition.price[Op.lte] = effectiveMaxPrice;
+        }
+      }
+
+      // Amenities filter
+      if (amenities && amenities.length > 0) {
+        const amenitiesList = Array.isArray(amenities) ? amenities : [amenities];
+        whereCondition.amenity = {
+          [Op.and]: amenitiesList.map((amenity) =>
+            Sequelize.where(
+              Sequelize.fn(
+                "JSON_CONTAINS",
+                Sequelize.col("amenity"),
+                Sequelize.literal(`'"${amenity}"'`),
+              ),
+              true,
+            ),
+          ),
+        };
+      }
+
+      // Search keyword filter across multiple text fields
+      if (search && typeof search === "string" && search.trim()) {
+        const searchTerm = `%${search.trim()}%`;
+        whereCondition[Op.and] = whereCondition[Op.and] || [];
+        whereCondition[Op.and].push({
+          [Op.or]: [
+            { propertyLocation: { [Op.like]: searchTerm } },
+            { city: { [Op.like]: searchTerm } },
+            { address: { [Op.like]: searchTerm } },
+            { propertyPreference: { [Op.like]: searchTerm } },
+            { propertyDescription: { [Op.like]: searchTerm } },
+          ],
+        });
+      }
 
       const buildings = await this.BuildingModel.findAndCountAll({
         where: whereCondition,
         limit,
         offset,
         order: [[sortBy, sortOrder]],
+        distinct: true,
       });
 
       return {
@@ -2952,7 +3054,7 @@ class UserService {
         pagination: {
           totalItems: buildings.count,
           currentPage: page,
-          totalPages: Math.ceil(buildings.count / pageSize),
+          totalPages: Math.ceil(buildings.count / pageSize) || 0,
         },
       };
     } catch (error) {
