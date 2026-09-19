@@ -3323,7 +3323,13 @@
  *         name: bedrooms
  *         schema:
  *           type: integer
- *         description: Filter by number of rooms/bedrooms.
+ *         description: Filter by number of rooms/bedrooms (alias for numberOfRooms).
+ *
+ *       - in: query
+ *         name: numberOfRooms
+ *         schema:
+ *           type: integer
+ *         description: Filter by number of rooms.
  *
  *       - in: query
  *         name: numberOfFloors
@@ -3344,10 +3350,22 @@
  *         description: Minimum price/budget filter.
  *
  *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: integer
+ *         description: Minimum price filter (alias for budgetMin).
+ *
+ *       - in: query
  *         name: budgetMax
  *         schema:
  *           type: integer
  *         description: Maximum price/budget filter.
+ *
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: integer
+ *         description: Maximum price filter (alias for budgetMax).
  *
  *       - in: query
  *         name: amenities
