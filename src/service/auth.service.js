@@ -1779,17 +1779,73 @@ class AuthenticationService {
           type: "NIN",
         });
 
-        const verifyData = fidopointResponse.data?.data?.data;
-        const providerResponse = verifyData?.providerResponse || {};
+        const resBody = fidopointResponse?.data;
+        const payload = resBody?.data || resBody;
+        const gatewayResult = resBody?.data;
+        const verifyData = gatewayResult?.data || gatewayResult;
+        const providerResponse =
+          payload?.providerResponse ||
+          verifyData?.providerResponse ||
+          gatewayResult?.providerResponse;
 
-        console.log("[Fidopoint] NIN verified:", JSON.stringify(providerResponse, null, 2));
+        // Standardized check:
+        // 1. Explicit verified flag must not be false
+        // 2. Gateway statusCode must be 200 (if present)
+        // 3. Status must not be FAILED
+        // 4. Must return valid NIN record in providerResponse
+        const isExplicitlyVerified = payload?.verified === true;
+        const hasValidNin = Boolean(
+          providerResponse?.nin ||
+          payload?.identityNumber ||
+          verifyData?.identityNumber ||
+          verifyData?.nin
+        );
+        const isStatusCodeOk =
+          !gatewayResult?.statusCode ||
+          Number(gatewayResult.statusCode) === 200;
+        const isStatusOk =
+          (!resBody?.status || resBody.status === 200 || resBody.status === "success") &&
+          (!verifyData?.status || String(verifyData.status).toUpperCase() === "SUCCESS");
+        const isOtpVerified =
+          payload?.verified !== false &&
+          verifyData?.otpVerified !== false;
+
+        const isVerified =
+          (isExplicitlyVerified || (isStatusCodeOk && isStatusOk && isOtpVerified)) &&
+          hasValidNin;
+
+        if (!isVerified) {
+          const failMessage =
+            gatewayResult?.message ||
+            gatewayResult?.responseMessage ||
+            verifyData?.message ||
+            payload?.message ||
+            resBody?.message ||
+            "Incorrect or invalid OTP for NIN verification.";
+
+          console.warn("[Fidopoint] NIN verification failed. Details:", {
+            isExplicitlyVerified,
+            isStatusCodeOk,
+            isStatusOk,
+            isOtpVerified,
+            hasValidNin,
+            failMessage,
+          });
+
+          throw new BadRequestError(failMessage);
+        }
+
+        console.log(
+          "[Fidopoint] NIN verified successfully:",
+          JSON.stringify(providerResponse, null, 2)
+        );
 
         // Build update payload
         let updatePayload = { isNINValid: true };
 
         // Sync firstName if it doesn't match
         if (
-          providerResponse.firstName &&
+          providerResponse?.firstName &&
           providerResponse.firstName.trim().toLowerCase() !==
           (relatedUser.firstName || "").trim().toLowerCase()
         ) {
@@ -1798,7 +1854,7 @@ class AuthenticationService {
 
         // Sync lastName if it doesn't match
         if (
-          providerResponse.lastName &&
+          providerResponse?.lastName &&
           providerResponse.lastName.trim().toLowerCase() !==
           (relatedUser.lastName || "").trim().toLowerCase()
         ) {
@@ -1806,31 +1862,57 @@ class AuthenticationService {
         }
 
         // Sync dateOfBirth if present and different
-        const rawDob = providerResponse.dateOfBirth || providerResponse.dob || providerResponse.birthdate;
+        const rawDob =
+          providerResponse?.dateOfBirth ||
+          providerResponse?.dob ||
+          providerResponse?.birthdate;
         if (rawDob) {
           // rawDob format is "DD-MM-YYYY", convert to Date
-          const [dd, mm, yyyy] = rawDob.split("-");
-          const parsedDob = new Date(`${yyyy}-${mm}-${dd}`);
-          const existingDob = relatedUser.dateOfBirth
-            ? new Date(relatedUser.dateOfBirth).toISOString().split("T")[0]
-            : null;
-          const incomingDob = parsedDob.toISOString().split("T")[0];
-          if (!existingDob || existingDob !== incomingDob) {
-            updatePayload.dateOfBirth = parsedDob;
+          const [dd, mm, yyyy] = String(rawDob).split("-");
+          if (dd && mm && yyyy) {
+            const parsedDob = new Date(`${yyyy}-${mm}-${dd}`);
+            if (!isNaN(parsedDob.getTime())) {
+              const existingDob = relatedUser.dateOfBirth
+                ? new Date(relatedUser.dateOfBirth).toISOString().split("T")[0]
+                : null;
+              const incomingDob = parsedDob.toISOString().split("T")[0];
+              if (!existingDob || existingDob !== incomingDob) {
+                updatePayload.dateOfBirth = parsedDob;
+              }
+            }
           }
         }
 
         await relatedUser.update(updatePayload);
 
-        // Expire the session
+        // Expire the session ONLY on successful verification
         await ninSession.update({ expiresIn: new Date() });
 
         return relatedUser;
       } catch (error) {
         console.log("[Fidopoint] NIN verify error:", error?.response?.data || error.message);
+        if (error instanceof SystemError) {
+          throw error;
+        }
+
+        const resStatus = error?.response?.status;
+        const resData = error?.response?.data;
+        const errMsg =
+          resData?.message ||
+          resData?.data?.message ||
+          resData?.error ||
+          error.message ||
+          "Failed to verify NIN OTP";
+
+        if (resStatus === 400 || resStatus === 422) {
+          throw new BadRequestError(errMsg);
+        } else if (resStatus === 404) {
+          throw new NotFoundError(errMsg);
+        }
+
         throw new SystemError(
-          error.name,
-          error?.response?.data?.message || error?.response?.data?.error || error.message
+          error.name || "SystemError",
+          errMsg
         );
       }
     }
@@ -2698,76 +2780,98 @@ class AuthenticationService {
   //cronJobToUpdateDisbursement
 
   /**
-   * Handles incoming Fidopoint webhook events.
-   * Called when Fidopoint sends an `identity.nin.verified` event to your server.
+   * Handles incoming Fidopoint NIN webhook events.
+   * Supported events:
+   *   - identity.nin.verified  → mark user isNINValid=true, sync profile fields
+   *   - identity.nin.failed    → log the failure, expire the session, no user update
    */
   async handleNINWebhook(payload) {
     const { event, data } = payload;
+    const { identityId, verified, providerResponse } = data || {};
+
+    // ── 1. Route by event type ──────────────────────────────────────────────
+    if (event === "identity.nin.failed") {
+      console.warn(
+        `[Fidopoint Webhook] NIN verification failed for identityId: ${identityId}`,
+        { verified, reason: data?.reason || "provider rejected" }
+      );
+
+      // Optionally expire the session so the user must restart
+      const failedSession = await this.EmailandTelValidationModel.findOne({
+        where: { identityId, type: "nin" },
+        order: [["updatedAt", "DESC"]],
+      });
+      if (failedSession) {
+        await failedSession.update({ expiresIn: new Date() });
+      }
+
+      return { processed: false, reason: "identity.nin.failed event received" };
+    }
 
     if (event !== "identity.nin.verified") {
       console.log(`[Fidopoint Webhook] Ignoring unhandled event: ${event}`);
       return { ignored: true };
     }
 
-    const { identityId, status, verificationResult } = data;
-    const providerResponse = verificationResult?.data?.providerResponse || {};
-
-
-    if (status !== "SUCCESS") {
-      return { processed: false, reason: "status not SUCCESS" };
+    // ── 2. Strict success guard ─────────────────────────────────────────────
+    // bill-bolt already validated everything before sending this event.
+    // We trust `verified === true` + a non-empty providerResponse as the contract.
+    if (verified !== true || !providerResponse) {
+      console.warn(
+        `[Fidopoint Webhook] identity.nin.verified received but verified flag is falsy for identityId: ${identityId}`
+      );
+      return { processed: false, reason: "verified flag is not true" };
     }
 
-    // Look up the stored session by identityId
+    // ── 3. Look up the session ──────────────────────────────────────────────
     const ninSession = await this.EmailandTelValidationModel.findOne({
       where: { identityId, type: "nin" },
       order: [["updatedAt", "DESC"]],
     });
 
     if (!ninSession) {
+      console.warn(`[Fidopoint Webhook] No session found for identityId: ${identityId}`);
       return { processed: false, reason: "session not found" };
     }
 
     const { userId, validateFor } = ninSession;
 
-    // Find the user
-    let user;
-    if (validateFor === "list") {
-      user = await this.PropertyManagerModel.findByPk(userId);
-    } else {
-      user = await this.ProspectiveTenantModel.findByPk(userId);
-    }
+    // ── 4. Find the user ────────────────────────────────────────────────────
+    const user = validateFor === "list"
+      ? await this.PropertyManagerModel.findByPk(userId)
+      : await this.ProspectiveTenantModel.findByPk(userId);
 
     if (!user) {
+      console.warn(`[Fidopoint Webhook] User not found for userId: ${userId}`);
       return { processed: false, reason: "user not found" };
     }
 
-    // Build update payload
-    let updatePayload = { isNINValid: true };
+    // Idempotency — skip if already verified
+    if (user.isNINValid) {
+      console.log(`[Fidopoint Webhook] User ${userId} already has isNINValid=true, skipping.`);
+      return { processed: true, skipped: true };
+    }
 
-    // Sync firstName if it doesn't match
+    // ── 5. Build update payload ─────────────────────────────────────────────
+    const updatePayload = { isNINValid: true };
+
     if (
       providerResponse.firstName &&
-      providerResponse.firstName.trim().toLowerCase() !==
-      (user.firstName || "").trim().toLowerCase()
+      providerResponse.firstName.trim().toLowerCase() !== (user.firstName || "").trim().toLowerCase()
     ) {
       updatePayload.firstName = providerResponse.firstName.trim();
     }
 
-    // Sync lastName if it doesn't match
     if (
       providerResponse.lastName &&
-      providerResponse.lastName.trim().toLowerCase() !==
-      (user.lastName || "").trim().toLowerCase()
+      providerResponse.lastName.trim().toLowerCase() !== (user.lastName || "").trim().toLowerCase()
     ) {
       updatePayload.lastName = providerResponse.lastName.trim();
     }
 
-    // Sync dateOfBirth if present and different
-    const rawDob =
-      providerResponse.dateOfBirth ||
-      providerResponse.dob ||
-      providerResponse.birthdate;
+    const rawDob = providerResponse.dateOfBirth || providerResponse.dob || providerResponse.birthdate;
     if (rawDob) {
+      // SafeHaven sends DD-MM-YYYY, convert to a proper Date
       const [dd, mm, yyyy] = rawDob.split("-");
       const parsedDob = new Date(`${yyyy}-${mm}-${dd}`);
       const existingDob = user.dateOfBirth
@@ -2779,13 +2883,12 @@ class AuthenticationService {
       }
     }
 
+    // ── 6. Persist & expire session ─────────────────────────────────────────
     await user.update(updatePayload);
-
-    // Expire the session to prevent replay
     await ninSession.update({ expiresIn: new Date() });
 
     console.log(
-      `[Fidopoint Webhook] User ${userId} updated — isNINValid=true, fields synced:`,
+      `[Fidopoint Webhook] User ${userId} marked isNINValid=true. Synced fields:`,
       Object.keys(updatePayload).filter((k) => k !== "isNINValid")
     );
 
