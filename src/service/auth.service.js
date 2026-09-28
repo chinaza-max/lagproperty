@@ -52,6 +52,63 @@ class AuthenticationService {
   SettingModel = Setting;
   NotificationModel = Notification;
 
+  /**
+   * Cross-table NIN uniqueness guard (mirrors UserService._assertNINNotTakenCrossTable).
+   *
+   * Rules:
+   *  - A verified NIN may NOT be shared by two accounts of the same role.
+   *  - Exception: one PropertyManager with type='landLord' AND one ProspectiveTenant
+   *    may share the same NIN (same real person is both a landlord and a tenant).
+   *  - Agents may never share a verified NIN with a ProspectiveTenant.
+   *
+   * @param {string} nin            - The NIN to check.
+   * @param {number} requestingUserId - The user who is about to be verified.\
+   * @param {string} requestingRole  - 'list' | 'rent'
+   */
+  async _assertNINNotTakenCrossTable(nin, requestingUserId, requestingRole) {
+    if (requestingRole === "rent") {
+      // Within-table: no other tenant may hold this verified NIN
+      const sameTableConflict = await this.ProspectiveTenantModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
+        throw new ConflictError(
+          "This NIN is already verified by another tenant account."
+        );
+      }
+      // Cross-table: the only allowed PM sharing is a landLord
+      const pmConflict = await this.PropertyManagerModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (pmConflict && pmConflict.type !== "landLord") {
+        throw new ConflictError(
+          "This NIN is already verified by an agent/lister account and cannot be reused for a tenant account."
+        );
+      }
+    } else {
+      // role === 'list'
+      // Within-table: no other PM may hold this verified NIN
+      const sameTableConflict = await this.PropertyManagerModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
+        throw new ConflictError(
+          "This NIN is already verified by another lister account."
+        );
+      }
+      // Cross-table: agents may never share with a tenant
+      const requestingPM = await this.PropertyManagerModel.findByPk(requestingUserId);
+      const tenantConflict = await this.ProspectiveTenantModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (tenantConflict && requestingPM?.type !== "landLord") {
+        throw new ConflictError(
+          "This NIN is already verified by a tenant account. Only a landlord account may share a NIN with a tenant."
+        );
+      }
+    }
+  }
+
   verifyToken(token) {
     try {
       const payload = jwt.verify(token, serverConfig.TOKEN_SECRET);
@@ -1840,6 +1897,22 @@ class AuthenticationService {
           JSON.stringify(providerResponse, null, 2)
         );
 
+        // Guard: ensure this NIN isn't already taken cross-table before marking valid
+        const ninFromProvider =
+          providerResponse?.nin ||
+          payload?.identityNumber ||
+          verifyData?.identityNumber ||
+          verifyData?.nin ||
+          ninSession.nin ||
+          relatedUser.nin;
+        if (ninFromProvider) {
+          await this._assertNINNotTakenCrossTable(
+            ninFromProvider,
+            ninSession.userId,
+            validateFor
+          );
+        }
+
         // Build update payload
         let updatePayload = { isNINValid: true };
 
@@ -2850,6 +2923,19 @@ class AuthenticationService {
     if (user.isNINValid) {
       console.log(`[Fidopoint Webhook] User ${userId} already has isNINValid=true, skipping.`);
       return { processed: true, skipped: true };
+    }
+
+    // Cross-table uniqueness guard before marking isNINValid=true
+    const ninToCheck = providerResponse?.nin || user.nin;
+    if (ninToCheck) {
+      try {
+        await this._assertNINNotTakenCrossTable(ninToCheck, userId, validateFor);
+      } catch (conflictErr) {
+        console.warn(
+          `[Fidopoint Webhook] NIN conflict for userId ${userId}: ${conflictErr.message}`
+        );
+        return { processed: false, reason: conflictErr.message };
+      }
     }
 
     // ── 5. Build update payload ─────────────────────────────────────────────

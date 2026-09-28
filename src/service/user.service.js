@@ -85,6 +85,81 @@ class UserService {
   NotificationModel = Notification;
   SettingModel = Setting;
 
+  /**
+   * Cross-table NIN uniqueness guard.
+   *
+   * Rules:
+   *  - A verified NIN (isNINValid=true) may NOT be used by two accounts of the same type.
+   *  - The ONLY allowed cross-table sharing is: one PropertyManager with type='landLord'
+   *    AND one ProspectiveTenant — representing the same real person who is both a
+   *    landlord and a tenant.
+   *  - An agent (type='agent') can NEVER share a verified NIN with a ProspectiveTenant.
+   *
+   * @param {string} nin            - The NIN being verified.
+   * @param {number} requestingUserId - The ID of the user currently verifying.
+   * @param {string} requestingRole  - 'rent' | 'list'
+   * @throws {ConflictError} if the NIN is already locked to another account that
+   *                         cannot share it with this user.
+   */
+  async _assertNINNotTakenCrossTable(nin, requestingUserId, requestingRole) {
+    // ── Within-table check ──────────────────────────────────────────────────
+    // No two users in the same table may ever share a verified NIN.
+    if (requestingRole === "rent") {
+      const sameTableConflict = await this.ProspectiveTenantModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
+        throw new ConflictError(
+          "This NIN is already verified by another prospect account. Each NIN can only be linked to one account of the same type."
+        );
+      }
+    } else {
+      // role === 'list' (PropertyManager — landLord or agent)
+      const sameTableConflict = await this.PropertyManagerModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
+        throw new ConflictError(
+          "This NIN is already verified by another lister account. Each NIN can only be linked to one account of the same type."
+        );
+      }
+    }
+
+    // ── Cross-table check ───────────────────────────────────────────────────
+    if (requestingRole === "rent") {
+      // Requesting user is a ProspectiveTenant.
+      // The only PropertyManager that may share this NIN is one with type='landLord'.
+      const pmConflict = await this.PropertyManagerModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+      if (pmConflict && pmConflict.type !== "landLord") {
+        throw new ConflictError(
+          "This NIN is already verified by an agent/lister account and cannot be reused for a tenant account."
+        );
+      }
+    } else {
+      // Requesting user is a PropertyManager (landLord or agent).
+      // Determine this user's type so we can apply the correct rule.
+      const requestingPM = await this.PropertyManagerModel.findByPk(requestingUserId);
+      const requestingType = requestingPM?.type;
+
+      const tenantConflict = await this.ProspectiveTenantModel.findOne({
+        where: { nin, isNINValid: true },
+      });
+
+      if (tenantConflict) {
+        // An agent may NEVER share a NIN with a ProspectiveTenant.
+        if (requestingType !== "landLord") {
+          throw new ConflictError(
+            "This NIN is already verified by a tenant account. Agents cannot share a NIN with a tenant."
+          );
+        }
+        // A landLord is allowed to share the NIN with a ProspectiveTenant (same real person).
+        // No error thrown.
+      }
+    }
+  }
+
   /*
   async handleUpdateProfile(data, file) {
     if (data.role == "list") {
@@ -251,20 +326,8 @@ class UserService {
           // Check if NIN is being changed
           const isNINChanged = currentUser.nin && currentUser.nin !== nin;
 
-          // Check if NIN exists for another user
-          const existingUser = await this.PropertyManagerModel.findOne({
-            where: { nin },
-          });
-
-          if (existingUser) {
-            if (existingUser.isNINValid && existingUser.id !== userId) {
-              throw new SystemError(
-                "NINAlreadyVerified",
-                "This NIN is already verified by another user",
-              );
-            }
-            // if not verified, allow update
-          }
+          // Cross-table + within-table uniqueness enforcement
+          await this._assertNINNotTakenCrossTable(nin, userId, "list");
 
           updateData.nin = nin;
 
@@ -315,20 +378,8 @@ class UserService {
           // Check if NIN is being changed
           const isNINChanged = currentTenant.nin && currentTenant.nin !== nin;
 
-          // Check if NIN exists for another tenant
-          const existingTenant = await this.ProspectiveTenantModel.findOne({
-            where: { nin },
-          });
-
-          if (existingTenant) {
-            if (existingTenant.isNINValid && existingTenant.id !== userId) {
-              throw new SystemError(
-                "NINAlreadyVerified",
-                "This NIN is already verified by another user",
-              );
-            }
-            // if not verified, allow update
-          }
+          // Cross-table + within-table uniqueness enforcement
+          await this._assertNINNotTakenCrossTable(nin, userId, "rent");
 
           updateData.nin = nin;
 
@@ -2073,6 +2124,10 @@ class UserService {
     if (!user) {
       throw new NotFoundError("User not found");
     }
+
+    // Block early if the NIN is already verified and locked to an incompatible account.
+    // This prevents wasting an API call to Fidopoint for a NIN that will be rejected anyway.
+    await this._assertNINNotTakenCrossTable(nin, userId, role);
 
     try {
       // Call Fidopoint /nin/initiate — Fidopoint automatically sends OTP to the NIN-linked phone
