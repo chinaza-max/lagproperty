@@ -86,77 +86,42 @@ class UserService {
   SettingModel = Setting;
 
   /**
-   * Cross-table NIN uniqueness guard.
+   * NIN uniqueness guard.
    *
    * Rules:
-   *  - A verified NIN (isNINValid=true) may NOT be used by two accounts of the same type.
-   *  - The ONLY allowed cross-table sharing is: one PropertyManager with type='landLord'
-   *    AND one ProspectiveTenant — representing the same real person who is both a
-   *    landlord and a tenant.
-   *  - An agent (type='agent') can NEVER share a verified NIN with a ProspectiveTenant.
+   *  - No two ProspectiveTenant accounts may share the same verified NIN.
+   *  - No two PropertyManager accounts may share the same verified NIN.
+   *  - A PropertyManager AND a ProspectiveTenant MAY share the same NIN —
+   *    the same real person can hold both a lister account and a tenant account.
    *
-   * @param {string} nin            - The NIN being verified.
+   * @param {string} nin             - The NIN being verified.
    * @param {number} requestingUserId - The ID of the user currently verifying.
    * @param {string} requestingRole  - 'rent' | 'list'
-   * @throws {ConflictError} if the NIN is already locked to another account that
-   *                         cannot share it with this user.
+   * @throws {ConflictError} if the NIN is already locked to another account of the same role.
    */
   async _assertNINNotTakenCrossTable(nin, requestingUserId, requestingRole) {
-    // ── Within-table check ──────────────────────────────────────────────────
-    // No two users in the same table may ever share a verified NIN.
     if (requestingRole === "rent") {
+      // Block if another ProspectiveTenant already holds this verified NIN
       const sameTableConflict = await this.ProspectiveTenantModel.findOne({
         where: { nin, isNINValid: true },
       });
       if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
         throw new ConflictError(
-          "This NIN is already verified by another prospect account. Each NIN can only be linked to one account of the same type."
+          "This NIN is already verified by another tenant account. Each NIN can only be linked to one tenant account."
         );
       }
+      // Cross-table (PM ↔ PT) sharing is allowed — same person can be both lister and tenant.
     } else {
-      // role === 'list' (PropertyManager — landLord or agent)
+      // role === 'list' — block if another PropertyManager already holds this verified NIN
       const sameTableConflict = await this.PropertyManagerModel.findOne({
         where: { nin, isNINValid: true },
       });
       if (sameTableConflict && sameTableConflict.id !== requestingUserId) {
         throw new ConflictError(
-          "This NIN is already verified by another lister account. Each NIN can only be linked to one account of the same type."
+          "This NIN is already verified by another lister account. Each NIN can only be linked to one lister account."
         );
       }
-    }
-
-    // ── Cross-table check ───────────────────────────────────────────────────
-    if (requestingRole === "rent") {
-      // Requesting user is a ProspectiveTenant.
-      // The only PropertyManager that may share this NIN is one with type='landLord'.
-      const pmConflict = await this.PropertyManagerModel.findOne({
-        where: { nin, isNINValid: true },
-      });
-      if (pmConflict && pmConflict.type !== "landLord") {
-        throw new ConflictError(
-          "This NIN is already verified by an agent/lister account and cannot be reused for a tenant account."
-        );
-      }
-    } else {
-      // Requesting user is a PropertyManager (landLord or agent).
-      // Determine this user's type so we can apply the correct rule.
-      const requestingPM = await this.PropertyManagerModel.findByPk(requestingUserId);
-      const requestingType = requestingPM?.type;
-
-      const tenantConflict = await this.ProspectiveTenantModel.findOne({
-        where: { nin, isNINValid: true },
-      });
-
-      if (tenantConflict) {
-        // An agent may NEVER share a NIN with a ProspectiveTenant.
-        if (requestingType !== "landLord") {
-          throw new ConflictError(
-            "This NIN is already verified by a tenant account. Agents cannot share a NIN with a tenant."
-          );
-        }
-        // A landLord is allowed to share the NIN with a ProspectiveTenant (same real person).
-        // No error thrown.
-      }
+      // Cross-table (PM ↔ PT) sharing is allowed — same person can be both lister and tenant.
     }
   }
 
