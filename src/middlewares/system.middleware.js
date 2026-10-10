@@ -66,16 +66,32 @@ class SystemMiddlewares {
     }
 
 
-    else if (error instanceof Joi.ValidationError) {
+    else if (
+      error?.isJoi ||
+      error instanceof Joi.ValidationError ||
+      error?.name === "ValidationError"
+    ) {
       return res.status(400).json({
         status: "validation-error",
+        message: error.details?.[0]?.message || error.message,
         errors: error.details,
+      });
+    } else if (
+      error?.name === "MulterError" ||
+      error?.code?.startsWith?.("LIMIT_")
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message:
+          error.code === "LIMIT_FILE_SIZE"
+            ? "File size exceeds the 3MB limit."
+            : error.message,
       });
     }
 
     return res.status(500).json({
       status: "server-error",
-      message: "An unexpected error occured.",
+      message: error.message || "An unexpected error occured.",
     });
 
   }

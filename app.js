@@ -223,6 +223,7 @@ class Server {
     this.app.use(express.json());
     this.app.use(cors(corsOptions));
     this.app.use(express.static(path.join(__dirname, "public")));
+    this.app.use("/public", express.static(path.join(__dirname, "public")));
     this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
     this.app.use(routes);
     this.app.use(systemMiddleware.errorHandler);

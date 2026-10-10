@@ -272,7 +272,84 @@ class UserService {
     }
   }
 */
+  _buildImageUrl(file) {
+    if (!file) return "";
+    const domain = (serverConfig.DOMAIN || "").replace(/\/$/, "");
+    if (file.filename) {
+      return `${domain}/images/${file.filename}`;
+    }
+    if (file.path) {
+      const cleanPath = file.path
+        .replace(/\\/g, "/")
+        .replace(/^.*\/public\//, "images/")
+        .replace(/^public\//, "")
+        .replace(/^\/public\//, "");
+      return `${domain}/${cleanPath}`;
+    }
+    return "";
+  }
+
   async handleUpdateProfile(data, file) {
+    // ── Check if this is an image-only update ─────────────────────────────
+    // When the client uploads just an image without the required full profile fields
+    const nonImageKeys = Object.keys(data || {}).filter(
+      (key) =>
+        !["userId", "role", "image"].includes(key) &&
+        data[key] !== undefined &&
+        data[key] !== null &&
+        data[key] !== ""
+    );
+
+    const isImageOnly = Boolean(
+      file && (!data?.firstName || nonImageKeys.length === 0)
+    );
+
+    if (isImageOnly) {
+      if (file?.size && file.size > 3000000) {
+        throw new BadRequestError("Image size must be less than 3MB");
+      }
+
+      const imageUrl = this._buildImageUrl(file);
+      const userId = data.userId;
+
+      try {
+        if (data.role === "list") {
+          const currentUser = await this.PropertyManagerModel.findOne({
+            where: { id: userId },
+          });
+
+          if (!currentUser) {
+            throw new NotFoundError("User not found");
+          }
+
+          await this.PropertyManagerModel.update(
+            { image: imageUrl },
+            { where: { id: userId } }
+          );
+        } else {
+          // Default to tenant (role === "rent")
+          const currentTenant = await this.ProspectiveTenantModel.findOne({
+            where: { id: userId },
+          });
+
+          if (!currentTenant) {
+            throw new NotFoundError("Tenant not found");
+          }
+
+          await this.ProspectiveTenantModel.update(
+            { image: imageUrl },
+            { where: { id: userId } }
+          );
+        }
+
+        return { imageUrl };
+      } catch (error) {
+        if (error instanceof SystemError) throw error;
+        throw new SystemError(error.name, error.parent || error.message);
+      }
+    }
+
+    // ── Full Profile Update (Existing logic preserved) ────────────────────
     if (data.role === "list") {
       let { userId, role, image, nin, ...updateData } =
         await userUtil.verifyHandleUpdateProfileList.validateAsync(data);
@@ -285,7 +362,7 @@ class UserService {
           });
 
           if (!currentUser) {
-            throw new SystemError("UserNotFound", "User not found");
+            throw new NotFoundError("User not found");
           }
 
           // Check if NIN is being changed
@@ -304,11 +381,7 @@ class UserService {
 
         let imageUrl = "";
         if (file) {
-          if (serverConfig.NODE_ENV === "production") {
-            imageUrl = serverConfig.DOMAIN + file.path.replace("/home", "");
-          } else if (serverConfig.NODE_ENV === "development") {
-            imageUrl = serverConfig.DOMAIN + file.path.replace("public", "");
-          }
+          imageUrl = this._buildImageUrl(file);
         }
 
         updateData.isProfileCompleted = true;
@@ -323,6 +396,7 @@ class UserService {
           });
         }
       } catch (error) {
+        if (error instanceof SystemError) throw error;
         throw new SystemError(error.name, error.parent || error.message);
       }
     } else {
@@ -337,7 +411,7 @@ class UserService {
           });
 
           if (!currentTenant) {
-            throw new SystemError("UserNotFound", "Tenant not found");
+            throw new NotFoundError("Tenant not found");
           }
 
           // Check if NIN is being changed
@@ -354,6 +428,12 @@ class UserService {
           }
         }
 
+        let imageUrl = "";
+        if (file) {
+          imageUrl = this._buildImageUrl(file);
+          updateData.image = imageUrl;
+        }
+
         if (lasrraId) {
           updateData.isProfileCompleted = true;
           await this.ProspectiveTenantModel.update(
@@ -368,6 +448,7 @@ class UserService {
           );
         }
       } catch (error) {
+        if (error instanceof SystemError) throw error;
         throw new SystemError(error.name, error.parent || error.message);
       }
     }
