@@ -1898,6 +1898,11 @@ class AuthenticationService {
         // Build update payload
         let updatePayload = { isNINValid: true };
 
+        // Sync nin if not set on user
+        if (ninFromProvider && !relatedUser.nin) {
+          updatePayload.nin = String(ninFromProvider).trim();
+        }
+
         // Sync firstName if it doesn't match
         if (
           providerResponse?.firstName &&
@@ -1934,6 +1939,42 @@ class AuthenticationService {
               if (!existingDob || existingDob !== incomingDob) {
                 updatePayload.dateOfBirth = parsedDob;
               }
+            }
+          }
+        }
+
+        // Sync State & LGA / State of Origin from verified provider response
+        const stateValue =
+          providerResponse?.stateOfOrigin ||
+          providerResponse?.stateOfResidence ||
+          providerResponse?.state ||
+          verifyData?.stateOfOrigin ||
+          verifyData?.state;
+        const lgaValue =
+          providerResponse?.lgaOfOrigin ||
+          providerResponse?.lgaOfResidence ||
+          providerResponse?.lga ||
+          verifyData?.lgaOfOrigin ||
+          verifyData?.lga;
+
+        if (validateFor === "list") {
+          if (stateValue) {
+            updatePayload.state = String(stateValue).trim();
+          }
+          if (lgaValue) {
+            updatePayload.lga = String(lgaValue).trim();
+          }
+        } else {
+          // role === "rent" (ProspectiveTenant)
+          if (stateValue) {
+            updatePayload.stateOfOrigin = String(stateValue).trim();
+          }
+          if (providerResponse?.gender) {
+            const g = String(providerResponse.gender).trim().toLowerCase();
+            if (g === "m" || g === "male") {
+              updatePayload.gender = "Male";
+            } else if (g === "f" || g === "female") {
+              updatePayload.gender = "Female";
             }
           }
         }
@@ -2923,6 +2964,10 @@ class AuthenticationService {
     // ── 5. Build update payload ─────────────────────────────────────────────
     const updatePayload = { isNINValid: true };
 
+    if (ninToCheck && !user.nin) {
+      updatePayload.nin = String(ninToCheck).trim();
+    }
+
     if (
       providerResponse.firstName &&
       providerResponse.firstName.trim().toLowerCase() !== (user.firstName || "").trim().toLowerCase()
@@ -2948,6 +2993,42 @@ class AuthenticationService {
       const incomingDob = parsedDob.toISOString().split("T")[0];
       if (!existingDob || existingDob !== incomingDob) {
         updatePayload.dateOfBirth = parsedDob;
+      }
+    }
+
+    // Sync State & LGA / State of Origin from verified provider response
+    const stateValue =
+      providerResponse?.stateOfOrigin ||
+      providerResponse?.stateOfResidence ||
+      providerResponse?.state ||
+      data?.stateOfOrigin ||
+      data?.state;
+    const lgaValue =
+      providerResponse?.lgaOfOrigin ||
+      providerResponse?.lgaOfResidence ||
+      providerResponse?.lga ||
+      data?.lgaOfOrigin ||
+      data?.lga;
+
+    if (validateFor === "list") {
+      if (stateValue) {
+        updatePayload.state = String(stateValue).trim();
+      }
+      if (lgaValue) {
+        updatePayload.lga = String(lgaValue).trim();
+      }
+    } else {
+      // role === "rent" (ProspectiveTenant)
+      if (stateValue) {
+        updatePayload.stateOfOrigin = String(stateValue).trim();
+      }
+      if (providerResponse?.gender) {
+        const g = String(providerResponse.gender).trim().toLowerCase();
+        if (g === "m" || g === "male") {
+          updatePayload.gender = "Male";
+        } else if (g === "f" || g === "female") {
+          updatePayload.gender = "Female";
+        }
       }
     }
 
