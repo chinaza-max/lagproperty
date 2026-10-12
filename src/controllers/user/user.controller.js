@@ -5,7 +5,14 @@ export default class UserController {
   async updateProfile(req, res, next) {
     try {
       const data = req.body;
-      const { file } = req;
+
+      // .any() populates req.files (array); .single() populates req.file.
+      // Accept file from any field name the client sends.
+      const file =
+        req.file ||
+        (Array.isArray(req.files) && req.files.length > 0
+          ? req.files[0]
+          : undefined);
 
       let my_bj = {
         ...data,

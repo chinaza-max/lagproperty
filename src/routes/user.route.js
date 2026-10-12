@@ -4093,7 +4093,7 @@ class UserRoutes extends UserController {
   routes() {
     this.router.post(
       "/updateProfile",
-      uploadHandler.image.single("image"),
+      uploadHandler.image.any(),
       this.updateProfile,
     );
 
