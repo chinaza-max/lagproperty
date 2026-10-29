@@ -16,6 +16,10 @@ import swaggerJsDoc from "swagger-jsdoc";
 import bcrypt from "bcrypt";
 import { Setting, Admin } from "./src/db/models/index.js";
 
+// ⚠️  DANGER SWITCH — set to true to DELETE all records on next server start.
+// Flip back to false immediately after the wipe.
+const CLEAN_DB = true;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -52,6 +56,10 @@ class Server {
 
   async initializeDbAndFirebase() {
     await DB.connectDB();
+
+    if (CLEAN_DB) {
+      await this._cleanDatabase();
+    }
 
     const [setting, created] = await Setting.findOrCreate({
       where: { id: 1 },
@@ -142,6 +150,59 @@ class Server {
       authService.rentDisbursements();
       authService.checkRefund();
     });
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Clean-database helper — called only when CLEAN_DB=true
+  // ──────────────────────────────────────────────────────────────────────────
+  async _cleanDatabase() {
+    console.warn("╔══════════════════════════════════════════════════════╗");
+    console.warn("║  ⚠️   CLEAN_DB IS ENABLED — WIPING ALL RECORDS …    ║");
+    console.warn("╚══════════════════════════════════════════════════════╝");
+
+    const sequelize = DB.sequelize;
+
+    // Disable FK checks so we can truncate in any order
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0;");
+
+    // Tables in leaf→root order (safe, but FK checks are disabled anyway)
+    const tables = [
+      "ComplaintMessages",
+      "Complaints",
+      "Notifications",
+      "RefundLogs",
+      "QuitNotices",
+      "Transactions",
+      "Inspections",
+      "Chats",
+      "TenantReviews",
+      "PropertyManagerReviews",
+      "Tenants",
+      "Buildings",
+      "PasswordResets",
+      "EmailandTelValidations",
+      "ProspectiveTenants",
+      "PropertyManagers",
+      // Setting is intentionally kept so the server re-seeds cleanly
+    ];
+
+    for (const table of tables) {
+      try {
+        await sequelize.query(`DELETE FROM \`${table}\`;`);
+        // Reset auto-increment counter
+        await sequelize.query(`ALTER TABLE \`${table}\` AUTO_INCREMENT = 1;`);
+        console.log(`[CLEAN_DB] ✅  Cleared table: ${table}`);
+      } catch (err) {
+        console.warn(`[CLEAN_DB] ⚠️  Could not clear table "${table}": ${err.message}`);
+      }
+    }
+
+    // Re-enable FK checks
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 1;");
+
+    console.warn("╔══════════════════════════════════════════════════════════════╗");
+    console.warn("║  ✅  Database wiped. Set CLEAN_DB=false to prevent re-wipe.  ║");
+    console.warn("╚══════════════════════════════════════════════════════════════╝");
   }
 
   initializeMiddlewaresAndRoutes() {
