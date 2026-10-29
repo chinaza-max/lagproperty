@@ -18,7 +18,7 @@ import { Setting, Admin } from "./src/db/models/index.js";
 
 // ⚠️  DANGER SWITCH — set to true to DELETE all records on next server start.
 // Flip back to false immediately after the wipe.
-const CLEAN_DB = true;
+const CLEAN_DB = false;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
